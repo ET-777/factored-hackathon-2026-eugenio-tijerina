@@ -54,7 +54,7 @@ No live lending decisions or movement of money is authorized by the challenge (B
 - The user explicitly confirmed that bucket credentials must not be shared. No separate data license has been discovered; this does not grant unrestricted redistribution of source records or permission to send them to external APIs.
 - The user knows of no extra rules or numerical rubric weights beyond the supplied PDFs. No video file format, presentation template, or additional submission procedure has been specified. These are limits of currently available information, not proof that no other organizer instructions exist.
 - The user suspects “public*” may mean accessible only to participants, but that interpretation is unconfirmed. Continue planning a conventional public code repository with independently authored synthetic fixtures; retain the PDF's public-repository requirement until a definitive clarification replaces it.
-- The deployed prototype, 4-6 slides and demonstration video remain planned. Repository publication is now authorized by the user.
+- The user authorized GitHub publication on 2026-09-29. The public code repository is [ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro); the deployed prototype, 4-6 slides and demonstration video remain planned. Repository creation alone does not complete the submission-bundle requirement.
 
 ## Documented data claims, not yet verified by this checklist
 

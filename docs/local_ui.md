@@ -104,4 +104,12 @@ records the required integration without mapping currencies/statuses or inventin
 Next implement that scenario adapter, train the local classifier on independent
 bilingual training phrases, and compare it to these keyword rules on development
 cases. Keep final contents sealed until freeze. Source-update replay, operational
-tracing, language review, deployment, repository publication, slides and video remain.
+tracing, language review, deployment, slides and video remain.
+
+The user subsequently authorized GitHub publication. On 2026-09-29, the 63 reviewed
+code/documentation, synthetic fixture and aggregate-evidence files were uploaded to
+[ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro).
+The pre-publication checker compared both dictionary credential values in memory,
+found zero violations and passed 8/8 exclusion probes without displaying the values.
+Source PDFs, private data, runtime databases, screenshots and final case contents
+remain excluded. Repository publication does not deploy the local application.

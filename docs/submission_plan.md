@@ -15,6 +15,14 @@ currencies and snapshot uncertainty. The app must not load the whole 5.35 GB dow
 No publishing, deployment, paid model calls or additional data downloads have been
 performed in the initial work, follow-up audit or local workflow milestone.
 
+**Repository checkpoint, 2026-09-29:** the user subsequently authorized publication.
+The reviewed code, synthetic fixtures and aggregate evidence are now in the public
+[ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro)
+repository. The initial upload contains 63 files; the local suite passed 225 tests
+and the credential/exclusion check passed, including exact credential comparisons
+in memory. No source records, PDFs, runtime stores or sealed final cases were uploaded.
+Deployment, learned-component evaluation, slides, video and submission remain pending.
+
 ## 34-hour work budget
 
 **Progress checkpoint, 2026-09-28:** the owner estimated 10-12 hours used before the
@@ -35,7 +43,7 @@ time estimate has been supplied, so this document does not infer hours spent.
 | Implement and compare the learned route | 4 | Keyword baseline and local character n-gram classifier; fit preprocessing only on training data; tune thresholds on development cases; record configurations and failure analysis. |
 | Complete one-page bilingual app and failure handling | 5 | Spanish/Portuguese paths and documented language review, denied/expired sessions, missing data, safe tool failure, prompt-injection isolation, bounded retries, structured traces without credentials. |
 | Freeze implementation and run final evaluation | 4 | Same untouched workload for baseline/proposed system; all failures counted; per-language results, safety/handoff checks, latency and cost assumptions; limitations recorded. |
-| Prepare public repository and deploy the prototype in a later session | 3 | Fresh-install check, approved/synthetic public fixtures, secret/data-exclusion check, working hosted link, documented test access, smoke test from a clean session. |
+| Deploy the prototype and complete repository delivery | 3 | Fresh-install check, approved/synthetic public fixtures, secret/data-exclusion check, working hosted link, documented test access, smoke test from a clean session. |
 | Package slides, video, README, and submission links | 4 | Five slides; recorded three-scene demonstration; reproducibility and limitations; complete link bundle checked against organizer instructions. |
 | Contingency and final delivery check | 2 | Fix blocking defects, verify links/artifacts, and make the authorized submission before the internal target. |
 | **Total** | **34** | **All work, including evaluation and submission packaging.** |
