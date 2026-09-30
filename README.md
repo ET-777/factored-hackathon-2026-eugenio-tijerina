@@ -1,7 +1,8 @@
 # Factored banking service prototype
 
 Local foundation for a solo Factored AI & Data Hackathon 2026 submission.
-Public repository: [ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro).
+Private development repository: [ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro).
+Keep it private during development; public visibility requires new explicit owner authorization.
 The application currently runs locally; a hosted prototype is still pending.
 
 **Status: local bilingual web UI and keyword baseline, with grounded inquiry,

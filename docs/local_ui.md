@@ -113,3 +113,6 @@ The pre-publication checker compared both dictionary credential values in memory
 found zero violations and passed 8/8 exclusion probes without displaying the values.
 Source PDFs, private data, runtime databases, screenshots and final case contents
 remain excluded. Repository publication does not deploy the local application.
+The owner subsequently required private visibility during development, and the
+repository was changed to private. Keep it private until new explicit owner
+authorization permits public release.

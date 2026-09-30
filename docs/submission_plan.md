@@ -16,12 +16,15 @@ No publishing, deployment, paid model calls or additional data downloads have be
 performed in the initial work, follow-up audit or local workflow milestone.
 
 **Repository checkpoint, 2026-09-29:** the user subsequently authorized publication.
-The reviewed code, synthetic fixtures and aggregate evidence are now in the public
+The reviewed code, synthetic fixtures and aggregate evidence were initially uploaded to
 [ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro)
 repository. The initial upload contains 63 files; the local suite passed 225 tests
 and the credential/exclusion check passed, including exact credential comparisons
 in memory. No source records, PDFs, runtime stores or sealed final cases were uploaded.
 Deployment, learned-component evaluation, slides, video and submission remain pending.
+The owner subsequently clarified that the development repository must be private,
+and its visibility was changed to private. Keep it private during development;
+any future change to public requires new explicit owner authorization.
 
 ## 34-hour work budget
 
