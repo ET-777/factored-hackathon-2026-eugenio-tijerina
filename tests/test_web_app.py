@@ -309,7 +309,7 @@ class WebAppTests(unittest.TestCase):
 
     def test_unsupported_currency_and_pesos_keep_search_without_generic_handoff(self):
         self.post("message", text="No reconozco un cargo")
-        for fragment in ("MXN", "pesos"):
+        for fragment in ("BRL", "pesos"):
             code, state, _ = self.post("message", text=fragment)
             self.assertEqual(code, 200)
             self.assertEqual(state["messages"][-1]["status"], "needs_currency")
@@ -434,7 +434,7 @@ class WebAppTests(unittest.TestCase):
             with self.subTest(corrected=corrected):
                 self.post("reset")
                 self.post("message", text="No reconozco un cargo de 25.50 USD")
-                self.post("message", text="30 MXN")
+                self.post("message", text="30 BRL")
                 code, state, _ = self.post("message", text=corrected)
                 self.assertEqual(code, 200)
                 if corrected == "USD":
@@ -443,6 +443,58 @@ class WebAppTests(unittest.TestCase):
                 else:
                     self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
                 self.assertEqual(self.browser().store.count(), 0)
+
+    def test_all_supported_currencies_are_valid_searches_and_absent_matches_do_not_convert(self):
+        for language in ("es", "pt"):
+            for currency in ("MXN", "COP", "ARS", "USD"):
+                with self.subTest(language=language, currency=currency):
+                    self.post("reset")
+                    self.post("language", language=language)
+                    request = "No reconozco un cargo" if language == "es" else "Não reconheço uma cobrança"
+                    self.post("message", text=request)
+                    code, state, _ = self.post("message", text=currency)
+                    self.assertEqual(code, 200)
+                    self.assertEqual(state["messages"][-1]["status"], "needs_filters")
+                    self.assertFalse(state["offers_handoff"])
+                    code, state, _ = self.post("message", text="25,50")
+                    self.assertEqual(code, 200)
+                    expected = "ambiguous" if currency == "USD" else "no_match"
+                    self.assertEqual(state["messages"][-1]["status"], expected)
+                    self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"] if currency == "USD" else [])
+                    self.assertIsNone(state["selected_transaction"])
+                    self.assertIsNone(state["pending_draft"])
+                    self.assertEqual(self.browser().store.count(), 0)
+
+    def test_pesos_requires_code_and_explicit_mxn_keeps_dispute_context_without_usd_match(self):
+        for language in ("es", "pt"):
+            with self.subTest(language=language):
+                self.post("reset")
+                self.post("language", language=language)
+                request = "No reconozco un cargo" if language == "es" else "Não reconheço uma cobrança"
+                self.post("message", text=request)
+                self.post("message", text="25,50 pesos")
+                self.assertEqual(self.state["messages"][-1]["status"], "needs_currency")
+                self.assertIn("MXN", self.state["messages"][-1]["text"])
+                self.post("message", text="25,50 pesos MXN")
+                self.assertEqual(self.state["messages"][-1]["status"], "no_match")
+                self.assertEqual(self.state["candidate_ids"], [])
+                self.assertIsNone(self.state["pending_draft"])
+                self.assertFalse(self.state["offers_handoff"])
+                self.post("message", text="USD")
+                self.post("choose", transaction_id="DEMO-TX-002")
+                self.assertEqual(self.state["pending_draft"]["packet"]["request"], request)
+                self.assertEqual(self.state["pending_draft"]["packet"]["facts"]["currency"], "USD")
+                self.assertEqual(self.browser().store.count(), 0)
+
+    def test_structured_mxn_search_is_valid_and_has_no_usd_fallback(self):
+        self.post("inquire", transaction_id="DEMO-TX-001")
+        code, state, _ = self.post("search", amount="25.50", currency="MXN")
+        self.assertEqual(code, 200)
+        self.assertEqual(state["messages"][-1]["status"], "no_match")
+        self.assertEqual(state["candidate_ids"], [])
+        self.assertIsNone(state["selected_transaction"])
+        self.assertIsNone(state["pending_draft"])
+        self.assertEqual(self.browser().store.count(), 0)
 
     def test_short_prefixed_and_invalid_numeric_followups_preserve_dispute_intent(self):
         for language, request, followup in (

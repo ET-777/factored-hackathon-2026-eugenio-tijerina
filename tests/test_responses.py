@@ -82,7 +82,7 @@ class TransactionResponseTests(unittest.TestCase):
 
     def test_preserves_precise_amount_and_native_currency_without_conversion(self):
         for language in ("es", "pt"):
-            for currency in ("USD", "COP", "ARS"):
+            for currency in ("USD", "COP", "ARS", "MXN"):
                 with self.subTest(language=language, currency=currency):
                     record = replace(self.record, amount=Decimal("123456.78901234567890123456789"), currency=currency)
                     answer = self.answer(language, record)

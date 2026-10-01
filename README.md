@@ -9,6 +9,9 @@ The application currently runs locally; a hosted prototype is still pending.
 clarification, confirmed simulated intake/handoff and verified SQLite receipts.**
 The keyword UI retains an unfinished search across amount/currency replies and
 summarizes distinct handoff steps without inventing unresolved questions.
+Supported transaction currencies are **MXN, COP, ARS and USD**. Searches preserve
+native amounts and return no match when the available records lack that currency;
+the current fictional demo records are USD-only.
 The learned classifier, evaluation scenario adapter, deployment and final evaluation
 remain pending. No comparative performance result is claimed.
 

@@ -113,8 +113,9 @@ Backups of edited existing files are under the ignored
 - Draft/conversation state is in memory. SQLite cases survive restart, but pending
   conversations and confirmations do not. Durable draft recovery is not claimed.
 - The public development fixtures use an independent scenario schema (including
-  `MXN`/`BRL` and statuses such as `posted`), while the source adapter deliberately
-  enforces the inspected source vocabulary. A later explicit fixture/domain adapter
+  `MXN`/`BRL` and statuses such as `posted`). The owner subsequently requested
+  transaction support for MXN, COP, ARS and USD; BRL and the remaining scenario
+  schema differences still require explicit handling. A later fixture/domain adapter
   must preserve those native facts. Do not silently map `posted` to `Approved`, change
   final cases, or weaken source validation to make the evaluation pass.
 - Unit/integration tests and demo runs do not count as the 19-case development or

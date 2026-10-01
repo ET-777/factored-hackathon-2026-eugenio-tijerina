@@ -35,6 +35,13 @@ These owner-review examples belong to development regression tests, not training
 or the untouched final set. Continue with the evaluation scenario adapter, then
 the learned intent comparison; keep the protected delivery blocks below.
 
+The owner subsequently requested MXN, COP, ARS and USD as supported transaction
+currencies, independently of observed source coverage. This application decision is
+implemented with exact native amounts and no conversion; absent records yield no
+match. Four-currency synthetic workflow checks and the full suite passed 262 tests.
+The audited source has no MXN transaction/product rows; that finding and the sealed
+evaluation artifacts remain unchanged.
+
 ## 34-hour work budget
 
 **Progress checkpoint, 2026-09-28:** the owner estimated 10-12 hours used before the

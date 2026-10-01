@@ -93,7 +93,7 @@ class ParseProductTests(unittest.TestCase):
         self.assertEqual(self.row, original)
 
     def test_accepts_supported_currency_with_outer_whitespace(self):
-        for currency in ("USD", "COP", "ARS"):
+        for currency in ("USD", "COP", "ARS", "MXN"):
             with self.subTest(currency=currency):
                 record = parse_product({**self.row, "currency": f" {currency} "})
 
@@ -107,7 +107,7 @@ class ParseProductTests(unittest.TestCase):
             cases.append(row)
         for field, value in (
             ("product_id", " "), ("customer_id", None),
-            ("currency", "MXN"), ("currency", "usd"), ("currency", 123),
+            ("currency", "BRL"), ("currency", "EUR"), ("currency", "usd"), ("currency", 123),
             ("opening_date", "2026-02-30"), ("opening_date", "2026-06-05T12:30:00"),
         ):
             cases.append({**self.row, field: value})
@@ -149,13 +149,16 @@ class TransactionLinkTests(unittest.TestCase):
         self.product = ProductRecord("DEMO-PRODUCT-A", "DEMO-CUSTOMER-A", "USD", date(2026, 6, 5))
 
     def test_matching_records_pass_without_mutation(self):
-        records = (self.transaction, self.customer, self.product)
-        before = tuple(asdict(record) for record in records)
+        for currency in ("USD", "COP", "ARS", "MXN"):
+            with self.subTest(currency=currency):
+                records = (replace(self.transaction, currency=currency), self.customer,
+                           replace(self.product, currency=currency))
+                before = tuple(asdict(record) for record in records)
 
-        result = validate_transaction_links(*records)
+                result = validate_transaction_links(*records)
 
-        self.assertIsNone(result)
-        self.assertEqual(tuple(asdict(record) for record in records), before)
+                self.assertIsNone(result)
+                self.assertEqual(tuple(asdict(record) for record in records), before)
 
     def test_rejects_missing_or_wrong_record_objects(self):
         for position in range(3):

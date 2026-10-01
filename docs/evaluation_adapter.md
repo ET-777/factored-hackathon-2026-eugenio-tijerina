@@ -15,8 +15,13 @@ They do not supply the source adapter's `transaction_type` or `process_date`.
 Their native `posted` status does not establish the source adapter's `Approved`
 status. One scenario deliberately has an invalid amount and missing currency.
 
-Keep `parse_transaction`, `parse_product`, and cohort validation strict and
-unchanged. Do not convert MXN/BRL to another currency, relabel `posted` as
+The owner explicitly requested MXN support on September 30. The application now
+accepts MXN, COP, ARS and USD, independently of which currencies occur in available
+records. BRL remains outside this source-shaped application contract. This currency
+decision does not reconcile the other scenario/source schema differences above.
+
+Keep `parse_transaction`, `parse_product`, and cohort validation strict. Do not
+convert MXN/BRL to another currency, relabel `posted` as
 `Approved`, invent `Purchase` or a process date, or drop malformed scenarios from
 the denominator. Such changes would alter the independent test rather than
 evaluate the intended behavior.

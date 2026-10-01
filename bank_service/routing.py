@@ -7,8 +7,9 @@ UI to clarify or offer a human path. Dates require an explicit ISO calendar date
 The demo explicitly interprets the word dollar/dólar/dólares as USD and marks that
 interpretation for display. The symbol $ and the word pesos remain ambiguous.
 Bare amounts are held separately until a currency is supplied. No conversion or
-inference from the customer's location is performed. The source record contract
-continues to allow USD, COP and ARS only.
+inference from the customer's location is performed. The prototype record
+contract allows USD, COP, ARS and MXN only. "Pesos" requires an explicit code
+because it can refer to MXN, COP or ARS.
 """
 
 from dataclasses import dataclass
@@ -89,7 +90,7 @@ _INQUIRY_REQUESTS = (
     r"\b(?:transaccion(?:es)?|transacao|transacoes|transactions?|cargos?|cobros?|cobrancas?|compras?|pagos?|pagamentos?|movimientos?|movimentacao|movimentacoes|debitos?|transferencias?|depositos?|retiros?|saques?)\b",
     r"\b(?:estado|status|importe|monto|valor|fecha|data)\b.{0,40}\b(?:tarjeta|cartao|registro|operacion|operacao)\b",
     r"\b(?:buscar|busca|encontrar|localizar|consultar|ver)\b.{0,30}\b(?:importe|monto|valor|registro|operacion|operacao)\b",
-    r"\b(?:USD|COP|ARS)\b",
+    r"\b(?:USD|COP|ARS|MXN)\b",
     r"\b\d{4}-\d{2}-\d{2}\b",
     r"\b[A-Za-z0-9]+-TX-[A-Za-z0-9_-]+\b",
 )
@@ -237,7 +238,7 @@ def extract_slots(text: str, language: str) -> RequestSlots:
     if currencies - SUPPORTED_CURRENCIES:
         raise RoutingError("unsupported_currency")
     currency = _one_value(currencies, "ambiguous_currency")
-    if has_peso_alias and currency is not None and currency not in ("COP", "ARS"):
+    if has_peso_alias and currency is not None and currency not in ("MXN", "COP", "ARS"):
         raise RoutingError("ambiguous_currency")
     amounts = set()
     for pattern in (_AMOUNT_BEFORE, _AMOUNT_AFTER):
@@ -317,7 +318,10 @@ def is_search_followup(text: str, language: str) -> bool:
     # the customer to correct the amount instead of changing their intent.
     number = _VALUE
     return bool(re.fullmatch(
-        r"(?:\$\s*" + number + r"|" + number + r"(?:\s+" + unit + r")?|"
-        + unit + r"\s+" + number + r")",
+        r"(?:\$\s*" + number + r"(?:\s+" + unit + r")?|"
+        + number + r"(?:\s+" + unit + r")?|"
+        + number + r"\s+pesos?\s+" + _CURRENCY + r"|"
+        + unit + r"\s+" + number + r"|"
+        + _CURRENCY + r"\s+" + number + r"\s+pesos?)",
         normalized, re.IGNORECASE,
     ))

@@ -71,6 +71,7 @@ The [completed local review](local_data_review.md) separates these descriptions 
 | Workflow selection | Delegated to Codex and now recorded in [scope.md](scope.md): transaction inquiry, confirmed simulated intake, verified receipt/human handoff. One workflow, with local bilingual intent learning evaluated against rules. |
 | Additional known rules/weights | The user identifies only the supplied PDFs and reports no extra rules or numerical weights; none should be invented. |
 | Credential sharing | Explicitly prohibited by the user, consistent with Brief p. 5. |
+| Supported transaction currencies | On September 30 the user explicitly requested **MXN, COP, ARS and USD**, including currencies absent from the current transaction records. This is an owner-approved application decision, not a claim that the audited dataset contains MXN transactions. Preserve exact native amounts; absent matches are not an unsupported-currency error. |
 
 ## Remaining unresolved questions / implementation decisions
 

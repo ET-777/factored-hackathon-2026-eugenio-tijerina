@@ -168,19 +168,41 @@ class SlotExtractionTests(unittest.TestCase):
         for text, amount, code in (
             ("25 pesos COP", Decimal("25"), "COP"),
             ("$25,50 ARS", Decimal("25.50"), "ARS"),
+            ("25 pesos MXN", Decimal("25"), "MXN"),
             ("importe 25.50 USD", Decimal("25.50"), "USD"),
         ):
             with self.subTest(text=text):
                 slots = extract_slots(text, "es")
                 self.assertEqual(slots.filters, TransactionFilters(amount=amount, currency=code))
                 self.assertFalse(slots.needs_currency)
-        self.assertEqual(SUPPORTED_CURRENCIES, frozenset({"USD", "COP", "ARS"}))
+        self.assertEqual(SUPPORTED_CURRENCIES, frozenset({"USD", "COP", "ARS", "MXN"}))
+
+    def test_explicit_mxn_code_and_amounts_in_both_languages(self):
+        for text, language, amount in (
+            ("25.50 MXN", "es", Decimal("25.50")),
+            ("25,50 MXN", "pt", Decimal("25.50")),
+            ("MXN 0", "es", Decimal("0")),
+            ("25,5 pesos MXN", "pt", Decimal("25.5")),
+            ("$25.50 MXN", "es", Decimal("25.50")),
+            ("mxn -25,50", "pt", Decimal("-25.50")),
+            ("MXN", "es", None),
+        ):
+            with self.subTest(text=text):
+                slots = extract_slots(text, language)
+                self.assertEqual(slots.filters, TransactionFilters(amount=amount, currency="MXN"))
+                self.assertFalse(slots.needs_currency)
+                self.assertFalse(slots.currency_ambiguous)
+                self.assertFalse(slots.used_dollar_alias)
+                self.assertIsNone(slots.amount_without_currency)
+                self.assertEqual(route_intent(text, language).intent, "inquiry")
+                self.assertTrue(is_search_followup(text, language))
 
     def test_ambiguous_denomination_is_distinct_from_bare_amount(self):
         for text, expected in (
             ("25", False), ("25,5", False), ("importe 25", False),
             ("25 pesos", True), ("pesos", True), ("$25.50", True),
             ("25 dolares", False), ("$25.50 USD", False), ("25 pesos COP", False),
+            ("25 pesos MXN", False),
         ):
             with self.subTest(text=text):
                 self.assertIs(extract_slots(text, "es").currency_ambiguous, expected)
@@ -190,7 +212,7 @@ class SlotExtractionTests(unittest.TestCase):
             ("25 dolares COP", "ambiguous_currency"),
             ("25 pesos USD", "ambiguous_currency"),
             ("25 dólares CAD", "unsupported_currency"),
-            ("25 pesos MXN", "unsupported_currency"),
+            ("25 pesos EUR", "unsupported_currency"),
             ("25 reais BRL", "unsupported_currency"),
         ):
             with self.subTest(text=text):
@@ -238,7 +260,7 @@ class SlotExtractionTests(unittest.TestCase):
     def test_currency_and_identifier_ambiguity_are_rejected(self):
         for text, code in (
             ("25.50 BRL", "unsupported_currency"),
-            ("MXN", "unsupported_currency"),
+            ("EUR", "unsupported_currency"),
             ("USD o COP", "ambiguous_currency"),
             ("DEMO-TX-001 o DEMO-TX-002", "ambiguous_transaction_id"),
         ):

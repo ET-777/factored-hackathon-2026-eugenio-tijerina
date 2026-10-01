@@ -1,6 +1,6 @@
 """Synthetic tests for consent, persistence, reconciliation, and human handoff."""
 
-from dataclasses import replace
+from dataclasses import asdict, replace
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 import hashlib
@@ -14,6 +14,8 @@ from bank_service.access import AccessDenied, Permission, TrustedSession
 from bank_service.actions import ActionError, ActionService, DRAFT_TTL
 from bank_service.case_store import CaseStore, StoreError
 from bank_service.records import TransactionRecord
+from bank_service.responses import answer_transaction
+from bank_service.selection import TransactionFilters, select_transaction
 from bank_service.transactions import SourceReference, SourcedTransaction
 
 
@@ -73,6 +75,61 @@ class ActionTests(unittest.TestCase):
                 self.assertNotIn("customer_id", packet["facts"])
                 self.assertNotIn("product_id", packet["facts"])
                 self.assertEqual(self.store.count(), before + 1)
+
+    def test_each_supported_currency_preserves_native_facts_through_verified_workflow_and_reopen(self):
+        records = {}
+        for currency in ("MXN", "COP", "ARS", "USD"):
+            record = replace(self.entry.record, transaction_id=f"SYNTH-{currency}", currency=currency)
+            source = json.dumps(asdict(record), sort_keys=True, default=str).encode("utf-8")
+            records[record.transaction_id] = SourcedTransaction(record, (
+                SourceReference(f"synthetic/{currency}.json", 1, hashlib.sha256(source).hexdigest()),))
+        for language in ("es", "pt"):
+            for currency in ("MXN", "COP", "ARS", "USD"):
+                with self.subTest(language=language, currency=currency), tempfile.TemporaryDirectory() as folder:
+                    identifier = f"SYNTH-{currency}"
+                    selected = select_transaction(
+                        self.session, TransactionFilters(amount=Decimal("123.4500"), currency=currency),
+                        records=records, language=language, now=self.now)
+                    self.assertEqual(selected.candidate_ids, (identifier,))
+                    answer = answer_transaction(self.session, identifier, records=records,
+                                                language=language, now=self.now)
+                    self.assertIn(f"123.4500 {currency}", answer.text)
+                    path = Path(folder) / "synthetic.sqlite3"
+                    store = CaseStore(path)
+                    try:
+                        actions = ActionService(records, store)
+                        intake = actions.prepare_intake(self.session, identifier, "Revisar el cargo",
+                                                        language=language, now=self.now)
+                        self.assertEqual(store.count(), 0)
+                        receipt = actions.confirm(self.session, intake.draft_id, confirmed=True, now=self.now)
+                        self.assertEqual(actions.confirm(self.session, intake.draft_id, confirmed=True,
+                                                         now=self.now), receipt)
+                        self.assertEqual(store.count(), 1)
+                        handoff = actions.prepare_handoff(
+                            self.session, transaction_id=identifier, request="Revisión humana",
+                            escalation_reason="human_requested", attempted_steps=("action_verified",),
+                            unresolved_questions=("Revisar el cargo",), verified_case_ids=(receipt.case_id,),
+                            language=language, now=self.now)
+                        proposed = json.loads(actions.review_draft(self.session, handoff.draft_id, now=self.now))
+                        self.assertEqual(proposed["verified_actions"][0]["case_id"], receipt.case_id)
+                        handoff_receipt = actions.confirm(self.session, handoff.draft_id,
+                                                         confirmed=True, now=self.now)
+                        self.assertEqual(store.count(), 2)
+                    finally:
+                        store.close()
+                    reopened = CaseStore(path)
+                    try:
+                        fresh = ActionService(records, reopened)
+                        for expected in (receipt, handoff_receipt):
+                            saved = fresh.read_case(self.session, expected.case_id, now=self.now)
+                            self.assertEqual(saved, expected)
+                            packet = json.loads(saved.payload_json)
+                            self.assertEqual(packet["facts"]["amount"], "123.4500")
+                            self.assertEqual(packet["facts"]["currency"], currency)
+                            self.assertEqual(packet["facts"]["transaction_id"], identifier)
+                        self.assertEqual(reopened.count(), 2)
+                    finally:
+                        reopened.close()
 
     def test_duplicate_confirmation_returns_same_case_even_after_draft_expiry(self):
         draft = self.prepare()
@@ -146,6 +203,7 @@ class ActionTests(unittest.TestCase):
     def test_fact_or_reference_changes_invalidate_drafts_without_writes(self):
         for changed in (
             replace(self.entry, record=replace(self.entry.record, amount=Decimal("999.00"))),
+            replace(self.entry, record=replace(self.entry.record, currency="MXN")),
             replace(self.entry, sources=(replace(self.entry.sources[0], row_sha256="b" * 64),)),
         ):
             with self.subTest(reference_change=changed.sources != self.entry.sources):

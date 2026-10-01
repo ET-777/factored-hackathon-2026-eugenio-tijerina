@@ -40,7 +40,7 @@ a linguistic quality assessment.
 
 `routing.py` implements the keyword baseline's four intent proposals: `inquiry`,
 `dispute_intake`, `human_request`, and `unsupported`. It extracts explicit transaction
-IDs, ISO dates and finite decimal amounts paired with explicit USD/COP/ARS currencies.
+IDs, ISO dates and finite decimal amounts paired with explicit MXN/COP/ARS/USD currencies.
 An unfinished inquiry or dispute retains its original request while collecting an
 amount and currency across turns. Common plural requests such as `Enséñame mis pagos`
 are supported. Comma decimals are supported. Ambiguous dates, IDs, currencies and grouped money
@@ -52,9 +52,10 @@ prepares a ticket using the original dispute reason and that candidate's exact f
 `25 dólares` has no match in these fixtures; it is not rounded to `25.50 USD`.
 As a prototype interpretation chosen by the team, the word `dólares` means USD and
 the chat displays that interpretation. `$` and `pesos` require an explicit code.
-No currency is inferred from location and no amounts are converted. MXN/BRL are
-outside the native source adapter contract; the fictional UI records are all USD.
-Their rejection explains this limitation and allows a correction or date-only search.
+No currency is inferred from location and no amounts are converted. The owner
+requested MXN/COP/ARS/USD support even where current records lack a currency.
+The fictional UI records are all USD, so MXN, COP and ARS searches currently return
+no match. BRL remains unsupported and its rejection permits a correction or date-only search.
 
 Context is bounded to one unfinished search. Slot-only replies and short prefixes
 such as `son`/`são` continue it. A new broad request starts a new subject; an explicit
@@ -150,6 +151,35 @@ No browser warnings/errors were captured. Fictional-only screenshot proofs are
 ignored under `.local/ui-review/chat-feedback-handoff-es.png` and
 `.local/ui-review/chat-feedback-handoff-pt.png`. This browser check does not replace
 independent Portuguese language review or the benchmark evaluation.
+
+### Owner-approved currency support, 2026-09-30
+
+The owner requested support for **MXN, COP, ARS and USD**, even when a currency has
+no available transaction examples. The shared record/product validator, exact search,
+chat parser, grounded responses and saved action packets now accept that set.
+This supersedes the earlier MXN rejection shown in the feedback checkpoint; the
+audit's zero-MXN transaction/product finding is unchanged. No source records were
+invented or converted, and the two public demo records remain USD-only.
+
+`No reconozco un cargo` → `MXN` → `25,50` now completes a valid search and returns
+no match in the demo. The original dispute request remains available for correction
+or human handoff. Bare `pesos` and `$` still require a code because the denomination
+is ambiguous. `25,50 pesos MXN` is an explicit MXN amount. BRL/EUR remain outside
+the four-currency application decision.
+
+Verification: **262 tests passed**. Synthetic ES/PT checks exercise all four
+currencies through exact selection, answers, confirmed simulated intake, handoff,
+duplicate confirmation and receipt readback through a fresh service/store. A currency
+change invalidates an earlier draft. Loopback HTTP checks prove valid MXN searches
+return no match against the unchanged USD fixtures, without a currency conversion,
+old selection, draft or write. One initial full-suite run hit a Windows connection
+abort (WinError 10053) in an existing Origin-rejection check; the seven security tests
+and the complete suite passed on rerun without changes to those tests or guards.
+All 13 protected before-edit hashes matched, including core permission/action
+modules, fictional demo fixtures, audit documents and public evaluation files.
+Final contents were not read. The privacy check again passed 63 eligible files and
+8/8 exclusion probes, without dictionary access or a Git history scan. Baseline
+backups are ignored under `.local/review_backups/mxn-support-20260930/`.
 
 Next implement that scenario adapter, train the local classifier on independent
 bilingual training phrases, and compare it to these keyword rules on development

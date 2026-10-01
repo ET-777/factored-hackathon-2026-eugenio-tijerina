@@ -63,8 +63,8 @@ TEXT = {
         "busy": "Hay demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
         "security": "La sesión de la página no coincide. Recarga la página antes de continuar.",
         "already_saved": "Esta solicitud ya está guardada. Comprueba la misma referencia para recuperar su recibo.",
-        "currency": "Indica el código de moneda: USD, COP o ARS. «Pesos» y «$» pueden referirse a varias monedas. Los movimientos ficticios de esta demo están en USD.",
-        "demo_currency": "Los movimientos ficticios de esta demo están en USD. No convierto importes de otras monedas. Puedes indicar USD o buscar por una fecha en formato AAAA-MM-DD.",
+        "currency": "Indica el código de moneda: MXN, COP, ARS o USD. «Pesos» y «$» pueden referirse a varias monedas. Los movimientos ficticios de esta demo están en USD.",
+        "unsupported_currency": "Puedo buscar movimientos en MXN, COP, ARS y USD. Esa moneda no está admitida en el prototipo. No convierto importes; indica una de esas monedas o una fecha en formato AAAA-MM-DD.",
         "dollars": "En esta demo interpreto «dólares» como USD; no hago una conversión de moneda.",
         "amount": "Indica el importe de la transacción o una fecha en formato AAAA-MM-DD para continuar la búsqueda.",
         "followup": "Para continuar, indica una fecha en formato AAAA-MM-DD, el importe y su moneda, o elige una coincidencia de la lista.",
@@ -84,8 +84,8 @@ TEXT = {
         "busy": "Há muitas solicitações. Aguarde um momento e tente novamente.",
         "security": "A sessão da página não corresponde. Recarregue a página antes de continuar.",
         "already_saved": "Esta solicitação já está salva. Verifique a mesma referência para recuperar o recibo.",
-        "currency": "Informe o código da moeda: USD, COP ou ARS. «Pesos» e «$» podem se referir a várias moedas. As transações fictícias desta demonstração estão em USD.",
-        "demo_currency": "As transações fictícias desta demonstração estão em USD. Não converto valores de outras moedas. Informe USD ou pesquise por uma data no formato AAAA-MM-DD.",
+        "currency": "Informe o código da moeda: MXN, COP, ARS ou USD. «Pesos» e «$» podem se referir a várias moedas. As transações fictícias desta demonstração estão em USD.",
+        "unsupported_currency": "Posso pesquisar transações em MXN, COP, ARS e USD. Essa moeda não é aceita no protótipo. Não converto valores; informe uma dessas moedas ou uma data no formato AAAA-MM-DD.",
         "dollars": "Nesta demonstração interpreto «dólares» como USD; não faço conversão de moeda.",
         "amount": "Informe o valor da transação ou uma data no formato AAAA-MM-DD para continuar a pesquisa.",
         "followup": "Para continuar, informe uma data no formato AAAA-MM-DD, o valor e a moeda, ou escolha uma correspondência na lista.",
@@ -357,7 +357,7 @@ class BrowserSession:
             if code in ("invalid_date", "ambiguous_date"):
                 context.transaction_date = None
             if code == "unsupported_currency":
-                self.append("assistant", TEXT[self.language]["demo_currency"], "needs_currency")
+                self.append("assistant", TEXT[self.language]["unsupported_currency"], "needs_currency")
                 return
             raise
         if slots.used_dollar_alias:

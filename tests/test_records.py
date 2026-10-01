@@ -2,7 +2,7 @@ import unittest
 from dataclasses import FrozenInstanceError, asdict
 from datetime import date, datetime, timedelta
 from bank_service.records import RecordValidationError, required_text, required_decimal, required_date, required_timestamp
-from bank_service.records import TransactionRecord, parse_transaction
+from bank_service.records import SUPPORTED_CURRENCIES, TransactionRecord, parse_transaction
 from decimal import Decimal
 
 
@@ -271,11 +271,12 @@ class ParseTransactionTests(unittest.TestCase):
                 parse_transaction(row)
 
     def test_trims_text_and_accepts_supported_source_values(self):
+        self.assertEqual(SUPPORTED_CURRENCIES, frozenset({"USD", "COP", "ARS", "MXN"}))
         cases = {
             "transaction_id": ("DEMO-TX-001",),
             "customer_id": ("DEMO-CUSTOMER-A",),
             "product_id": ("DEMO-PRODUCT-A",),
-            "currency": ("USD", "COP", "ARS"),
+            "currency": ("USD", "COP", "ARS", "MXN"),
             "transaction_type": ("Deposit", "Withdrawal", "Transfer", "Purchase", "Payment", "Adjustment"),
             "transaction_status": ("Approved", "Declined", "Pending", "Reversed"),
         }
@@ -288,7 +289,7 @@ class ParseTransactionTests(unittest.TestCase):
 
     def test_rejects_unsupported_values_without_guessing(self):
         for field, value in (
-            ("currency", "MXN"), ("currency", "usd"),
+            ("currency", "BRL"), ("currency", "EUR"), ("currency", "usd"),
             ("transaction_type", "Refund"), ("transaction_type", "purchase"),
             ("transaction_status", "Settled"), ("transaction_status", "approved"),
         ):
