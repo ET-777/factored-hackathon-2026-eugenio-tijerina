@@ -103,6 +103,7 @@ class ConversationTests(unittest.TestCase):
     def test_all_turns_require_exact_session_instance_and_fresh_read_grant(self):
         draft = self.prepare()
         operations = (
+            lambda session, now: self.conversation.clear_selection(session, now=now),
             lambda session, now: self.conversation.search(session, None, now=now),
             lambda session, now: self.conversation.choose(session, "SYNTH-FOREIGN", now=now),
             lambda session, now: self.conversation.inquire(session, now=now),
@@ -128,11 +129,28 @@ class ConversationTests(unittest.TestCase):
         ).status, "action_verified")
 
     def test_choice_must_belong_to_pending_candidates_without_echoing_invalid_id(self):
-        self.conversation.search(self.session, TransactionFilters(currency="USD"), now=self.now)
         for identifier in ("SYNTH-C", "SYNTH-FOREIGN", "PRIVATE_UNKNOWN", None, []):
-            with self.subTest(identifier=identifier), self.assertRaisesRegex(ConversationError, "^invalid_choice$"):
-                self.conversation.choose(self.session, identifier, now=self.now)
+            with self.subTest(identifier=identifier):
+                self.conversation.search(self.session, TransactionFilters(currency="USD"), now=self.now)
+                with self.assertRaisesRegex(ConversationError, "^invalid_choice$"):
+                    self.conversation.choose(self.session, identifier, now=self.now)
+                with self.assertRaisesRegex(ConversationError, "^invalid_choice$"):
+                    self.conversation.choose(self.session, "SYNTH-A", now=self.now)
+        self.conversation.search(self.session, TransactionFilters(currency="USD"), now=self.now)
         self.assertEqual(self.conversation.choose(self.session, "SYNTH-A", now=self.now).selected_id, "SYNTH-A")
+
+    def test_rejected_choice_clears_previous_answer_before_handoff(self):
+        self.conversation.inquire(self.session, "SYNTH-A", now=self.now)
+        with self.assertRaisesRegex(ConversationError, "^invalid_choice$"):
+            self.conversation.choose(self.session, "PRIVATE_UNKNOWN", now=self.now)
+        with self.assertRaisesRegex(ConversationError, "^transaction_required$"):
+            self.conversation.inquire(self.session, now=self.now)
+        prepared = self.conversation.prepare_handoff(self.session, "Necesito ayuda humana.", now=self.now)
+        proposed = json.loads(self.actions.review_draft(self.session, prepared.draft.draft_id, now=self.now))
+        self.assertIsNone(proposed["transaction_id"])
+        self.assertIsNone(proposed["facts"])
+        self.assertEqual(proposed["sources"], [])
+        self.assertIn("choice_rejected", proposed["attempted_steps"])
 
     def test_failed_search_invalidates_selection_draft_and_prior_candidates(self):
         draft = self.prepare()
@@ -150,6 +168,28 @@ class ConversationTests(unittest.TestCase):
         with self.assertRaisesRegex(ConversationError, "^invalid_choice$"):
             self.conversation.choose(self.session, "SYNTH-A", now=self.now)
         self.assertEqual(self.store.count(), 0)
+
+    def test_clear_selection_invalidates_candidates_and_consent_but_keeps_verified_history(self):
+        pending = self.prepare()
+        self.assertIsNone(self.conversation.clear_selection(self.session, now=self.now))
+        with self.assertRaisesRegex(ConversationError, "^transaction_required$"):
+            self.conversation.inquire(self.session, now=self.now)
+        with self.assertRaisesRegex(ConversationError, "^no_pending_action$"):
+            self.conversation.confirm(self.session, pending.draft_id, confirmed=True, now=self.now)
+        self.assertEqual(self.store.count(), 0)
+        verified_draft = self.prepare()
+        verified = self.conversation.confirm(self.session, verified_draft.draft_id, confirmed=True, now=self.now)
+        self.conversation.search(self.session, TransactionFilters(currency="USD"), now=self.now)
+        self.conversation.clear_selection(self.session, now=self.now)
+        with self.assertRaisesRegex(ConversationError, "^invalid_choice$"):
+            self.conversation.choose(self.session, "SYNTH-A", now=self.now)
+        with self.assertRaisesRegex(ConversationError, "^no_pending_action$"):
+            self.conversation.confirm(self.session, verified_draft.draft_id, confirmed=True, now=self.now)
+        handoff = self.conversation.prepare_handoff(self.session, "Necesito ayuda humana.", now=self.now)
+        proposed = json.loads(self.actions.review_draft(self.session, handoff.draft.draft_id, now=self.now))
+        self.assertIsNone(proposed["transaction_id"])
+        self.assertIn("action_verified", proposed["attempted_steps"])
+        self.assertEqual(proposed["verified_actions"][0]["case_id"], verified.receipt.case_id)
 
     def test_changed_record_ownership_is_rechecked_for_choice_and_followup(self):
         self.conversation.search(self.session, TransactionFilters(currency="USD"), now=self.now)
@@ -265,6 +305,42 @@ class ConversationTests(unittest.TestCase):
         self.assertIn("action_verified", packet)
         self.assertEqual(self.store.count(), 2)
 
+    def test_repeated_searches_do_not_hide_prior_handoff_outcomes(self):
+        for language, request, question in (
+            ("es", "Quiero hablar con una persona", "No reconozco la compra seleccionada."),
+            ("pt", "Quero falar com uma pessoa", "Não reconheço a compra selecionada."),
+        ):
+            with self.subTest(language=language):
+                conversation = Conversation(self.records, self.actions, self.session, language=language)
+                cancelled = self.prepare(conversation)
+                conversation.confirm(self.session, cancelled.draft_id, confirmed=False, now=self.now)
+                draft = self.prepare(conversation)
+                with patch.object(self.actions, "confirm", side_effect=ActionError("write_not_verified")):
+                    with self.assertRaises(ActionError):
+                        conversation.confirm(self.session, draft.draft_id, confirmed=True, now=self.now)
+                verified = conversation.confirm(self.session, draft.draft_id, confirmed=True, now=self.now)
+                for _ in range(16):
+                    self.select_a(conversation)
+                prepared = conversation.prepare_handoff(
+                    self.session, request, unresolved_questions=(question,), now=self.now,
+                )
+                proposed = json.loads(self.actions.review_draft(
+                    self.session, prepared.draft.draft_id, now=self.now,
+                ))
+                steps = proposed["attempted_steps"]
+                self.assertEqual(len(steps), len(set(steps)))
+                self.assertLessEqual(len(steps), 12)
+                for observed in ("search_attempted", "transaction_answered", "intake_prepared",
+                                 "action_cancelled", "confirmation_failed", "action_verified"):
+                    self.assertIn(observed, steps)
+                self.assertEqual(proposed["request"], request)
+                self.assertEqual(proposed["unresolved_questions"], [question])
+                self.assertEqual(proposed["verified_actions"][0]["case_id"], verified.receipt.case_id)
+                result = conversation.confirm(self.session, prepared.draft.draft_id, confirmed=True, now=self.now)
+                stored = json.loads(result.receipt.payload_json)
+                self.assertEqual(stored["attempted_steps"], steps)
+                self.assertEqual(stored["unresolved_questions"], [question])
+
     def test_confirmation_rejects_truthy_values_and_unrelated_ids_without_writing(self):
         draft = self.prepare()
         for value in (1, "yes", "false", None, [], {}):
@@ -289,25 +365,34 @@ class ConversationTests(unittest.TestCase):
         ).status, "action_verified")
 
     def test_failed_cancellation_preserves_recovery_of_a_committed_unverified_case(self):
-        draft = self.prepare()
-        original_read = self.store.read_by_key
+        for operation in ("search", "clear_selection", "invalid_choice"):
+            with self.subTest(operation=operation):
+                conversation = Conversation(self.records, self.actions, self.session)
+                draft = self.prepare(conversation)
+                before = self.store.count()
+                original_read = self.store.read_by_key
 
-        def fail_after_write(key):
-            if self.store.count():
-                raise StoreError("store_read_failed")
-            return original_read(key)
+                def fail_after_write(key):
+                    if self.store.count() > before:
+                        raise StoreError("store_read_failed")
+                    return original_read(key)
 
-        with patch.object(self.store, "read_by_key", side_effect=fail_after_write):
-            with self.assertRaisesRegex(ActionError, "^unknown_outcome$"):
-                self.conversation.confirm(self.session, draft.draft_id, confirmed=True, now=self.now)
-        self.assertEqual(self.store.count(), 1)
-        with self.assertRaisesRegex(ActionError, "^already_confirmed$"):
-            self.conversation.search(self.session, TransactionFilters(currency="USD"), now=self.now)
-        with self.assertRaisesRegex(ConversationError, "^transaction_required$"):
-            self.conversation.inquire(self.session, now=self.now)
-        recovered = self.conversation.confirm(self.session, draft.draft_id, confirmed=True, now=self.now)
-        self.assertEqual(recovered.status, "action_verified")
-        self.assertEqual(self.store.count(), 1)
+                with patch.object(self.store, "read_by_key", side_effect=fail_after_write):
+                    with self.assertRaisesRegex(ActionError, "^unknown_outcome$"):
+                        conversation.confirm(self.session, draft.draft_id, confirmed=True, now=self.now)
+                self.assertEqual(self.store.count(), before + 1)
+                with self.assertRaisesRegex(ActionError, "^already_confirmed$"):
+                    if operation == "search":
+                        conversation.search(self.session, TransactionFilters(currency="USD"), now=self.now)
+                    elif operation == "clear_selection":
+                        conversation.clear_selection(self.session, now=self.now)
+                    else:
+                        conversation.choose(self.session, "PRIVATE_UNKNOWN", now=self.now)
+                with self.assertRaisesRegex(ConversationError, "^transaction_required$"):
+                    conversation.inquire(self.session, now=self.now)
+                recovered = conversation.confirm(self.session, draft.draft_id, confirmed=True, now=self.now)
+                self.assertEqual(recovered.status, "action_verified")
+                self.assertEqual(self.store.count(), before + 1)
 
 
 if __name__ == "__main__":

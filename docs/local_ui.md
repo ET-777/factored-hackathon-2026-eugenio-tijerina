@@ -19,7 +19,7 @@ Ctrl+C. No extra UI dependency, provider account or model call is required.
 1. Ask `Quiero consultar una compra de 25,50 USD del 2026-06-16`. Both owned demo
    transactions match; choose a candidate. The amount, currency, status, dates and
    merchant come from that record. Source proof is available in a disclosure panel.
-2. Use `No reconozco un cargo`. Review the proposed ticket's exact request and
+2. Use `No reconozco esta compra`. Review the proposed ticket's exact request and
    transaction facts. Confirm or cancel using the proposal's buttons. Typing
    agreement does not authorize a write. A successful receipt verifies a local
    simulated ticket; it does not resolve the dispute or promise a refund.
@@ -41,9 +41,28 @@ a linguistic quality assessment.
 `routing.py` implements the keyword baseline's four intent proposals: `inquiry`,
 `dispute_intake`, `human_request`, and `unsupported`. It extracts explicit transaction
 IDs, ISO dates and finite decimal amounts paired with explicit USD/COP/ARS currencies.
-Comma decimals are supported. Ambiguous dates, IDs, currencies and grouped money
+An unfinished inquiry or dispute retains its original request while collecting an
+amount and currency across turns. Common plural requests such as `Enséñame mis pagos`
+are supported. Comma decimals are supported. Ambiguous dates, IDs, currencies and grouped money
 strings fail safely rather than selecting a convenient interpretation. The transaction
 list and suggested prompts provide an alternative when the rules do not understand.
+
+For example, `No reconozco un cargo` → `dólares` → `25,5` → choose a candidate
+prepares a ticket using the original dispute reason and that candidate's exact facts.
+`25 dólares` has no match in these fixtures; it is not rounded to `25.50 USD`.
+As a prototype interpretation chosen by the team, the word `dólares` means USD and
+the chat displays that interpretation. `$` and `pesos` require an explicit code.
+No currency is inferred from location and no amounts are converted. MXN/BRL are
+outside the native source adapter contract; the fictional UI records are all USD.
+Their rejection explains this limitation and allows a correction or date-only search.
+
+Context is bounded to one unfinished search. Slot-only replies and short prefixes
+such as `son`/`são` continue it. A new broad request starts a new subject; an explicit
+singular reference such as `esta compra` may reuse the selected record. Relative
+dates and unrestricted conversation are not implemented. Language changes and reset
+clear unfinished slot collection. Failed parsing or choices clear record selection
+in both the UI and authorized controller, preventing a later draft from attaching
+an earlier transaction.
 
 The rule's 0/1 confidence value is a match indicator, not a calibrated probability.
 This is not the planned learned component or an unrestricted conversational model.
@@ -96,10 +115,41 @@ fictional-data screenshot is `.local/ui-review/verified-handoff.jpg`, also ignor
 HTTP tests use disposable fictional records and temporary stores; they do not count
 as the public 19-case development or sealed 32-case final benchmark.
 
-The source adapter's native contract is preserved. The only core action extension
-is a read-only, freshly authorized port for displaying the proposed packet. Evaluation
+At that checkpoint the source adapter's native contract was preserved, and the only
+core action extension was a freshly authorized port for displaying the proposal. Evaluation
 scenarios have an independent schema; [evaluation_adapter.md](evaluation_adapter.md)
 records the required integration without mapping currencies/statuses or inventing facts.
+
+### Owner-feedback checkpoint, 2026-09-30
+
+The owner's screenshots became synthetic regression checks, separate from training
+and benchmark cases. In addition to the input/context changes above, handoff steps
+now show each observed step type once in first-observed order. They summarize work
+attempted, rather than an event log. Verified receipts remain distinct evidence.
+The request for a person appears in the request/escalation fields. An actual unresolved
+business request is carried separately; if none is known, the questions list stays
+empty and the UI says none were specified. Preparing or saving an intake does not
+resolve the underlying disputed charge. Long business requests use a literal excerpt
+of at most 300 characters, ending in an ellipsis, in the questions field. The handoff's
+own request remains in its separate pre-consent field.
+
+Verification: **257 tests passed**, including 29 routing and 32 loopback HTTP tests.
+The regression journeys cover ES/PT amount/currency collection, original dispute
+reason, exact amounts, pesos/$ ambiguity, unsupported currency correction, interruption
+by a new inquiry/unsupported service/human request, failed selections, typed consent,
+handoff deduplication, reset, language changes and browser isolation. The source record,
+access, selection, transaction, response and store modules and both public evaluation
+files matched all eight protected before-edit hashes. Final contents were not read.
+The working-tree privacy check passed 63 eligible files and 8/8 exclusion probes,
+without reading the dictionary or scanning Git history. Baseline backups are ignored
+under `.local/review_backups/chat-feedback-20260930/`.
+Live Edge review verified Spanish dispute → MXN/pesos clarification → USD/amount →
+selection → confirmed simulated intake → meaningful handoff, and Portuguese plural
+inquiry → exact amount correction → selection → handoff with honest empty questions.
+No browser warnings/errors were captured. Fictional-only screenshot proofs are
+ignored under `.local/ui-review/chat-feedback-handoff-es.png` and
+`.local/ui-review/chat-feedback-handoff-pt.png`. This browser check does not replace
+independent Portuguese language review or the benchmark evaluation.
 
 Next implement that scenario adapter, train the local classifier on independent
 bilingual training phrases, and compare it to these keyword rules on development

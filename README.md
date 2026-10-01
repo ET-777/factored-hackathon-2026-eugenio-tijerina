@@ -7,6 +7,8 @@ The application currently runs locally; a hosted prototype is still pending.
 
 **Status: local bilingual web UI and keyword baseline, with grounded inquiry,
 clarification, confirmed simulated intake/handoff and verified SQLite receipts.**
+The keyword UI retains an unfinished search across amount/currency replies and
+summarizes distinct handoff steps without inventing unresolved questions.
 The learned classifier, evaluation scenario adapter, deployment and final evaluation
 remain pending. No comparative performance result is claimed.
 

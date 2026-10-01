@@ -88,8 +88,11 @@ class Conversation:
         require_access(session, session.customer_id, Permission.READ_TRANSACTION, now=now)
 
     def _step(self, code: str) -> None:
+        # This is a bounded summary of distinct observed step types, not an
+        # execution log. Repeated searches must not crowd out earlier outcomes.
         # Codes originate in this controller, never in a user/model transcript.
-        self._attempted_steps = (*self._attempted_steps, code)[-MAX_ATTEMPTED_STEPS:]
+        if code not in self._attempted_steps:
+            self._attempted_steps = (*self._attempted_steps, code)[-MAX_ATTEMPTED_STEPS:]
 
     def _invalidate_action(self, session: TrustedSession, now: datetime) -> None:
         pending_id = self._pending_draft_id
@@ -119,6 +122,15 @@ class Conversation:
             selected_id=transaction_id, sources=answer.sources,
         )
 
+    def clear_selection(self, session: TrustedSession, *, now: datetime) -> None:
+        """Start a new subject without discarding observed steps or verified cases.
+
+        If cancellation cannot establish the previous action's outcome, this
+        raises and preserves its recovery token while clearing record selection.
+        """
+        self._authorize(session, now)
+        self._clear_selection(session, now)
+
     def search(
         self, session: TrustedSession, filters: TransactionFilters, *, now: datetime,
     ) -> ConversationReply:
@@ -143,6 +155,9 @@ class Conversation:
         self._authorize(session, now)
         if not isinstance(transaction_id, str) or transaction_id not in self._candidate_ids:
             self._step("choice_rejected")
+            # A rejected choice starts no valid selection. Do not silently carry
+            # a previously answered transaction into a later action or handoff.
+            self._clear_selection(session, now)
             raise ConversationError("invalid_choice")
         self._clear_selection(session, now)
         return self._answer(session, transaction_id, now)

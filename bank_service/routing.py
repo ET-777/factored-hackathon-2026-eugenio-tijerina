@@ -3,8 +3,12 @@
 This module proposes an intent; it never authorizes access, confirms a draft, or
 writes a case. ``confidence`` is a binary rule-match indicator, not a calibrated
 probability. No learned model is implemented here. Unknown wording requires the
-UI to clarify or offer a human path. Slots require an explicit ISO date or native
-currency code; no currency conversion or implied currency is performed.
+UI to clarify or offer a human path. Dates require an explicit ISO calendar date.
+The demo explicitly interprets the word dollar/dólar/dólares as USD and marks that
+interpretation for display. The symbol $ and the word pesos remain ambiguous.
+Bare amounts are held separately until a currency is supplied. No conversion or
+inference from the customer's location is performed. The source record contract
+continues to allow USD, COP and ARS only.
 """
 
 from dataclasses import dataclass
@@ -37,6 +41,10 @@ class IntentProposal:
 class RequestSlots:
     transaction_id: str | None
     filters: TransactionFilters
+    amount_without_currency: Decimal | None = None
+    needs_currency: bool = False
+    used_dollar_alias: bool = False
+    currency_ambiguous: bool = False
 
 
 def _checked_text(text: str, language: str) -> str:
@@ -78,7 +86,7 @@ _DISPUTE_REQUESTS = (
     r"\b(?:abrir|crear|criar)\s+(?:un\s+|um\s+|una\s+|uma\s+)?(?:caso|reclamo|reclamacion|reclamacao)\b",
 )
 _INQUIRY_REQUESTS = (
-    r"\b(?:transaccion|transacao|transaction|cargo|cobro|cobranca|compra|compras|pago|pagamento|movimiento|movimentacao|debito)\b",
+    r"\b(?:transaccion(?:es)?|transacao|transacoes|transactions?|cargos?|cobros?|cobrancas?|compras?|pagos?|pagamentos?|movimientos?|movimentacao|movimentacoes|debitos?|transferencias?|depositos?|retiros?|saques?)\b",
     r"\b(?:estado|status|importe|monto|valor|fecha|data)\b.{0,40}\b(?:tarjeta|cartao|registro|operacion|operacao)\b",
     r"\b(?:buscar|busca|encontrar|localizar|consultar|ver)\b.{0,30}\b(?:importe|monto|valor|registro|operacion|operacao)\b",
     r"\b(?:USD|COP|ARS)\b",
@@ -109,6 +117,18 @@ def route_intent(text: str, language: str) -> IntentProposal:
     ):
         if any(re.search(pattern, normalized, re.IGNORECASE) for pattern in patterns):
             return IntentProposal(intent, 1.0, True)
+    # Slot-bearing fragments are inquiry proposals. The caller decides whether
+    # they continue an active search or need initial clarification. Unsupported
+    # currencies still reach the slot validator instead of a generic refusal.
+    if (
+        _CURRENCY_PATTERN.search(normalized)
+        or _DOLLAR_ALIAS.search(normalized)
+        or _PESO_ALIAS.search(normalized)
+        or _BARE_AMOUNT.fullmatch(normalized)
+        or _SYMBOL_AMOUNT.search(normalized)
+        or is_search_followup(text, language)
+    ):
+        return IntentProposal("inquiry", 1.0, True)
     return IntentProposal("unsupported", 0.0, False)
 
 
@@ -121,6 +141,23 @@ _CURRENCY_CODES = (
 _CURRENCY = "(?:" + "|".join(_CURRENCY_CODES) + ")"
 _CURRENCY_PATTERN = re.compile(r"\b" + _CURRENCY + r"\b", re.IGNORECASE)
 _VALUE = r"[+-]?(?:\d(?:[\d.,]*\d)?(?:\s+\d(?:[\d.,]*\d)?)*(?:[eE][+-]?\d+)?|s?NaN|Infinity|Inf)"
+_DOLLAR_ALIAS = re.compile(r"\b(?:dolar(?:es)?|dollars?)\b", re.IGNORECASE)
+_PESO_ALIAS = re.compile(r"\bpesos?\b", re.IGNORECASE)
+_BARE_AMOUNT = re.compile(r"\s*(?:\$\s*)?(?P<value>" + _VALUE + r")[.!?]?\s*", re.IGNORECASE)
+_SYMBOL_AMOUNT = re.compile(r"\$\s*(?P<value>" + _VALUE + r")(?![\w-]|[.,](?=\d))", re.IGNORECASE)
+_PESO_AMOUNT_BEFORE = re.compile(
+    r"(?<![\w.,-])(?P<value>" + _VALUE + r")\s+pesos?\b", re.IGNORECASE,
+)
+_PESO_AMOUNT_AFTER = re.compile(
+    r"\bpesos?\s+(?P<value>" + _VALUE + r")(?![\w-]|[.,](?=\d))", re.IGNORECASE,
+)
+_NAMED_AMOUNT = re.compile(
+    r"\b(?:importe|monto|valor)\s*[:=]?\s*(?P<value>" + _VALUE + r")(?![\w-]|[.,](?=\d))",
+    re.IGNORECASE,
+)
+_SLOT_REPLY_PREFIX = re.compile(
+    r"^(?:de|del|en|em|son|sao|es|e|fue|foi|por)\s+", re.IGNORECASE,
+)
 _AMOUNT_AFTER = re.compile(
     r"\b(?P<currency>" + _CURRENCY + r")\b\s+(?P<value>" + _VALUE + r")(?![\w-]|[.,](?=\d))",
     re.IGNORECASE,
@@ -193,13 +230,94 @@ def extract_slots(text: str, language: str) -> RequestSlots:
             raise RoutingError("invalid_date") from None
     transaction_date = _one_value(dates, "ambiguous_date")
 
-    currencies = {match.group(0).upper() for match in _CURRENCY_PATTERN.finditer(checked)}
+    used_dollar_alias = bool(_DOLLAR_ALIAS.search(ascii_text))
+    money_text = _DOLLAR_ALIAS.sub("USD", ascii_text)
+    has_peso_alias = bool(_PESO_ALIAS.search(ascii_text))
+    currencies = {match.group(0).upper() for match in _CURRENCY_PATTERN.finditer(money_text)}
     if currencies - SUPPORTED_CURRENCIES:
         raise RoutingError("unsupported_currency")
     currency = _one_value(currencies, "ambiguous_currency")
+    if has_peso_alias and currency is not None and currency not in ("COP", "ARS"):
+        raise RoutingError("ambiguous_currency")
     amounts = set()
     for pattern in (_AMOUNT_BEFORE, _AMOUNT_AFTER):
-        for match in pattern.finditer(checked):
+        for match in pattern.finditer(money_text):
             amounts.add(_parse_amount(match.group("value")))
+    # Keep amounts lacking a denomination out of TransactionFilters. The UI may
+    # collect the next currency reply, but it cannot authorize a search yet.
+    unpaired_amounts = set()
+    # Ordinary short replies such as "son 25"/"são 25" remain an amount
+    # fragment. Only a full numeric match qualifies; new sentences do not.
+    bare = _BARE_AMOUNT.fullmatch(_SLOT_REPLY_PREFIX.sub("", money_text.strip()))
+    if bare:
+        unpaired_amounts.add(_parse_amount(bare.group("value")))
+    for pattern in (_SYMBOL_AMOUNT, _PESO_AMOUNT_BEFORE, _PESO_AMOUNT_AFTER, _NAMED_AMOUNT):
+        for match in pattern.finditer(money_text):
+            unpaired_amounts.add(_parse_amount(match.group("value")))
+    all_amounts = amounts | unpaired_amounts
+    _one_value(all_amounts, "ambiguous_amount")
     amount = _one_value(amounts, "ambiguous_amount")
-    return RequestSlots(transaction_id, TransactionFilters(transaction_date, amount, currency))
+    amount_without_currency = None
+    if currency is None:
+        amount_without_currency = _one_value(unpaired_amounts, "ambiguous_amount")
+    elif amount is None:
+        # An explicit code disambiguates a pesos/$/named-amount phrase without
+        # changing denominations. There is exactly one code and one amount.
+        amount = _one_value(unpaired_amounts, "ambiguous_amount")
+    needs_currency = currency is None and (
+        amount_without_currency is not None or has_peso_alias or "$" in money_text
+    )
+    return RequestSlots(
+        transaction_id, TransactionFilters(transaction_date, amount, currency),
+        amount_without_currency, needs_currency, used_dollar_alias,
+        currency is None and (has_peso_alias or "$" in money_text),
+    )
+
+
+def refers_to_selected_transaction(text: str, language: str) -> bool:
+    """Recognize an explicit singular reference; the caller owns actual state.
+
+    This flag neither chooses a record nor overrides an explicit identifier or
+    new search filters. It is only useful while a server-owned selection exists.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold()
+    return bool(re.search(
+        r"\b(?:esta|este|esa|ese|essa|esse|aquela|aquele)\s+"
+        r"(?:compra|cargo|cobro|transaccion|transacao|pago|pagamento|debito)\b",
+        normalized,
+    ))
+
+
+def is_search_followup(text: str, language: str) -> bool:
+    """Recognize one slot-only reply for an unfinished server-owned search.
+
+    This predicate does not validate the value, preserve an intent, or read any
+    conversation state. The caller uses it only with an active unfinished search
+    and still calls extract_slots(), permission checks and record selection.
+    Full matching deliberately excludes new requests and typed consent.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold().strip()
+    normalized = _SLOT_REPLY_PREFIX.sub("", normalized)
+    if _CONFIRMATION.search(normalized):
+        return False
+    # Permit ordinary terminal punctuation without treating it as another slot.
+    if normalized.endswith((".", "!", "?")):
+        normalized = normalized[:-1].rstrip()
+    if _DIRECT_ID.fullmatch(normalized):
+        return True
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", normalized):
+        return True
+    unit = "(?:" + _CURRENCY + r"|dolar(?:es)?|dollars?|pesos?)"
+    if re.fullmatch(unit + r"|\$", normalized, re.IGNORECASE):
+        return True
+    # Malformed grouping can still be recognizably money. Slot validation will
+    # reject it instead of silently losing the customer's active search intent.
+    # Nonfinite and exponent spellings are recognizable amount attempts, but
+    # _parse_amount rejects them. Preserve the unfinished search while asking
+    # the customer to correct the amount instead of changing their intent.
+    number = _VALUE
+    return bool(re.fullmatch(
+        r"(?:\$\s*" + number + r"|" + number + r"(?:\s+" + unit + r")?|"
+        + unit + r"\s+" + number + r")",
+        normalized, re.IGNORECASE,
+    ))

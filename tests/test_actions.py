@@ -263,7 +263,7 @@ class ActionTests(unittest.TestCase):
         receipt = self.confirm(draft)
         packet = json.loads(receipt.payload_json)
         self.assertEqual(packet["operation"], "handoff")
-        self.assertEqual(packet["unresolved_questions"], [packet["request"]])
+        self.assertEqual(packet["unresolved_questions"], [])
         self.assertEqual(packet["attempted_steps"], ["inquiry"])
         self.assertEqual(packet["escalation_reason"], "human_requested")
         self.assertEqual(packet["verified_actions"], [{"case_id": intake.case_id, "kind": "intake",
@@ -276,6 +276,44 @@ class ActionTests(unittest.TestCase):
         self.assertIsNone(json.loads(result.payload_json)["facts"])
         self.assertEqual(json.loads(result.payload_json)["sources"], [])
         self.assertIn("Nenhuma pessoa foi contatada", result.text)
+
+    def test_handoff_separates_human_request_from_explicit_questions_in_both_languages(self):
+        for language, request, question, empty_marker in (
+            ("es", "Quiero hablar con una persona", "No reconozco este cargo.",
+             "No se especificaron preguntas pendientes."),
+            ("pt", "Quero falar com uma pessoa", "Não reconheço esta cobrança.",
+             "Nenhuma pergunta pendente foi informada."),
+        ):
+            for questions in ((), (question,)):
+                with self.subTest(language=language, has_question=bool(questions)):
+                    before = self.store.count()
+                    draft = self.handoff(language=language, request=request, unresolved_questions=questions)
+                    proposed = json.loads(self.actions.review_draft(self.session, draft.draft_id, now=self.now))
+                    self.assertEqual(proposed["request"], request)
+                    self.assertEqual(proposed["unresolved_questions"], list(questions))
+                    self.assertNotIn(request, proposed["unresolved_questions"])
+                    self.assertEqual(empty_marker in draft.summary, not questions)
+                    self.assertIs(proposed["consent"], False)
+                    self.assertEqual(self.store.count(), before)
+                    stored = json.loads(self.confirm(draft).payload_json)
+                    self.assertEqual(stored["request"], request)
+                    self.assertEqual(stored["unresolved_questions"], proposed["unresolved_questions"])
+
+    def test_handoff_deduplicates_step_summary_without_merging_distinct_outcomes(self):
+        steps = ("search_attempted", "transaction_answered", "search_attempted", "confirmation_failed",
+                 "action_cancelled", "action_verified", "transaction_answered", "confirmation_failed")
+        expected = ["search_attempted", "transaction_answered", "confirmation_failed",
+                    "action_cancelled", "action_verified"]
+        for language in ("es", "pt"):
+            with self.subTest(language=language):
+                draft = self.handoff(language=language, attempted_steps=steps)
+                proposed = json.loads(self.actions.review_draft(self.session, draft.draft_id, now=self.now))
+                self.assertEqual(proposed["attempted_steps"], expected)
+                self.assertEqual(draft.summary.count('"transaction_answered"'), 1)
+                self.assertEqual(draft.summary.count('"confirmation_failed"'), 1)
+                receipt = self.confirm(draft)
+                self.assertEqual(json.loads(receipt.payload_json)["attempted_steps"], expected)
+                self.assertEqual(self.confirm(draft), receipt)
 
     def test_handoff_rejects_fabricated_or_foreign_receipt_ids(self):
         with self.assertRaises(AccessDenied):

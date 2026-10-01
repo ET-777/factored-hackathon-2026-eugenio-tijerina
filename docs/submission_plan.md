@@ -26,6 +26,15 @@ The owner subsequently clarified that the development repository must be private
 and its visibility was changed to private. Keep it private during development;
 any future change to public requires new explicit owner authorization.
 
+**Owner-feedback checkpoint, 2026-09-30:** natural inquiry phrases and bounded
+amount/currency followups now retain the unfinished request. Handoff steps are
+deduplicated and the request for a person is not repeated as an unresolved issue.
+Synthetic regression tests cover these corrections; the suite passed 257 tests.
+This is a rules/context correction, not evidence of learned-model performance.
+These owner-review examples belong to development regression tests, not training
+or the untouched final set. Continue with the evaluation scenario adapter, then
+the learned intent comparison; keep the protected delivery blocks below.
+
 ## 34-hour work budget
 
 **Progress checkpoint, 2026-09-28:** the owner estimated 10-12 hours used before the

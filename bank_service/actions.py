@@ -279,8 +279,11 @@ class ActionService:
         if kind == "handoff":
             lines.append(("Motivo de derivación: " if is_es else "Motivo do encaminhamento: ") + escalation_reason)
             lines.append(("Pasos intentados: " if is_es else "Etapas tentadas: ") + _canonical(list(attempted_steps)))
-            lines.append(("Preguntas pendientes: " if is_es else "Perguntas pendentes: ") +
-                         "; ".join(_quote_field(question) for question in unresolved_questions))
+            questions_text = "; ".join(_quote_field(question) for question in unresolved_questions)
+            if not questions_text:
+                questions_text = ("No se especificaron preguntas pendientes." if is_es else
+                                  "Nenhuma pergunta pendente foi informada.")
+            lines.append(("Preguntas pendientes: " if is_es else "Perguntas pendentes: ") + questions_text)
             lines.append(("Acciones simuladas verificadas: " if is_es else "Ações simuladas verificadas: ") +
                          "; ".join(_quote_field(action["case_id"]) for action in verified_actions))
         lines.append("Confirma estos detalles para guardar la simulación. Este borrador aún no se ha guardado." if is_es else
@@ -315,10 +318,12 @@ class ActionService:
                 raise ActionError("invalid_attempted_steps")
             if not isinstance(unresolved_questions, tuple) or len(unresolved_questions) > 10:
                 raise ActionError("invalid_unresolved_questions")
-            attempted_steps = tuple(_code(step) for step in attempted_steps)
+            # Summarize each observed step type once while keeping failure,
+            # cancellation and verified-action outcomes distinct.
+            attempted_steps = tuple(dict.fromkeys(_code(step) for step in attempted_steps))
             unresolved_questions = tuple(_text(question, limit=300) for question in unresolved_questions)
-            if not unresolved_questions:
-                unresolved_questions = (request,)
+            # A request for a person is not itself an unresolved business issue.
+            # Only explicit questions from the caller's context belong here.
             if (not isinstance(verified_case_ids, tuple) or len(verified_case_ids) > 12
                     or any(not isinstance(case_id, str) or not case_id for case_id in verified_case_ids)
                     or len(set(verified_case_ids)) != len(verified_case_ids)):

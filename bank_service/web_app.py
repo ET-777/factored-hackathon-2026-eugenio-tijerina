@@ -6,7 +6,7 @@ tool; production hosting/authentication are a separate deployment task.
 """
 
 from collections import deque
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
 from http.cookies import SimpleCookie, CookieError
@@ -25,7 +25,9 @@ from bank_service.case_store import CaseStore, StoreError
 from bank_service.conversation import Conversation, ConversationError, ConversationReply
 from bank_service.demo_fixtures import demo_records, demo_session
 from bank_service.responses import ResponseFormatError
-from bank_service.routing import RoutingError, extract_slots, route_intent
+from bank_service.routing import (
+    RoutingError, extract_slots, is_search_followup, refers_to_selected_transaction, route_intent,
+)
 from bank_service.selection import SelectionError, TransactionFilters
 from bank_service.transactions import get_transaction
 
@@ -61,6 +63,11 @@ TEXT = {
         "busy": "Hay demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
         "security": "La sesión de la página no coincide. Recarga la página antes de continuar.",
         "already_saved": "Esta solicitud ya está guardada. Comprueba la misma referencia para recuperar su recibo.",
+        "currency": "Indica el código de moneda: USD, COP o ARS. «Pesos» y «$» pueden referirse a varias monedas. Los movimientos ficticios de esta demo están en USD.",
+        "demo_currency": "Los movimientos ficticios de esta demo están en USD. No convierto importes de otras monedas. Puedes indicar USD o buscar por una fecha en formato AAAA-MM-DD.",
+        "dollars": "En esta demo interpreto «dólares» como USD; no hago una conversión de moneda.",
+        "amount": "Indica el importe de la transacción o una fecha en formato AAAA-MM-DD para continuar la búsqueda.",
+        "followup": "Para continuar, indica una fecha en formato AAAA-MM-DD, el importe y su moneda, o elige una coincidencia de la lista.",
     },
     "pt": {
         "greeting": "Olá. Posso ajudar a encontrar uma transação fictícia, consultar seus dados ou abrir uma solicitação de revisão. Do que você precisa?",
@@ -77,6 +84,11 @@ TEXT = {
         "busy": "Há muitas solicitações. Aguarde um momento e tente novamente.",
         "security": "A sessão da página não corresponde. Recarregue a página antes de continuar.",
         "already_saved": "Esta solicitação já está salva. Verifique a mesma referência para recuperar o recibo.",
+        "currency": "Informe o código da moeda: USD, COP ou ARS. «Pesos» e «$» podem se referir a várias moedas. As transações fictícias desta demonstração estão em USD.",
+        "demo_currency": "As transações fictícias desta demonstração estão em USD. Não converto valores de outras moedas. Informe USD ou pesquise por uma data no formato AAAA-MM-DD.",
+        "dollars": "Nesta demonstração interpreto «dólares» como USD; não faço conversão de moeda.",
+        "amount": "Informe o valor da transação ou uma data no formato AAAA-MM-DD para continuar a pesquisa.",
+        "followup": "Para continuar, informe uma data no formato AAAA-MM-DD, o valor e a moeda, ou escolha uma correspondência na lista.",
     },
 }
 
@@ -110,6 +122,17 @@ def _reject_constant(value: str) -> None:
     raise ValueError("invalid_json_number")
 
 
+@dataclass
+class PendingSearch:
+    """One unfinished request and exact slots, owned by the trusted server session."""
+
+    kind: str
+    request: str
+    transaction_date: date | None = None
+    amount: Decimal | None = None
+    currency: str | None = None
+
+
 class BrowserSession:
     """A browser token resolves to this exact server-owned session and controller."""
 
@@ -130,6 +153,8 @@ class BrowserSession:
         self.outcome_unverified = False
         self.pending_request: str | None = None
         self.pending_route: tuple[str, str] | None = None
+        self.pending_search: PendingSearch | None = None
+        self.business_issue: str | None = None
         self.case_ids: list[str] = []
         self.handoff_id: str | None = None
         self.offers_handoff = False
@@ -255,13 +280,36 @@ class BrowserSession:
                 self.session, self.pending_draft.draft_id, confirmed=False, now=now)
             self.reply(reply)
 
-    def prepare(self, kind: str, request: str, now: datetime, questions: tuple[str, ...] = ()) -> None:
+    def clear_record_selection(self, now: datetime) -> None:
+        # Clear both UI and controller state before parsing a new query that may
+        # fail. A stale selected record must never leak into a later draft.
+        self.selected_id, self.candidate_ids = None, ()
+        self.conversation.clear_selection(self.session, now=now)
+
+    def clear_search(self) -> None:
+        self.pending_search, self.pending_route = None, None
+
+    def unresolved_questions(self) -> tuple[str, ...]:
+        issue = self.business_issue
+        if issue is None and self.pending_search is not None:
+            issue = self.pending_search.request
+        if issue is None:
+            return ()
+        # Questions use a visibly bounded literal excerpt, never an invented
+        # diagnosis or bank decision. The handoff has its own request field.
+        return (issue if len(issue) <= 300 else issue[:297] + "...",)
+
+    def prepare(self, kind: str, request: str, now: datetime, questions: tuple[str, ...] | None = None) -> None:
         if kind == "intake":
             reply = self.conversation.prepare_intake(self.session, request, now=now)
+            self.business_issue = request
         else:
             reply = self.conversation.prepare_handoff(
-                self.session, request, unresolved_questions=questions, now=now)
+                self.session, request,
+                escalation_reason="unsupported_request" if request == self.handoff_request else "human_requested",
+                unresolved_questions=self.unresolved_questions() if questions is None else questions, now=now)
         self.pending_request = request
+        self.clear_search()
         self.reply(reply)
 
     def message(self, text: str, now: datetime) -> None:
@@ -275,25 +323,72 @@ class BrowserSession:
             self.prepare("handoff", text, now)
             return
         if proposal.intent == "unsupported":
+            if not proposal.matched and self.pending_search is not None:
+                self.append("assistant", TEXT[self.language]["followup"], "needs_filters")
+                return
+            self.clear_search()
+            self.clear_record_selection(now)
+            self.business_issue = text
             self.offers_handoff = True
             self.handoff_request = text
             self.append("assistant", TEXT[self.language]["unsupported"], "unsupported")
             return
-        slots = extract_slots(text, self.language)
-        self.pending_route = None
+        self.handoff_request = None
+        continuing = self.pending_search is not None and is_search_followup(text, self.language)
+        if not continuing:
+            kind = "intake" if proposal.intent == "dispute_intake" else "inquiry"
+            self.pending_search = PendingSearch(kind, text)
+            self.business_issue = text if kind == "intake" else None
+        context = self.pending_search
+        self.pending_route = ("intake", context.request) if context.kind == "intake" else None
+        # Only an explicit reference to the selected transaction can reuse it.
+        reuse_selection = (not continuing and self.selected_id is not None
+                           and refers_to_selected_transaction(text, self.language))
+        selected = self.selected_id
+        self.clear_record_selection(now)
+        try:
+            slots = extract_slots(text, self.language)
+        except RoutingError as error:
+            code = str(error)
+            if code in ("invalid_amount", "ambiguous_amount", "unsupported_currency", "ambiguous_currency"):
+                context.amount = None
+            if code in ("unsupported_currency", "ambiguous_currency"):
+                context.currency = None
+            if code in ("invalid_date", "ambiguous_date"):
+                context.transaction_date = None
+            if code == "unsupported_currency":
+                self.append("assistant", TEXT[self.language]["demo_currency"], "needs_currency")
+                return
+            raise
+        if slots.used_dollar_alias:
+            self.append("assistant", TEXT[self.language]["dollars"], "currency_interpretation")
         if slots.transaction_id is not None:
-            self.selected_id, self.candidate_ids = None, ()
             self.reply(self.conversation.inquire(self.session, slots.transaction_id, now=now))
-        elif slots.filters != TransactionFilters() or self.selected_id is None:
-            self.selected_id, self.candidate_ids = None, ()
-            self.reply(self.conversation.search(self.session, slots.filters, now=now))
+        elif reuse_selection and slots.filters == TransactionFilters() and not slots.needs_currency:
+            self.reply(self.conversation.inquire(self.session, selected, now=now))
         else:
-            self.reply(self.conversation.inquire(self.session, now=now))
-        if proposal.intent == "dispute_intake":
+            if slots.filters.transaction_date is not None:
+                context.transaction_date = slots.filters.transaction_date
+            if slots.filters.currency is not None:
+                context.currency = slots.filters.currency
+            elif slots.currency_ambiguous:
+                context.currency = None
+            amount = slots.filters.amount if slots.filters.amount is not None else slots.amount_without_currency
+            if amount is not None:
+                context.amount = amount
+            if slots.currency_ambiguous or (context.amount is not None and context.currency is None):
+                self.append("assistant", TEXT[self.language]["currency"], "needs_currency")
+                return
+            if context.currency is not None and context.amount is None and context.transaction_date is None:
+                self.append("assistant", TEXT[self.language]["amount"], "needs_filters")
+                return
+            self.reply(self.conversation.search(
+                self.session, TransactionFilters(context.transaction_date, context.amount, context.currency), now=now))
+        if context.kind == "intake":
             if self.selected_id is not None:
-                self.prepare("intake", text, now)
-            else:
-                self.pending_route = ("intake", text)
+                self.prepare("intake", context.request, now)
+        elif self.selected_id is not None:
+            self.clear_search()
 
     def act(self, payload: dict, now: datetime) -> None:
         self.authorize(now)
@@ -309,23 +404,27 @@ class BrowserSession:
             self.selected_id, self.candidate_ids = None, ()
             method = self.conversation.choose if action == "choose" else self.conversation.inquire
             self.reply(method(self.session, identifier, now=now))
-            self.pending_route = None
+            self.clear_search()
+            if action == "inquire":
+                self.business_issue = None
             if route is not None:
                 self.prepare(route[0], route[1], now)
         elif action == "search":
-            filters = _filters(payload)
             self.cancel_for_navigation(now)
-            self.pending_route = None
-            self.selected_id, self.candidate_ids = None, ()
+            self.clear_search()
+            self.business_issue = None
+            self.clear_record_selection(now)
+            filters = _filters(payload)
             self.reply(self.conversation.search(self.session, filters, now=now))
         elif action == "prepare_intake":
             self.prepare("intake", _text(payload.get("reason")), now)
         elif action == "prepare_handoff":
             request = _text(payload.get("request"))
-            questions = payload.get("unresolved_questions", [])
-            if not isinstance(questions, list) or len(questions) > 10:
+            questions = payload.get("unresolved_questions")
+            if "unresolved_questions" in payload and (not isinstance(questions, list) or len(questions) > 10):
                 raise UiError("invalid_input")
-            self.prepare("handoff", request, now, tuple(_text(question) for question in questions))
+            self.prepare("handoff", request, now,
+                         None if questions is None else tuple(_text(question) for question in questions))
         elif action in ("confirm", "cancel"):
             identifier = _text(payload.get("draft_id"))
             confirmed = payload.get("confirmed") if action == "confirm" else False
@@ -339,7 +438,7 @@ class BrowserSession:
             self.cancel_for_navigation(now)
             reply = self.conversation.set_language(self.session, language, now=now)
             self.language = language
-            self.pending_route = None
+            self.clear_search()
             self.reply(reply)
         elif action == "view_case":
             receipt = self.actions.read_case(self.session, _text(payload.get("case_id")), now=now)

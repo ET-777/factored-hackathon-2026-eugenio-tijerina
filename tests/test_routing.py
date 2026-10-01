@@ -4,7 +4,11 @@ from datetime import date
 from decimal import Decimal
 import unittest
 
-from bank_service.routing import IntentProposal, RoutingError, extract_slots, route_intent
+from bank_service.routing import (
+    IntentProposal, RoutingError, extract_slots, is_search_followup,
+    refers_to_selected_transaction, route_intent,
+)
+from bank_service.records import SUPPORTED_CURRENCIES
 from bank_service.selection import TransactionFilters
 
 
@@ -20,6 +24,24 @@ class IntentRoutingTests(unittest.TestCase):
         for text, language in cases:
             with self.subTest(text=text):
                 self.assertEqual(route_intent(text, language), IntentProposal("inquiry", 1.0, True))
+
+    def test_common_plural_inquiries_from_owner_development_review(self):
+        for text, language in (
+            ("Enséñame mis pagos", "es"),
+            ("Muéstrame mis cargos y movimientos", "es"),
+            ("Busco las transacciones", "es"),
+            ("Mostre meus pagamentos", "pt"),
+            ("Quero ver as transações e movimentações", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(route_intent(text, language), IntentProposal("inquiry", 1.0, True))
+
+    def test_money_replies_route_to_inquiry_for_context_or_clarification(self):
+        for text in ("25 dolares", "25,5 dólares", "25", "25 pesos", "pesos", "MXN", "BRL", "$25.50"):
+            with self.subTest(text=text):
+                self.assertEqual(route_intent(text, "es"), IntentProposal("inquiry", 1.0, True))
+        # Explicit unsupported requests retain priority over the fragment rule.
+        self.assertEqual(route_intent("Transfiere 25 dolares", "es").intent, "unsupported")
 
     def test_bilingual_disputed_charge(self):
         for text, language in (
@@ -109,6 +131,84 @@ class SlotExtractionTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(extract_slots(text, "pt").filters, filters)
 
+    def test_explicit_demo_dollar_word_interpretation_is_flagged(self):
+        for text, language, amount in (
+            ("25 dolares", "es", Decimal("25")),
+            ("25,5 dólares", "es", Decimal("25.5")),
+            ("25,50 dólares", "pt", Decimal("25.50")),
+            ("dólares 0", "pt", Decimal("0")),
+        ):
+            with self.subTest(text=text):
+                slots = extract_slots(text, language)
+                self.assertEqual(slots.filters, TransactionFilters(amount=amount, currency="USD"))
+                self.assertTrue(slots.used_dollar_alias)
+                self.assertFalse(slots.needs_currency)
+                self.assertIsNone(slots.amount_without_currency)
+
+    def test_bare_amount_and_ambiguous_units_stay_out_of_search_filters(self):
+        for text, amount in (
+            ("25", Decimal("25")),
+            ("25,5", Decimal("25.5")),
+            ("0 pesos", Decimal("0")),
+            ("pesos -25.50", Decimal("-25.50")),
+            ("$25.50", Decimal("25.50")),
+            ("importe 25.50", Decimal("25.50")),
+        ):
+            with self.subTest(text=text):
+                slots = extract_slots(text, "es")
+                self.assertEqual(slots.filters, TransactionFilters())
+                self.assertEqual(slots.amount_without_currency, amount)
+                self.assertTrue(slots.needs_currency)
+                self.assertFalse(slots.used_dollar_alias)
+        slots = extract_slots("pesos", "es")
+        self.assertTrue(slots.needs_currency)
+        self.assertIsNone(slots.amount_without_currency)
+
+    def test_explicit_native_code_disambiguates_pesos_and_symbols(self):
+        for text, amount, code in (
+            ("25 pesos COP", Decimal("25"), "COP"),
+            ("$25,50 ARS", Decimal("25.50"), "ARS"),
+            ("importe 25.50 USD", Decimal("25.50"), "USD"),
+        ):
+            with self.subTest(text=text):
+                slots = extract_slots(text, "es")
+                self.assertEqual(slots.filters, TransactionFilters(amount=amount, currency=code))
+                self.assertFalse(slots.needs_currency)
+        self.assertEqual(SUPPORTED_CURRENCIES, frozenset({"USD", "COP", "ARS"}))
+
+    def test_ambiguous_denomination_is_distinct_from_bare_amount(self):
+        for text, expected in (
+            ("25", False), ("25,5", False), ("importe 25", False),
+            ("25 pesos", True), ("pesos", True), ("$25.50", True),
+            ("25 dolares", False), ("$25.50 USD", False), ("25 pesos COP", False),
+        ):
+            with self.subTest(text=text):
+                self.assertIs(extract_slots(text, "es").currency_ambiguous, expected)
+
+    def test_alias_conflicts_and_unsupported_codes_are_not_converted(self):
+        for text, error in (
+            ("25 dolares COP", "ambiguous_currency"),
+            ("25 pesos USD", "ambiguous_currency"),
+            ("25 dólares CAD", "unsupported_currency"),
+            ("25 pesos MXN", "unsupported_currency"),
+            ("25 reais BRL", "unsupported_currency"),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaisesRegex(RoutingError, "^" + error + "$"):
+                    extract_slots(text, "es")
+
+    def test_missing_currency_amount_validation_and_conflict(self):
+        for text, error in (
+            ("1,000", "invalid_amount"),
+            ("$NaN", "invalid_amount"),
+            ("25,123 pesos", "invalid_amount"),
+            ("25 pesos y 30 pesos", "ambiguous_amount"),
+            ("25 USD y importe 30", "ambiguous_amount"),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaisesRegex(RoutingError, "^" + error + "$"):
+                    extract_slots(text, "es")
+
     def test_explicit_identifier_and_no_customer_derivation(self):
         self.assertEqual(extract_slots("transação TXN_000102", "pt").transaction_id, "TXN_000102")
         for text in ("cliente CUSTOMER-A", "transacción CUSTOMER-001", "transacción 2026-06-17", "transacción pendiente"):
@@ -152,6 +252,93 @@ class SlotExtractionTests(unittest.TestCase):
         self.assertEqual(result.transaction_id, "DEMO-TX-001")
         self.assertEqual(result.filters.amount, Decimal("25.50"))
         self.assertEqual(result.filters.transaction_date, date(2026, 6, 17))
+
+    def test_explicit_reference_helper_does_not_treat_broad_queries_as_selection(self):
+        for text, language in (
+            ("No reconozco esta compra", "es"),
+            ("Quiero revisar ese cargo", "es"),
+            ("Não reconheço esse débito", "pt"),
+            ("Quero falar desta transação: esta transação", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(refers_to_selected_transaction(text, language))
+        for text in ("Enséñame mis pagos", "Buscar otra compra", "Quiero consultar todas las transacciones", "Sí"):
+            with self.subTest(text=text):
+                self.assertFalse(refers_to_selected_transaction(text, "es"))
+
+    def test_search_followup_accepts_only_bounded_slot_replies(self):
+        for text, language in (
+            ("USD", "es"), ("MXN", "es"), ("BRL", "pt"),
+            ("dólares", "pt"), ("pesos", "es"), ("$", "es"),
+            ("25", "es"), ("25.", "es"), ("25,5", "pt"), ("25 dolares", "es"),
+            ("de 25,50 dólares", "es"), ("del 25 USD", "es"),
+            ("em COP", "pt"), ("en 2026-06-17", "es"),
+            ("$25.50", "es"), ("USD 25.50", "pt"),
+            ("DEMO-TX-001", "es"), ("TX_102", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(is_search_followup(text, language))
+
+    def test_search_followup_does_not_inherit_intent_into_new_requests(self):
+        for text in (
+            "Enséñame mis pagos", "Busca otra compra de 25 USD", "Quero ver meus pagamentos",
+            "No reconozco esta compra", "Hablar con una persona", "Falar com um atendente",
+            "Transfiere 25 USD", "Bloquea mi tarjeta", "Sí", "sim!", "confirmo", "acepto",
+            "USD y COP", "25 USD y busca otra compra", "cliente CUSTOMER-001", "hola",
+        ):
+            with self.subTest(text=text):
+                self.assertFalse(is_search_followup(text, "es"))
+
+    def test_search_followup_still_requires_slot_validation_and_input_bounds(self):
+        self.assertTrue(is_search_followup("1,000 USD", "es"))
+        with self.assertRaisesRegex(RoutingError, "^invalid_amount$"):
+            extract_slots("1,000 USD", "es")
+        self.assertTrue(is_search_followup("2026-02-30", "es"))
+        with self.assertRaisesRegex(RoutingError, "^invalid_date$"):
+            extract_slots("2026-02-30", "es")
+        for text, language, error in (
+            (None, "es", "invalid_request"), ("USD", "en", "unsupported_language"),
+            ("x" * 1001, "pt", "request_too_long"),
+        ):
+            with self.subTest(error=error):
+                with self.assertRaisesRegex(RoutingError, "^" + error + "$"):
+                    is_search_followup(text, language)
+
+    def test_short_bilingual_slot_prefixes_preserve_search_shape(self):
+        for text, language, amount, currency in (
+            ("Son 25.5 dólares", "es", Decimal("25.5"), "USD"),
+            ("São 25,50 dólares", "pt", Decimal("25.50"), "USD"),
+            ("es 25", "es", Decimal("25"), None),
+            ("é 25,50", "pt", Decimal("25.50"), None),
+            ("fue 25 USD", "es", Decimal("25"), "USD"),
+            ("foi 25 COP", "pt", Decimal("25"), "COP"),
+            ("por 25 pesos", "es", Decimal("25"), None),
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(is_search_followup(text, language))
+                self.assertEqual(route_intent(text, language).intent, "inquiry")
+                slots = extract_slots(text, language)
+                self.assertEqual(slots.filters.currency, currency)
+                if currency is None:
+                    self.assertEqual(slots.amount_without_currency, amount)
+                    self.assertTrue(slots.needs_currency)
+                else:
+                    self.assertEqual(slots.filters.amount, amount)
+        for text in ("Son mis pagos", "São meus pagamentos", "Es otra compra de 25 USD", "Fue un reembolso"):
+            with self.subTest(new_request=text):
+                self.assertFalse(is_search_followup(text, "es"))
+
+    def test_malformed_amount_replies_remain_followups_but_never_valid_slots(self):
+        for text, language in (
+            ("NaN", "es"), ("Infinity", "pt"), ("son NaN", "es"),
+            ("São Infinity", "pt"), ("foi 1e3", "pt"), ("por 25,123 pesos", "es"),
+            ("Son 1,000 dólares", "es"),
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(is_search_followup(text, language))
+                self.assertEqual(route_intent(text, language).intent, "inquiry")
+                with self.assertRaisesRegex(RoutingError, "^invalid_amount$"):
+                    extract_slots(text, language)
 
 
 if __name__ == "__main__":

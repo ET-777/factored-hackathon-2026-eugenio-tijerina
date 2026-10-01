@@ -239,7 +239,228 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(state["pending_draft"]["packet"]["request"], request)
         self.assertIn(request, state["pending_draft"]["packet"]["unresolved_questions"])
+        self.assertEqual(state["pending_draft"]["packet"]["escalation_reason"], "unsupported_request")
         self.assertEqual(self.browser().store.count(), 0)
+
+    def test_bilingual_dispute_collects_currency_and_amount_without_losing_original_reason(self):
+        for language, request, currency, amount in (
+            ("es", "No reconozco un cargo", "dólares", "25.5"),
+            ("pt", "Não reconheço uma cobrança", "dólares", "25,50"),
+        ):
+            with self.subTest(language=language):
+                self.post("reset")
+                self.post("language", language=language)
+                self.post("message", text=request)
+                code, state, _ = self.post("message", text=currency)
+                self.assertEqual(code, 200)
+                self.assertFalse(state["offers_handoff"])
+                self.assertEqual(state["candidate_ids"], [])
+                self.assertIn("USD", state["messages"][-2]["text"])
+                self.assertEqual(state["messages"][-2]["status"], "currency_interpretation")
+                code, state, _ = self.post("message", text=amount)
+                self.assertEqual(code, 200)
+                self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
+                self.assertIsNone(state["pending_draft"])
+                code, state, _ = self.post("choose", transaction_id="DEMO-TX-002")
+                packet = state["pending_draft"]["packet"]
+                self.assertEqual(packet["request"], request)
+                self.assertEqual(packet["facts"]["transaction_id"], "DEMO-TX-002")
+                self.assertEqual(packet["facts"]["amount"], "25.50")
+                self.assertEqual(self.browser().store.count(), 0)
+
+    def test_natural_plural_inquiry_and_dollar_followups_match_exact_amounts(self):
+        for language, inquiry, wrong, corrected in (
+            ("es", "Enséñame mis pagos", "25 dolares", "25,5 dolares"),
+            ("pt", "Mostre meus pagamentos", "25 dólares", "25,5 dólares"),
+        ):
+            with self.subTest(language=language):
+                self.post("reset")
+                self.post("language", language=language)
+                code, state, _ = self.post("message", text=inquiry)
+                self.assertEqual(state["messages"][-1]["status"], "needs_filters")
+                self.assertFalse(state["offers_handoff"])
+                code, state, _ = self.post("message", text=wrong)
+                self.assertEqual(state["messages"][-1]["status"], "no_match")
+                self.assertEqual(state["candidate_ids"], [])
+                code, state, _ = self.post("message", text=corrected)
+                self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
+                self.post("choose", transaction_id="DEMO-TX-001")
+                self.assertIsNone(self.state["pending_draft"])
+                self.assertEqual(self.browser().store.count(), 0)
+
+    def test_amount_first_and_ambiguous_pesos_or_symbol_require_explicit_currency(self):
+        for fragment in ("25.5", "25,50 pesos", "$25.50"):
+            with self.subTest(fragment=fragment):
+                self.post("reset")
+                self.post("message", text="No reconozco un cargo")
+                code, state, _ = self.post("message", text=fragment)
+                self.assertEqual(state["messages"][-1]["status"], "needs_currency")
+                self.assertEqual(state["candidate_ids"], [])
+                self.assertIsNone(state["pending_draft"])
+                code, state, _ = self.post("message", text="USD")
+                self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
+                self.assertIsNone(state["pending_draft"])
+        self.post("reset")
+        self.post("message", text="No reconozco un cargo")
+        self.post("message", text="USD")
+        self.post("message", text="$25.50")
+        self.assertEqual(self.state["candidate_ids"], [])
+        self.assertEqual(self.state["messages"][-1]["status"], "needs_currency")
+
+    def test_unsupported_currency_and_pesos_keep_search_without_generic_handoff(self):
+        self.post("message", text="No reconozco un cargo")
+        for fragment in ("MXN", "pesos"):
+            code, state, _ = self.post("message", text=fragment)
+            self.assertEqual(code, 200)
+            self.assertEqual(state["messages"][-1]["status"], "needs_currency")
+            self.assertFalse(state["offers_handoff"])
+            self.assertIsNone(state["selected_transaction"])
+        self.post("message", text="USD")
+        self.post("message", text="25.50")
+        self.post("choose", transaction_id="DEMO-TX-002")
+        self.assertEqual(self.state["pending_draft"]["packet"]["request"], "No reconozco un cargo")
+
+    def test_new_broad_request_clears_old_selection_but_explicit_reference_can_reuse_it(self):
+        self.post("inquire", transaction_id="DEMO-TX-001")
+        self.post("message", text="No reconozco un cargo")
+        self.assertIsNone(self.state["selected_transaction"])
+        self.assertIsNone(self.state["pending_draft"])
+        self.post("message", text="25.50 USD")
+        self.post("choose", transaction_id="DEMO-TX-002")
+        identifier = self.state["pending_draft"]["draft_id"]
+        self.assertEqual(self.state["pending_draft"]["packet"]["facts"]["transaction_id"], "DEMO-TX-002")
+        self.post("cancel", draft_id=identifier)
+        self.post("message", text="No reconozco esta compra")
+        self.assertEqual(self.state["pending_draft"]["packet"]["facts"]["transaction_id"], "DEMO-TX-002")
+
+    def test_explicit_new_inquiry_and_unsupported_action_supersede_pending_dispute(self):
+        self.post("message", text="No reconozco un cargo")
+        self.post("message", text="Enséñame mis pagos de 25.50 USD")
+        self.post("choose", transaction_id="DEMO-TX-001")
+        self.assertIsNone(self.state["pending_draft"])
+        self.post("message", text="No reconozco un cargo de 25.50 USD")
+        self.post("message", text="Quiero transferir 25.50 USD")
+        self.assertTrue(self.state["offers_handoff"])
+        self.assertEqual(self.state["candidate_ids"], [])
+        self.assertIsNone(self.state["selected_transaction"])
+        self.assertIsNone(self.state["pending_draft"])
+        self.post("message", text="25.50 USD")
+        self.post("choose", transaction_id="DEMO-TX-002")
+        self.assertIsNone(self.state["pending_draft"])
+        self.assertEqual(self.browser().store.count(), 0)
+
+    def test_foreign_or_invalid_followup_cannot_attach_an_old_transaction(self):
+        for fragment, expected in (("DEMO-TX-003", 403), ("USD 1,000", 400)):
+            with self.subTest(fragment=fragment):
+                self.post("reset")
+                self.post("inquire", transaction_id="DEMO-TX-001")
+                self.post("message", text="No reconozco un cargo")
+                code, state, _ = self.post("message", text=fragment)
+                self.assertEqual(code, expected)
+                self.assertIsNone(state["selected_transaction"])
+                self.assertEqual(state["candidate_ids"], [])
+                self.assertIsNone(state["pending_draft"])
+                code, state, _ = self.post("prepare_intake", reason="No reconozco el cargo")
+                self.assertEqual(state["error"]["code"], "transaction_required")
+                self.assertEqual(self.browser().store.count(), 0)
+
+    def test_handoff_summary_preserves_issue_and_distinct_steps_without_repeating_human_request(self):
+        request = "No reconozco un cargo"
+        human = "Quiero hablar con una persona"
+        self.post("message", text=request)
+        self.post("message", text="USD")
+        self.post("message", text="25")
+        self.post("message", text="25.50")
+        self.post("choose", transaction_id="DEMO-TX-001")
+        self.post("confirm", draft_id=self.state["pending_draft"]["draft_id"], confirmed=True)
+        case_id = self.state["receipts"][0]["case_id"]
+        self.post("message", text=human)
+        packet = self.state["pending_draft"]["packet"]
+        self.assertEqual(packet["request"], human)
+        self.assertEqual(packet["unresolved_questions"], [request])
+        self.assertEqual(len(packet["attempted_steps"]), len(set(packet["attempted_steps"])))
+        self.assertEqual(packet["verified_actions"][0]["case_id"], case_id)
+        self.assertEqual(self.browser().store.count(), 1)
+        self.post("confirm", draft_id=self.state["pending_draft"]["draft_id"], confirmed=True)
+        self.assertEqual(self.state["handoff"]["unresolved_questions"], [request])
+        self.post("reset")
+        self.post("message", text=human)
+        self.assertEqual(self.state["pending_draft"]["packet"]["unresolved_questions"], [])
+        self.assertIsNone(self.state["pending_draft"]["packet"]["facts"])
+
+    def test_human_request_interrupts_slot_collection_and_typed_assent_never_prepares_or_writes(self):
+        self.post("message", text="No reconozco un cargo")
+        self.post("message", text="25.50")
+        self.post("message", text="sí, confirmo")
+        self.assertIsNone(self.state["pending_draft"])
+        self.assertEqual(self.browser().store.count(), 0)
+        self.post("message", text="Quiero hablar con una persona")
+        self.assertEqual(self.state["pending_draft"]["kind"], "handoff")
+        self.assertEqual(self.state["pending_draft"]["packet"]["unresolved_questions"], ["No reconozco un cargo"])
+        self.assertIsNone(self.state["pending_draft"]["packet"]["facts"])
+        self.post("message", text="confirmo")
+        self.assertEqual(self.browser().store.count(), 0)
+
+    def test_language_reset_and_second_browser_clear_unfinished_slot_context(self):
+        self.post("message", text="No reconozco un cargo")
+        self.post("message", text="25.50")
+        self.post("language", language="pt")
+        self.post("message", text="USD")
+        self.assertEqual(self.state["candidate_ids"], [])
+        self.assertIsNone(self.state["pending_draft"])
+        self.post("message", text="25,50")
+        self.post("choose", transaction_id="DEMO-TX-001")
+        self.assertIsNone(self.state["pending_draft"])
+        self.post("reset")
+        self.post("message", text="USD")
+        self.assertEqual(self.state["candidate_ids"], [])
+        self.post("message", text="25.50")
+        self.request("GET", "/api/state", cookie="")
+        self.post("message", text="USD")
+        self.assertEqual(self.state["candidate_ids"], [])
+        self.assertEqual(self.browser().store.count(), 0)
+
+    def test_rejected_choice_cannot_attach_old_transaction_to_handoff(self):
+        self.post("inquire", transaction_id="DEMO-TX-001")
+        code, state, _ = self.post("choose", transaction_id="DEMO-NOT-FOUND")
+        self.assertEqual(code, 400)
+        self.assertIsNone(state["selected_transaction"])
+        self.post("message", text="Quiero hablar con una persona")
+        self.assertIsNone(self.state["pending_draft"]["packet"]["facts"])
+        self.assertEqual(self.state["pending_draft"]["packet"]["unresolved_questions"], [])
+
+    def test_rejected_currency_discards_old_amount_and_allows_date_only_correction(self):
+        for corrected in ("USD", "2026-06-16"):
+            with self.subTest(corrected=corrected):
+                self.post("reset")
+                self.post("message", text="No reconozco un cargo de 25.50 USD")
+                self.post("message", text="30 MXN")
+                code, state, _ = self.post("message", text=corrected)
+                self.assertEqual(code, 200)
+                if corrected == "USD":
+                    self.assertEqual(state["candidate_ids"], [])
+                    self.assertIsNone(state["pending_draft"])
+                else:
+                    self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
+                self.assertEqual(self.browser().store.count(), 0)
+
+    def test_short_prefixed_and_invalid_numeric_followups_preserve_dispute_intent(self):
+        for language, request, followup in (
+            ("es", "No reconozco un cargo", "Son 25.5 dólares"),
+            ("pt", "Não reconheço uma cobrança", "São 25,50 dólares"),
+        ):
+            with self.subTest(language=language):
+                self.post("reset")
+                self.post("language", language=language)
+                self.post("message", text=request)
+                code, state, _ = self.post("message", text="NaN")
+                self.assertEqual(code, 400)
+                self.assertIsNone(state["selected_transaction"])
+                self.post("message", text=followup)
+                self.post("choose", transaction_id="DEMO-TX-002")
+                self.assertEqual(self.state["pending_draft"]["kind"], "intake")
+                self.assertEqual(self.state["pending_draft"]["packet"]["request"], request)
+                self.assertEqual(self.browser().store.count(), 0)
 
 
 if __name__ == "__main__":
