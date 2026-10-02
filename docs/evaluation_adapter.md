@@ -1,10 +1,13 @@
-# Pending adapter for independently authored evaluation scenarios
+# Deferred adapter for independently authored diagnostic scenarios
 
-Status: contract review only. No scenario adapter, development workload run, or
+Status: deferred contract review only. No scenario adapter, development workload run, or
 final workload run is implemented by this document. The current UI and keyword
 router use separate fictional demo records. The sealed final cases were not read
 for this review and must remain untouched until the freeze and authorized scoring
-sequence in [evaluation.md](evaluation.md).
+sequence in [evaluation.md](evaluation.md), including its October 1 eligibility gate.
+The organizer's conditional mock-data reply does not establish these constructed
+scenarios as eligible learned-component performance evidence. First inventory usable
+private source labels and coverage; this adapter is not a prerequisite to that review.
 
 ## Why an explicit adapter is necessary
 
@@ -92,6 +95,8 @@ evaluate the intended behavior.
 | DEV-18 | Invalid amount and missing currency produce safe unknowns; case remains scored. |
 | DEV-19 | Changed version and amount require review and fresh consent, with no stale write. |
 
-The adapter should be implemented and tested against these public scenarios before
-training or final scoring. This contract records the identified integration work;
-it does not claim measured workflow or classifier quality.
+If the constructed diagnostic runner is implemented later, validate this adapter
+against public development scenarios before any authorized constructed final scoring.
+Do not use it to bypass the submission-evidence eligibility gate or alter the sealed
+cases. This contract records deferred integration work; it does not claim measured
+workflow or classifier quality or organizer acceptance of synthetic performance tests.

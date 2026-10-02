@@ -2,13 +2,25 @@
 
 Status: transaction inquiry, user-confirmed simulated dispute intake, and human handoff is selected under the user's delegated scope decision. The component and acceptance targets below are project choices, not organizer-mandated thresholds or measured results. The fuller local-data review strengthens this choice. The local workflow has synthetic component/integration checks, a scripted demo and a bilingual UI with keyword routing; see [local_workflow.md](local_workflow.md) and [local_ui.md](local_ui.md). Keyword rules are implemented and tested with demo records; neither the 19-case development workload nor the sealed final workload has run. The learned classifier is not implemented. No live bank action or paid model call has run.
 
+## Submission-evidence eligibility gate, October 1
+
+Diego Ralón's [September 29 organizer reply](https://factored-hackathon.slack.com/archives/C0BUZCY0TUY/p1790699312315549?thread_ts=1790698838.166839) permits generated mock data "if its not used for testing" and requests more context. This does not establish whether software regression cases, synthetic tool faults, authored utterances or translations are permitted in the required learned-component evaluation. Distinguishing software correctness diagnostics from performance evidence is our interpretation; organizer acceptance remains unresolved.
+
+The constructed workloads, counts, targets and scoring sequence below are retained as the original diagnostic plan. They are **not currently established as eligible submission performance evidence**. Development-based threshold selection and final scoring below are conditional, not the current next step. Do not claim that synthetic regression results meet the learned-component requirement. Do not run, open, rewrite, retire or reseal the existing final cases to resolve this ambiguity. If eligibility or the evaluation design changes, record that decision separately before any authorized final access; preserve the original commitment and history.
+
+Next perform a bounded **private label/coverage inventory** of the 42 normalized Spanish customer-text groups already identified by the local audit. Read customer inputs only; review labels for `inquiry`, `dispute_intake`, `human_request` and `unsupported`, with an explicit uncertain/unusable outcome. Record source provenance, multiplicities, review status and related template families. Do not copy source text into public documentation, use contradictory source topic labels as truth, or infer intent from agent responses/outcomes. Determine class support and family independence before choosing any grouped source-data train/development/final split. Do not promise that all four classes or enough independent groups exist.
+
+This inventory is feasibility evidence, not classifier performance. Authored training phrases remain a candidate with separate provenance; derived utterances, translations and Portuguese evaluation need the clarification in [requirements.md](requirements.md). Supplied transcripts have no verified native Portuguese coverage. Software adapter/runner plumbing can proceed as explicitly labeled diagnostics, but the larger synthetic-schema adapter is deferred behind this inventory. English submission explanations must disclose these source and review limitations while the product retains both languages.
+
+The [baseline clarification](https://factored-hackathon.slack.com/archives/C0BUZCY0TUY/p1790697181127899?thread_ts=1790696927.151849) confirms that pattern rules can make the same decision as the learned candidate. Once an eligible workload is established, both routes must share data, permissions, tools, scoring and failure denominators. The existing constructed final set is not silently replaced by a source-derived set; any future benchmark requires its own provenance, split commitment and authorized freeze/scoring sequence.
+
 ## What is being tested
 
 The prototype should answer an authenticated customer's transaction questions in Spanish or Portuguese from available records; ask for missing identifiers; decline access to other customers; say when evidence is absent; and create a simulated dispute or handoff only after specific user confirmation. An external state machine authorizes tools and verifies returned receipts. A classifier may propose an intent; it never grants permissions or declares an action successful.
 
 An action is verified only when a successful tool result matches the authorized customer, transaction, operation, idempotency key, and persisted state. A timeout is an unknown outcome until reconciliation. A rejected or mismatched receipt must not become a success statement. A repeated confirmation must return the same persisted result. Every action, receipt, and handoff is visibly simulated; the demo must not imply access to a real bank.
 
-## Fair baseline and proposed learned component
+## Fair baseline and proposed learned component (evaluation eligibility pending)
 
 | Component | Baseline | Selected candidate to implement and evaluate |
 | --- | --- | --- |
@@ -18,15 +30,15 @@ An action is verified only when a successful tool result matches the authorized 
 | Response wording | Grounded bilingual templates | Same templates; the learned component changes routing only |
 | Confirmation and duplicate handling | External session state and idempotency | Identical external session state and idempotency |
 
-Train approximately 80-120 short phrases, balanced by language and intent, using separate `TRAIN-` identities and scenario families. Training data does not exist yet. Preserve a training manifest before model fitting. Do not train on development fixtures or either split's case labels, prompt wording, templates, entities, or translations. The four-label taxonomy is shared; the actual held-out examples are not. Development cases may guide model/threshold selection but must not become training examples. Group paraphrases and translations of one underlying scenario into one split. No paid model API is needed for the proposed candidate. If the small classifier is weak, retain the rules baseline and report the limitation.
+Original candidate training plan, subject to the eligibility gate: approximately 80-120 short phrases, balanced by language and intent, using separate `TRAIN-` identities and scenario families. Training data does not exist yet. Preserve a training manifest before model fitting. Do not train on development fixtures or either split's case labels, prompt wording, templates, entities, or translations. The four-label taxonomy is shared; the actual held-out examples are not. Threshold selection needs an eligible development workload; the existing constructed cases are not currently approved for submission performance selection. Group paraphrases and translations of one underlying scenario into one split. No paid model API is needed for the proposed candidate. If the small classifier is weak, retain the rules baseline and report the limitation; that alone does not satisfy the required learned-component evaluation.
 
-The full local contact review inspected 171,321 transcripts with only 42 normalized customer-text groups; every group has conflicting source topics. Per-text majority labels agree with only 59,786/171,321 source labels (34.897%), exactly the overall Transactional majority count. All stored languages are `es`; detected intent is `consulta_general` in 162,864 rows and absent in 8,457. These provided topic/intent fields are unsuitable as ground truth for our four intents. Author and review separate bilingual labels; do not use agent responses, outcomes or future state as classifier features. The comparison measures constructed bilingual scenarios, not naturalistic classifier improvement. Source-text normalization is NFKC, casefold and whitespace collapse; see [local_data_review.md](local_data_review.md) for provenance and limits.
+The full local contact review inspected 171,321 transcripts with only 42 normalized customer-text groups; every group has conflicting source topics. Per-text majority labels agree with only 59,786/171,321 source labels (34.897%), exactly the overall Transactional majority count. All stored languages are `es`; detected intent is `consulta_general` in 162,864 rows and absent in 8,457. These provided topic/intent fields are unsuitable as ground truth for our four intents. Review labels separately; do not use agent responses, outcomes or future state as classifier features. The prior constructed comparison plan is retained below; a supplied-data comparison protocol is pending reviewed labels and coverage. Source-text normalization is NFKC, casefold and whitespace collapse; see [local_data_review.md](local_data_review.md) for provenance and limits.
 
-The full download is audit/development evidence only. It does not replace, populate or unseal the 32-case final workload. Source-adapter contract checks are a separate validation layer: demonstrate actual row/ownership integrity and a deliberately corrupted fixture without treating these as extra held-out model successes. Keep source-row tests, constructed workflow metrics and projected service impact distinct.
+The full download has so far supplied audit/development evidence, not learned-component performance results. It does not replace, populate or unseal the 32-case constructed final workload. The private label/coverage inventory above will assess a separate supplied-data comparison. Source-adapter contract checks are a separate validation layer: demonstrate actual row/ownership integrity and a deliberately corrupted fixture without treating these as extra held-out model successes. Keep source-row checks, constructed diagnostics, eligible component metrics and projected service impact distinct.
 
 Keep the search small: one feature representation and at most three confidence/margin settings. Choose the setting on development macro-F1 subject to safety and completion constraints; freeze it before final access. Also record calibration/coverage on development. Unsupported/low-confidence requests clarify or offer a human path. High classification confidence never changes permissions. Do not add an unconstrained LLM merely to make the submission appear more sophisticated.
 
-## Fixtures and split discipline
+## Preserved constructed fixtures and split discipline
 
 `evaluation/development.json` contains 19 public, synthetic scenarios: 10 Spanish and 9 Portuguese. They cover normal inquiry, ambiguity, another customer's record, record-borne prompt injection, consent, denied consent, timeouts, duplicate confirmation, unknown facts, currency fidelity, language switching, useful handoff, unsupported service, expired sessions, malformed/missing data, and record changes before confirmation. Fixtures have synthetic snapshots, a trusted session, one or more user turns, deterministic tool outcomes, expected facts/decisions/mutation counts, and a short human rubric. They are not evidence of organizer-data quality or real customer demand.
 
@@ -38,7 +50,11 @@ Final intent distribution: 16 inquiry, 10 dispute intake, 4 human request, and 2
 
 If scope or the fixture contract materially changes, retire this seal with a dated reason and seal a fresh independent final set before implementation uses it. Never silently replace a failed final set. Correcting a discovered label/schema error after exposure requires an erratum, original results retained, and no tuning on the correction.
 
-## Measurement and proposed acceptance targets
+## Preserved diagnostic measurement and proposed acceptance targets
+
+These fixed constructed-set targets remain project choices for the original diagnostic
+plan. They do not establish compliance with the submission learned-component requirement
+and must not be applied unchanged to a future source-derived benchmark.
 
 These are proposed project targets, not organizer-mandated thresholds. Freeze the rubric and targets before final evaluation. Do not promise them as achieved.
 
@@ -78,7 +94,9 @@ Automated trace checks should verify authorization boundaries, record/fact refer
 
 Save a redacted synthetic-only per-case result file with system/version, case ID, split, seed, start/end time, predicted intent/confidence, answer, cited fixture fields, requested/authorized tool calls, confirmation events, returned receipts, persisted state digest, error, and rubric outcomes. Never include source credentials or real customer data. Hash the implementation, training data, baseline rules, candidate weights, thresholds, template/rubric versions, dependency lock, and case seal in the run manifest. These are requirements for the later runner, not existing artifacts or claimed instrumentation.
 
-## Run sequence
+## Original diagnostic run sequence (subject to the eligibility gate)
+
+Before threshold selection or performance scoring, resolve the submission-evidence gate and record the eligible workload's provenance, reviewed labels and group separation. The following constructed-scenario sequence remains conditional. This documentation update does not authorize opening or running the sealed final cases.
 
 1. Use the selected scope and fuller local audit to implement a deterministic inquiry through a validated record adapter and the external authorization guard; add Portuguese response templates against the same facts. Use only the development fixtures and a small private source cohort that passes the data contract.
 2. Implement the remaining shared state/tool contracts and development runner. Run the baseline on the 19 development cases. Preserve failures.
@@ -91,5 +109,6 @@ The first-session deliverable was the fixture/measurement contract and sealed co
 The local structured workflow is now implemented. Before running this workload, build
 an explicit adapter for the independent scenario schema: fixture currencies and native
 statuses must remain intact, not silently converted to source-adapter enums. The sealed
-final contents remain untouched. Next implement the development runner and shared
-baseline/learned intent route; the scripted CLI demonstration is not an evaluation run.
+final contents remain untouched. Next inventory private source labels and coverage;
+the scenario adapter and runner remain deferred diagnostic work. The scripted CLI
+demonstration is not an evaluation run.

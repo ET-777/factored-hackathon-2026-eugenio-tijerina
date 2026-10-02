@@ -72,6 +72,14 @@ See [evaluation.md](evaluation.md) for predeclared success criteria, development
 the sealed final workload, leakage controls, failure denominators and language breakdowns.
 No model improvement or production efficiency gain has been established in this session.
 
+**October 1 organizer clarification:** generated mock data is conditionally permitted
+with a testing restriction whose scope needs context. The existing constructed
+workloads are preserved diagnostics, not currently established as eligible submission
+performance evidence. First inventory usable source customer-text labels and class
+coverage privately, then settle the eligible comparison protocol, including Portuguese
+translations/authored cases. This does not change the selected customer workflow or
+authorize reading/replacing the sealed final set.
+
 ## Next concrete implementation step
 
 The validated adapter, bounded private source cohort, guarded lookup, grounded bilingual
@@ -81,9 +89,12 @@ and consented handoff. Its demonstration uses independently authored fictional r
 not either evaluation split. These are implementation checks, not final quality scores.
 
 The [local interface](local_ui.md) and keyword baseline now implement the browser
-journey for independently authored demo records. Next implement the explicit
-development-fixture/domain adapter and local learned router. Preserve fixture
-currencies and status meanings separately from strict source validation. Do not revise
+journey for independently authored demo records. Next inventory the 42 known Spanish
+customer-text groups privately with reviewed four-intent labels and explicit uncertainty,
+checking support and related families before choosing source-data splits. Resolve
+evaluation eligibility before component performance scoring. The constructed scenario
+adapter is deferred diagnostic work; retain its native currencies and status meanings
+separately from strict source validation if implemented later. Do not revise
 the sealed final cases to fit implementation. General natural-language understanding,
 full development evaluation, language review, deployment and final evaluation remain pending. Scope is
 selected; no further scope-approval question or source download is needed.
