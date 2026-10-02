@@ -111,22 +111,41 @@ python -X utf8 -B -m scripts.summarize_intent_review --run-name new-private-revi
 Fifteen isolated synthetic extractor tests and four aggregate/privacy tests pass.
 These verify utility boundaries, not model accuracy or human label correctness.
 
-## Next decision and prepared organizer question
+## Scoped organizer permission and next step, October 2
 
-Preserve the [October 1 evaluation eligibility gate](evaluation.md). The synthetic
-scenario adapter remains deferred. Before the learned benchmark, clarify acceptable
-authored/translated evaluation inputs and obtain an eligible four-intent workload with
-reviewed labels and independent families. The existing final set stays sealed.
+The October 1 report prepared an organizer question because the reviewed source
+utterances could not support the four-intent comparison. On October 2 the owner
+provided a screenshot of the question they posted and Diego's reply. Its live Slack
+permalink has not yet been retrieved; the screenshot is the reference source, and no
+local attachment path or image is published here.
 
-Prepared message for the organizer's mock-data thread in `#general` (not sent):
+Owner's exact question shown in the screenshot:
 
-> Hi team! For a transaction inquiry/dispute prototype, our reviewed transcript subset
-> contains only balance-request templates and no Portuguese language tags. May we
-> evaluate a learned intent component on independently authored, reviewed Spanish and
-> Portuguese requests grounded in the supplied transaction records, with separately
-> labeled simulated safety/tool-failure scenarios? Does the generated-mock-data testing
-> restriction exclude these utterances/scenarios, or only fabricated banking records?
-> We will keep source records private and disclose provenance and limitations.
+> I’m building a transaction inquiry/dispute assistant, but the transcripts I reviewed only cover balance requests in Spanish. Can I generate my own Spanish and Portuguese customer messages for evaluation, using the supplied transaction records, with separately labeled simulated safety/tool failure scenarios?
 
-Posting requires explicit owner authorization because it sends a message from the
-owner's Slack account. Reading organizer guidance does not supply that authorization.
+Diego's exact reply:
+
+> Yes just make sure to justify it
+
+This permits the scoped proposal with justification. The completed inventory supplies
+that rationale: three intended classes have zero support, the only represented class
+has two opening families, and no source language tag is Portuguese. Label generated
+customer messages separately from supplied transaction facts and simulated faults;
+fault scenarios do not represent historical bank outcomes. Review semantic labels,
+independent request families and Portuguese wording, group related examples before
+splitting, and disclose generation/review limitations. Permission does not prove model
+quality, native language coverage or representative customer demand.
+
+The reply does not blanket-approve the existing workload's fictional banking records,
+grant source redistribution/external-provider permission, or authorize opening,
+changing or replacing its final seal. A proposed source-grounded workload requires its
+own reviewed protocol before a new, separately authorized final freeze. See the
+updated readiness checks in [evaluation.md](evaluation.md).
+
+The [October 2 implementation increment](private_cohort_ui.md) connects a separate
+loopback UI mode for the existing validated private cohort, with trusted startup
+identity/permissions and unchanged fictional demo behavior. Next establish the reviewed
+source-grounded authored ES/PT workload and shared comparison protocol. Keep source
+evidence private. The synthetic scenario adapter remains deferred; no training,
+tuning, performance scoring, public release, deployment or
+additional Slack message is part of this increment.

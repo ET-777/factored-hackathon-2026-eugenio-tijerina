@@ -11,14 +11,20 @@ deployed link, 4-6 slides and a video no longer than three minutes. Prepare the 
 early enough to verify the listed submission address and acknowledgment, because a
 participant reported a bounce and no organizer resolution was found.
 
-Generated mock data is conditionally permitted, with a restriction on testing whose
-scope remains unresolved. Existing software regressions and constructed case contracts
-are diagnostic evidence, not currently established as eligible learned-component
-performance evidence. Preserve the final seal. The private source-text label/coverage
-inventory in [evaluation.md](evaluation.md) is complete and lacks three intended classes.
-Next establish eligible evaluation inputs and reviewed class coverage before the larger
-synthetic scenario adapter or threshold tuning. This changes the order of the evaluation block,
-not the 34-hour total or the protected delivery time.
+**Scoped evaluation update, October 2:** the owner supplied a screenshot of their
+question about generated ES/PT customer messages for evaluation using supplied
+transaction records, with separately labeled simulated safety/tool-failure scenarios.
+Diego replied: "Yes just make sure to justify it". The exact question and screenshot
+source status are in [source_intent_inventory.md](source_intent_inventory.md); a live
+Slack permalink has not yet been retrieved. This supersedes the earlier pending gate
+for that proposal, not every fictional-bank-record case. Justify the lack of intent/PT
+coverage, distinguish provenance, and establish reviewed labels, independent families
+and a comparison protocol before fitting or tuning. Preserve the existing final seal;
+any new source-grounded final workload needs a separate authorized freeze. The current
+increment connects [private-cohort loopback serving](private_cohort_ui.md), with its
+integration checks completed. Next establish the reviewed source-grounded authored
+ES/PT workload and shared comparison protocol. No model training, performance
+evaluation, public release or deployment has run. The 34-hour total and protected delivery time are unchanged.
 
 Use feature branches, small reviewed PRs, clear commits and a tagged submission version
 for new increments, following organizer judging advice. Preserve prior history and
@@ -56,9 +62,10 @@ deduplicated and the request for a person is not repeated as an unresolved issue
 Synthetic regression tests cover these corrections; the suite passed 257 tests.
 This is a rules/context correction, not evidence of learned-model performance.
 These owner-review examples belong to development regression tests, not training
-or the untouched final set. The October 1 update supersedes the immediate scenario
-adapter priority: first inventory private source labels and evaluation eligibility;
-keep the protected delivery blocks below.
+or the untouched final set. The October 1 update deferred the immediate scenario
+adapter priority pending source coverage and clarification. Those findings and the
+scoped October 2 reply are now recorded above; workload review remains pending.
+Keep the protected delivery blocks below.
 
 The owner subsequently requested MXN, COP, ARS and USD as supported transaction
 currencies, independently of observed source coverage. This application decision is
@@ -84,9 +91,9 @@ time estimate has been supplied, so this document does not infer hours spent.
 | Initial session: reference review, minimal scaffold, bounded audit, scope/evaluation recommendation | 3 maximum | Source-page checklist, reproducible bounded audit or precise access limitation, protected local scaffold, next step. Stop expanding the audit at this cap. |
 | Follow-up local review, scope decision, labels/fixtures and split protocol | 3 | Local review and workflow selection are recorded. Complete independently reviewed label rules and customer/scenario-family separation. Keep development material separate from untouched final cases. No training on held-out transcripts, translations, or follow-ups. |
 | Build the deterministic vertical slice | 6 | Validated adapter, chronology quarantine, small private source cohort and public synthetic fixtures; trusted test session, customer-scoped read tool, grounded answers, clarification, confirmed simulated intake, idempotency/readback and handoff. |
-| Establish eligible evidence and compare the learned route | 4 | First inventory reviewed source labels, four-intent coverage and independent groups; clarify generated/translated evaluation eligibility. Then compare the rules and local classifier on an eligible shared workload, fitting preprocessing only on training data and recording configurations/failures. Do not substitute constructed diagnostics for compliant performance evidence. |
+| Establish reviewed evidence and compare the learned route | 4 | Source coverage inventory and scoped organizer permission are recorded. Justify the generated ES/PT messages grounded in supplied records and separate simulated faults; review labels and independent families, then commit a shared comparison protocol. Fit preprocessing only on training data and record configurations/failures. Do not substitute software diagnostics for learned-component performance evidence. |
 | Complete one-page bilingual app and failure handling | 5 | Spanish/Portuguese paths and documented language review, denied/expired sessions, missing data, safe tool failure, prompt-injection isolation, bounded retries, structured traces without credentials. |
-| Freeze implementation and run final evaluation | 4 | Resolve eligibility and commit the approved protocol before scoring; use the same untouched workload for baseline/proposed system, all failures counted, per-language results, safety/handoff checks, latency/cost assumptions and limitations. The existing constructed final seal stays untouched while eligibility is unresolved. |
+| Freeze implementation and run final evaluation | 4 | Review and commit the source-grounded protocol before a separate authorized final freeze/scoring step; use the same untouched workload for baseline/proposed system, all failures counted, per-language results, safety/handoff checks, latency/cost assumptions and limitations. Preserve the existing constructed final commitment; scoped permission does not automatically approve or replace it. |
 | Deploy the prototype and complete repository delivery | 3 | Fresh-install check, approved/synthetic public fixtures, secret/data-exclusion check, working hosted link, documented test access, smoke test from a clean session. |
 | Package slides, video, README, and submission links | 4 | Five slides; recorded three-scene demonstration; reproducibility and limitations; complete link bundle checked against organizer instructions. |
 | Contingency and final delivery check | 2 | Fix blocking defects, verify links/artifacts, and make the authorized submission before the internal target. |
@@ -100,7 +107,7 @@ For Portuguese, first review development wording and labels with the owner if fl
 
 | Slide | Message | Evidence to insert when available |
 |---|---|---|
-| 1. One customer problem worth solving | Explain the narrow selected workflow, who needs it, and what the prototype can complete. | Verified local-audit contact reasons with checked row counts, dates, coverage, method, and limits; distinguish the original sample, broader local review, and unchecked data. State that dataset text is documented as Spanish-only and Portuguese fixtures are team-generated. |
+| 1. One customer problem worth solving | Explain the narrow selected workflow, who needs it, and what the prototype can complete. | Supplied contact-category metadata and verified record feasibility with row counts, dates, coverage, method and limits; disclose that reviewed utterances do not validate demand for this workflow. Distinguish the original sample, broader local review and unchecked data. Portuguese messages are team-generated, not native source coverage. |
 | 2. The complete service journey | Show understand, clarify, retrieve, act when allowed, verify, and escalate. | A compact path diagram and Spanish/Portuguese examples. Selected boundary: transaction explanation, confirmed simulated intake, verified receipt/human handoff; no real refund, money movement, or adjudication. |
 | 3. Where learning helps and where controls live | Explain the keyword baseline versus the proposed learned intent classifier within the same deterministic workflow. | One architecture diagram: trusted session and record repository; learned intent suggestion; independent permission/policy checks; confirmed simulated tool; verified receipt; structured handoff. Learning never grants access or creates banking policy. |
 | 4. Evidence, including failures | Show whether the proposed component improves the chosen outcome on an identical held-out workload. | Actual case counts/mix, classification metric, safe resolution and automation-attempt rates, unsafe count/denominator, escalation quality, p50/p95 latency, cost assumptions, per-language results, and meaningful failure examples. Keep placeholders until measured; report ties or regression honestly. |
@@ -124,16 +131,18 @@ Use the final **10 seconds** for deployed/repository links and what the offline 
 - Reachable deployed prototype with documented trusted demo access; verify both language paths and record isolation in a fresh session.
 - English five-slide presentation and English-narrated demonstration video with Spanish/Portuguese customer journeys and exported duration no greater than 180 seconds; verify reviewer access without relying on the owner's authenticated browser.
 - English submission message/link bundle ready for `hackathon.admin@factored.ai`, the address still listed by the Hub. Resolve the reported bounce and obtain delivery/acknowledgment evidence. No message is authorized or sent by this documentation update.
-- Track remaining questions in `requirements.md`: generated-mock-data testing scope and Portuguese evaluation, data-use terms, submission address/confirmation, and format/access constraints. The Hub makes the public-repository requirement explicit; no visibility exception or numerical rubric weights were found. The exact cutoff time remains user-reported.
+- Track remaining questions in `requirements.md`: evaluation justification/protocol and Portuguese review, data-use terms, submission address/confirmation, and format/access constraints. The scoped generated-message permission is recorded; it does not grant unrestricted source redistribution. The Hub makes the public-repository requirement explicit; no visibility exception or numerical rubric weights were found. The exact cutoff time remains user-reported.
 
 **Next implementation step:** the [bounded private label/coverage inventory](source_intent_inventory.md)
 is complete: two balance-request openings produce 42 full-text variants, with zero
 support for inquiry, dispute intake or human request. Do not train or benchmark the
-four-intent router from this subset. Clarify acceptable authored/translated ES/PT
-evaluation and establish reviewed independent class coverage before fitting, tuning or
-submission performance scoring. A concrete organizer message is prepared in the report;
-sending it requires explicit owner authorization. The constructed
-[scenario adapter](evaluation_adapter.md) remains deferred diagnostic work. The [local interface](local_ui.md)
-is ready for the owner's experience and handoff review. The validated source adapter, private cohort,
-guarded inquiry and simulated intake/readback/handoff now have local implementations.
-Do not place the full dataset behind the app or alter final cases to fit implementation.
+four-intent router from this subset. Connect the existing validated private cohort to
+a separate [loopback interface mode](local_ui.md), with trusted startup identity and
+permissions, exact native facts, guarded inquiry and simulated intake/readback/handoff.
+Keep its evidence private and the fictional demo unchanged. The permitted generated
+ES/PT evaluation plan still needs reviewed labels, independent families and a protocol
+before training or scoring; any new final workload requires a separate authorized
+freeze. The constructed [scenario adapter](evaluation_adapter.md) remains deferred
+diagnostic work. This increment includes no training, evaluation, publishing or
+deployment. Do not place the full dataset behind the app or alter existing final cases
+to fit implementation.

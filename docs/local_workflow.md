@@ -125,7 +125,17 @@ Backups of edited existing files are under the ignored
   separate work; draft fingerprint checks alone do not prove a complete update pipeline.
 
 The subsequent [local UI checkpoint](local_ui.md) adds the loopback interface and
-keyword baseline; the above 191-test result remains historical CLI evidence. Next
-implement the [scenario adapter](evaluation_adapter.md), then compare the shared
-baseline with the planned local learned intent classifier. Keep the final set sealed
-until implementation and evaluation choices are frozen.
+keyword baseline; the above 191-test result remains historical CLI evidence. The current
+increment connects the existing validated private cohort to a separate [loopback UI](private_cohort_ui.md)
+mode, with identity and permissions from trusted startup configuration, exact native
+record facts, simulated actions and private evidence. The fictional demonstration
+remains unchanged; the full dataset is not loaded behind the app.
+
+The scoped generated ES/PT evaluation plan now has organizer permission with
+justification; see [evaluation.md](evaluation.md). Reviewed labels, independent families,
+Portuguese review and the comparison protocol remain pending. The [scenario
+adapter](evaluation_adapter.md) is deferred diagnostic work. This increment includes
+no model training, performance evaluation, public release or deployment. Next establish
+the reviewed source-grounded authored workload and shared comparison protocol. Keep the existing
+final set sealed; any new source-grounded final workload requires a separate authorized
+freeze rather than changing old cases to fit the implementation.

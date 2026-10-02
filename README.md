@@ -11,21 +11,26 @@ The keyword UI retains an unfinished search across amount/currency replies and
 summarizes distinct handoff steps without inventing unresolved questions.
 Supported transaction currencies are **MXN, COP, ARS and USD**. Searches preserve
 native amounts and return no match when the available records lack that currency;
-the current fictional demo records are USD-only.
+the default fictional demo records are USD-only. An optional local private-cohort
+mode serves an existing validated source snapshot with a fixed startup test identity.
 The learned classifier, evaluation scenario adapter, deployment and final evaluation
 remain pending. No comparative performance result is claimed.
 
 Organizer guidance reviewed October 1 requires English submission deliverables and
-Spanish/Portuguese customer interactions. The generated-mock-data testing restriction
-needs clarification: existing synthetic software checks are not currently claimed as
-eligible submission performance evidence. Next inventory usable private source labels
-and class coverage; keep the constructed final cases sealed. See
+Spanish/Portuguese customer interactions. In an October 2 owner-provided Slack screenshot,
+Diego permits authored ES/PT evaluation messages using supplied transaction records
+and separately labeled simulated safety/tool-failure scenarios: "Yes just make sure
+to justify it". Record their purpose, provenance and limits; this does not approve
+redistributing source data or every pre-existing fictional-record workload.
+Reviewed labels, independent request families and the comparison protocol remain
+to be established. Keep the existing final cases sealed. See
 [requirements](docs/requirements.md) and the [evaluation eligibility gate](docs/evaluation.md).
 
 The [bounded source-intent review](docs/source_intent_inventory.md) is complete:
 1,098 rows and 42 full-text variants reduce to two balance-request opening families,
 both outside the transaction workflow. These transcripts cannot support a four-intent
-benchmark. Draft labels remain private; eligible ES/PT performance inputs need clarification.
+benchmark. Draft labels remain private; justified authored ES/PT inputs are now
+permitted within the exact question's scope, with language review still pending.
 
 Internal submission target: **October 4, 2026, 16:00 America/Monterrey**.
 Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
@@ -38,12 +43,14 @@ Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
 - [Full local-data review and revisions](docs/local_data_review.md): broader evidence from the user-downloaded dataset; the first audit remains historical evidence.
 - [Scope recommendation and implementation handoff](docs/scope.md).
 - [Evaluation plan and eligibility gate](docs/evaluation.md): baseline, proposed learned component, source-label feasibility, and preserved constructed diagnostics/final seal.
-- [Source-intent inventory](docs/source_intent_inventory.md): bounded extraction, provisional label/family counts, first-turn limitations and the prepared organizer question.
+- [Source-intent inventory](docs/source_intent_inventory.md): bounded extraction, provisional label/family counts, first-turn limitations and the scoped organizer answer.
 - [Submission plan](docs/submission_plan.md): work budget, deployed prototype, slides, and video.
 - [Run and review the local workflow](docs/local_workflow.md): demo commands, module map,
   confirmation rules, checks, and current limitations.
 - [Try the local interface](docs/local_ui.md): browser commands, review journey,
   keyword input limits, session/reset behavior and current verification.
+- [Private-cohort UI](docs/private_cohort_ui.md): optional loopback mode, trusted startup
+  identity/permissions, source snapshot limits and local integration checks.
 - [Deferred diagnostic scenario adapter](docs/evaluation_adapter.md): preserve the
   independent constructed schema without weakening source validation.
 
@@ -61,9 +68,11 @@ python -B scripts/check_private_artifacts.py
 ```
 
 Open **http://127.0.0.1:8765** after the `web` command starts. Stop it with Ctrl+C.
-The browser uses fictional records and a server-owned demo session. Cases are
+By default the browser uses fictional records and a server-owned demo session. Cases are
 isolated per browser session and temporary; resetting starts a fresh demonstration.
-The UI stays on the loopback interface and does not load private source records.
+The UI stays on the loopback interface. The optional private-cohort mode loads only
+an existing bounded cohort at startup; it never scans the full download. See its
+[startup instructions](docs/private_cohort_ui.md). Neither mode loads evaluation cases.
 
 The bare module reports status; `demo` exercises the real local workflow using newly
 authored fictional records and explicitly scripted confirmation. It creates a temporary
@@ -94,10 +103,12 @@ tests/                         synthetic record, permission, workflow and storag
 data/                          ignored source samples and private audit provenance
 ```
 
-The existing development/final scenario contracts use team-authored synthetic fixtures,
-not extracts or Portuguese translations of organizer customer records. Their eligibility
-as submission performance evidence needs clarification. A separate supplied-data
-comparison protocol is pending private label/coverage review. Source dataset text is
+The existing development/final scenario contracts use team-authored fictional banking
+fixtures, not extracts or Portuguese translations of organizer customer records.
+The October 2 permission addresses authored customer messages using supplied transaction
+records and separately labeled simulated scenarios; do not retroactively declare every
+old fictional-record case eligible. A source-grounded comparison protocol with reviewed
+labels and independent families is still pending. Source dataset text is
 documented as Spanish-only; Portuguese evaluation provenance and fluent review remain open.
 
 ## Privacy and source handling

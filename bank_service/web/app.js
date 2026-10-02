@@ -116,12 +116,35 @@ const COPY = {
   }
 };
 
+const PRIVATE_COPY = {
+  es: {
+    demoAccount: "CUENTA LOCAL DE PRUEBA",
+    transactionsHint: "Registros del conjunto proporcionado para el hackathon.",
+    demoNote: "Datos del hackathon en un entorno local. Las solicitudes son simuladas y no se envían a un banco.",
+    demoBadge: "Datos del hackathon · local",
+    customerFallback: "Cliente de prueba",
+    snapshotNote: "Registro histórico del conjunto proporcionado. El estado corresponde a esa versión del registro."
+  },
+  pt: {
+    demoAccount: "CONTA LOCAL DE TESTE",
+    transactionsHint: "Registros do conjunto fornecido para o hackathon.",
+    demoNote: "Dados do hackathon em um ambiente local. As solicitações são simuladas e não são enviadas a um banco.",
+    demoBadge: "Dados do hackathon · local",
+    customerFallback: "Cliente de teste",
+    snapshotNote: "Registro histórico do conjunto fornecido. O estado corresponde a essa versão do registro."
+  }
+};
+
 let serverState = null;
 let busy = false;
 let activeNotice = "";
 const $ = (id) => document.getElementById(id);
-const tr = (key) => COPY[serverState?.language === "pt" ? "pt" : "es"][key];
-const strings = () => COPY[serverState?.language === "pt" ? "pt" : "es"];
+const strings = () => {
+  const language = serverState?.language === "pt" ? "pt" : "es";
+  return serverState?.data_mode === "private_cohort"
+    ? {...COPY[language], ...PRIVATE_COPY[language]} : COPY[language];
+};
+const tr = (key) => strings()[key];
 const asText = (value) => typeof value === "string" ? value : "";
 
 function node(tag, className, text) {

@@ -1,11 +1,13 @@
-"""Loopback-only demo UI with server-owned sessions and guarded workflow calls.
+"""Loopback-only review UI with server-owned sessions and guarded workflow calls.
 
-All records are independently authored demo fixtures. No source cohort, evaluator,
-model, credential or network provider is loaded. This local HTTP server is a review
-tool; production hosting/authentication are a separate deployment task.
+The default mode uses authored demo fixtures. An explicit trusted startup config
+may supply an already validated, bounded private cohort and fixed customer. The
+browser cannot choose the data source, identity or permissions. All actions remain
+local simulations; production hosting/authentication are a separate task.
 """
 
 from collections import deque
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
@@ -17,20 +19,22 @@ import secrets
 from tempfile import TemporaryDirectory
 from threading import RLock
 import time
+from types import MappingProxyType
 import unicodedata
 from urllib.parse import urlsplit
 
-from bank_service.access import AccessDenied, Permission, require_access
+from bank_service.access import AccessDenied, Permission, TrustedSession, require_access
 from bank_service.actions import ActionDraft, ActionError, ActionService
 from bank_service.case_store import CaseStore, StoreError
 from bank_service.conversation import Conversation, ConversationError, ConversationReply
 from bank_service.demo_fixtures import demo_records, demo_session
+from bank_service.records import TransactionRecord
 from bank_service.responses import ResponseFormatError
 from bank_service.routing import (
     RoutingError, extract_slots, is_search_followup, refers_to_selected_transaction, route_intent,
 )
-from bank_service.selection import SelectionError, TransactionFilters
-from bank_service.transactions import SourcedTransaction, get_transaction
+from bank_service.selection import MAX_SEARCH_RECORDS, SelectionError, TransactionFilters
+from bank_service.transactions import SourceReference, SourcedTransaction, get_transaction
 
 
 MAX_BODY_BYTES = 16 * 1024
@@ -105,6 +109,71 @@ TEXT = {
     },
 }
 
+PRIVATE_TEXT = {
+    "es": {
+        "greeting": "Hola. Puedo ayudarte a consultar las transacciones de tu instantánea privada o preparar una solicitud de revisión simulada. ¿Qué necesitas?",
+        "denied": "No puedo acceder a esa información con esta sesión. Puedes iniciar una nueva sesión del mismo conjunto privado.",
+        "currency": "Indica el código de moneda: MXN, COP, ARS o USD. «Pesos» y «$» pueden referirse a varias monedas. La búsqueda conserva la moneda de los registros de esta instantánea privada.",
+        "dollars": "Interpreto «dólares» como USD; no hago una conversión de moneda.",
+        "customer_label": "Cliente del conjunto privado",
+    },
+    "pt": {
+        "greeting": "Olá. Posso ajudar a consultar as transações da sua amostra privada ou preparar uma solicitação de revisão simulada. Do que você precisa?",
+        "denied": "Não posso acessar essas informações com esta sessão. Você pode iniciar uma nova sessão da mesma amostra privada.",
+        "currency": "Informe o código da moeda: MXN, COP, ARS ou USD. «Pesos» e «$» podem se referir a várias moedas. A pesquisa preserva a moeda dos registros desta amostra privada.",
+        "dollars": "Interpreto «dólares» como USD; não faço conversão de moeda.",
+        "customer_label": "Cliente da amostra privada",
+    },
+}
+
+
+@dataclass(frozen=True, repr=False)
+class PrivateCohortConfig:
+    """Trusted startup selection, never reconstructed from browser arguments.
+
+    The caller loads and validates the cohort before creating this configuration.
+    Copying the bounded mapping prevents later caller mutations changing the
+    configured snapshot. Frozen records and source references can safely be shared.
+    """
+
+    records: Mapping[str, SourcedTransaction]
+    customer_id: str
+    permissions: frozenset[Permission]
+
+    def __post_init__(self) -> None:
+        invalid = ValueError("invalid_private_cohort_config")
+        allowed_permissions = frozenset({Permission.READ_TRANSACTION, Permission.CREATE_SIMULATED_INTAKE,
+                                         Permission.CREATE_SIMULATED_HANDOFF})
+        if (not isinstance(self.records, Mapping) or not 0 < len(self.records) <= MAX_SEARCH_RECORDS
+                or not isinstance(self.customer_id, str) or not self.customer_id.strip()
+                or self.customer_id != self.customer_id.strip()
+                or not isinstance(self.permissions, frozenset)
+                or any(not isinstance(permission, Permission) for permission in self.permissions)
+                or not self.permissions <= allowed_permissions
+                or Permission.READ_TRANSACTION not in self.permissions):
+            raise invalid
+        snapshot = dict(self.records)
+        customer_found = False
+        for identifier, entry in snapshot.items():
+            if (not isinstance(identifier, str) or not identifier.strip()
+                    or not isinstance(entry, SourcedTransaction) or not isinstance(entry.record, TransactionRecord)
+                    or identifier != entry.record.transaction_id
+                    or not isinstance(entry.sources, tuple) or not entry.sources):
+                raise invalid
+            customer_found = customer_found or entry.record.customer_id == self.customer_id
+            for source in entry.sources:
+                if (not isinstance(source, SourceReference) or not isinstance(source.file, str)
+                        or not source.file or "\\" in source.file or ":" in source.file
+                        or any(part in ("", ".", "..") for part in source.file.split("/"))
+                        or any(ord(character) < 32 or ord(character) == 127 for character in source.file)
+                        or type(source.row_number) is not int or source.row_number < 1
+                        or not isinstance(source.row_sha256, str) or len(source.row_sha256) != 64
+                        or any(character not in "0123456789abcdef" for character in source.row_sha256)):
+                    raise invalid
+        if not customer_found:
+            raise invalid
+        object.__setattr__(self, "records", MappingProxyType(snapshot))
+
 
 class UiError(ValueError):
     def __init__(self, code: str, status: int = 400):
@@ -177,12 +246,19 @@ def _intake_preference(text: str, language: str) -> bool | None:
 class BrowserSession:
     """A browser token resolves to this exact server-owned session and controller."""
 
-    def __init__(self, database: Path):
+    def __init__(self, database: Path, *, config: PrivateCohortConfig | None = None):
+        if config is not None and not isinstance(config, PrivateCohortConfig):
+            raise ValueError("invalid_private_cohort_config")
         self.lock = RLock()
         self.retired = False
         self.csrf_token = secrets.token_urlsafe(32)
-        self.session = demo_session(_now())
-        self.records = demo_records()
+        self.data_mode = "demo" if config is None else "private_cohort"
+        if config is None:
+            self.session = demo_session(_now())
+            self.records = demo_records()
+        else:
+            self.session = TrustedSession(config.customer_id, _now() + timedelta(minutes=20), config.permissions)
+            self.records = MappingProxyType(dict(config.records))
         self.store = CaseStore(database)
         self.actions = ActionService(self.records, self.store)
         self.conversation = Conversation(self.records, self.actions, self.session)
@@ -202,7 +278,12 @@ class BrowserSession:
         self.offers_handoff = False
         self.handoff_request: str | None = None
         self.request_times: deque[float] = deque()
-        self.append("assistant", TEXT[self.language]["greeting"], "greeting")
+        self.append("assistant", self.text("greeting"), "greeting")
+
+    def text(self, key: str) -> str:
+        if self.data_mode == "private_cohort" and key in PRIVATE_TEXT[self.language]:
+            return PRIVATE_TEXT[self.language][key]
+        return TEXT[self.language][key]
 
     def close(self) -> None:
         with self.lock:
@@ -245,8 +326,8 @@ class BrowserSession:
         except AccessDenied:
             active = False
         state = {
-            "language": self.language, "csrf_token": self.csrf_token,
-            "session": {"customer_label": "Cliente demo A" if self.language == "es" else "Cliente demo A",
+            "language": self.language, "csrf_token": self.csrf_token, "data_mode": self.data_mode,
+            "session": {"customer_label": self.text("customer_label") if self.data_mode == "private_cohort" else "Cliente demo A",
                         "expires_at": self.session.expires_at.isoformat(), "active": active},
             "simulation": True, "route_mode": "keyword_baseline", "messages": [],
             "transactions": [], "selected_transaction": None, "candidate_ids": [],
@@ -255,10 +336,10 @@ class BrowserSession:
             "intake_offer": None,
         }
         if not active:
-            state["messages"] = [{"role": "assistant", "status": "access_denied", "text": TEXT[self.language]["denied"]}]
+            state["messages"] = [{"role": "assistant", "status": "access_denied", "text": self.text("denied")}]
             return state
-        # The fixture set is fixed for this browser session. Every returned entry
-        # still goes through its actual owner guard; foreign fixtures are omitted.
+        # The snapshot is fixed for this browser session. Every returned entry
+        # still goes through its actual owner guard; foreign records are omitted.
         state["transactions"] = [self.transaction(identifier, now) for identifier, entry in self.records.items()
                                  if entry.record.customer_id == self.session.customer_id]
         state["messages"] = list(self.messages)
@@ -451,7 +532,7 @@ class BrowserSession:
                 return
             raise
         if slots.used_dollar_alias:
-            self.append("assistant", TEXT[self.language]["dollars"], "currency_interpretation")
+            self.append("assistant", self.text("dollars"), "currency_interpretation")
         if slots.transaction_id is not None:
             self.reply(self.conversation.inquire(self.session, slots.transaction_id, now=now))
         elif reuse_selection and slots.filters == TransactionFilters() and not slots.needs_currency:
@@ -467,7 +548,7 @@ class BrowserSession:
             if amount is not None:
                 context.amount = amount
             if slots.currency_ambiguous or (context.amount is not None and context.currency is None):
-                self.append("assistant", TEXT[self.language]["currency"], "needs_currency")
+                self.append("assistant", self.text("currency"), "needs_currency")
                 return
             if context.currency is not None and context.amount is None and context.transaction_date is None:
                 self.append("assistant", TEXT[self.language]["amount"], "needs_filters")
@@ -571,7 +652,10 @@ class DemoServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, port: int = 8765):
+    def __init__(self, port: int = 8765, *, config: PrivateCohortConfig | None = None):
+        if config is not None and not isinstance(config, PrivateCohortConfig):
+            raise ValueError("invalid_private_cohort_config")
+        self._config = config
         self._sessions: dict[str, BrowserSession] = {}
         self._session_lock = RLock()
         self._minted_sessions = 0
@@ -589,7 +673,7 @@ class DemoServer(ThreadingHTTPServer):
             if len(self._sessions) >= MAX_SESSIONS or self._minted_sessions >= MAX_MINTED_SESSIONS:
                 raise UiError("session_capacity", 503)
             token = secrets.token_urlsafe(32)
-            session = BrowserSession(Path(self._temporary.name) / f"{token}.sqlite3")
+            session = BrowserSession(Path(self._temporary.name) / f"{token}.sqlite3", config=self._config)
             self._sessions[token] = session
             self._minted_sessions += 1
             return token, session
@@ -690,7 +774,7 @@ class DemoHandler(BaseHTTPRequestHandler):
                 state = session.state(_now())
             except (AccessDenied, ActionError, StoreError):
                 pass
-        state["error"] = {"code": code, "text": TEXT[language][label],
+        state["error"] = {"code": code, "text": TEXT[language][label] if session is None else session.text(label),
                           "outcome_unverified": label == "unknown"}
         self._json(status, state)
 
@@ -770,8 +854,8 @@ class DemoHandler(BaseHTTPRequestHandler):
                         or not secrets.compare_digest(supplied, session.csrf_token)):
                     raise UiError("csrf_rejected", 403)
                 if action == "reset":
-                    # Reset deliberately starts a fresh demonstration; expiration
-                    # never silently grants the old conversation another session.
+                    # Reset mints fresh state with the same startup mode/customer;
+                    # expiry never silently extends the old session's authority.
                     session.rate_limit()
                     self.server.retire_session(token)
                     token, session = self.server.mint_session()
@@ -788,11 +872,12 @@ class DemoHandler(BaseHTTPRequestHandler):
                 self._error(error)
 
 
-def serve(port: int = 8765) -> None:
+def serve(port: int = 8765, *, config: PrivateCohortConfig | None = None) -> None:
     if type(port) is not int or not 0 <= port <= 65535:
         raise ValueError("invalid_port")
-    server = DemoServer(port)
-    print(f"Local fictional-data review UI: http://127.0.0.1:{server.server_address[1]}", flush=True)
+    server = DemoServer(port, config=config)
+    label = "fictional-data" if config is None else "private-cohort"
+    print(f"Local {label} review UI: http://127.0.0.1:{server.server_address[1]}", flush=True)
     try:
         server.serve_forever(poll_interval=0.2)
     except KeyboardInterrupt:

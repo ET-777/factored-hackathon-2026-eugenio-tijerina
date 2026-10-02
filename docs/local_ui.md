@@ -2,8 +2,10 @@
 
 The local UI connects the existing guarded workflow to Spanish/Portuguese chat,
 transaction selection, exact proposal review, explicit confirmation, verified
-receipts and readable human-handoff packets. It uses independently authored
-fictional demo records, never the private source cohort or either evaluation split.
+receipts and readable human-handoff packets. Its default mode uses independently authored
+fictional demo records. An optional [private-cohort mode](private_cohort_ui.md) uses an
+existing bounded source snapshot with a fixed trusted startup identity. Neither mode
+loads an evaluation split or invokes a model.
 
 ## Run and review
 
@@ -39,6 +41,11 @@ The owner can now review the experience and handoff presentation on the working 
 Portuguese wording still needs independent fluent review; functional tests are not
 a linguistic quality assessment.
 
+Private mode keeps the same simulated-action journey and changes the record source
+and data captions. The source path, customer and permissions are configured before
+the loopback server binds; the browser cannot choose or replace them. Read-only is
+the default for this mode; simulated intake/handoff need explicit startup grants.
+
 ## Current input component
 
 `routing.py` implements the keyword baseline's four intent proposals: `inquiry`,
@@ -58,8 +65,9 @@ As a prototype interpretation chosen by the team, the word `dólares` means USD 
 the chat displays that interpretation. `$` and `pesos` require an explicit code.
 No currency is inferred from location and no amounts are converted. The owner
 requested MXN/COP/ARS/USD support even where current records lack a currency.
-The fictional UI records are all USD, so MXN, COP and ARS searches currently return
-no match. BRL remains unsupported and its rejection permits a correction or date-only search.
+The default fictional UI records are all USD, so MXN, COP and ARS searches in that mode
+return no match. Private mode uses the cohort's native currencies and never assumes
+USD-only records. BRL remains unsupported and its rejection permits a correction or date-only search.
 
 Context is bounded to one unfinished search. Slot-only replies and short prefixes
 such as `son`/`são` continue it. A new broad request starts a new subject; an explicit
@@ -71,8 +79,11 @@ an earlier transaction.
 
 The rule's 0/1 confidence value is a match indicator, not a calibrated probability.
 This is not the planned learned component or an unrestricted conversational model.
-The later character n-gram classifier will propose the same intents while permission,
-selection, confirmation and receipt checks stay outside it.
+The proposed character n-gram classifier will suggest the same intents while permission,
+selection, confirmation and receipt checks stay outside it. The October 2 organizer
+answer permits justified authored ES/PT evaluation messages using supplied transaction
+records and labeled simulated scenarios. Reviewed examples and the comparison protocol
+are still required before fitting or scoring; the existing final set stays sealed.
 
 ## Session and storage behavior
 
@@ -80,7 +91,7 @@ selection, confirmation and receipt checks stay outside it.
   expiry, controller and action drafts outside browser input. Each browser session
   has a separate temporary SQLite case store, even when its fictional customer label
   matches another browser. Session lifetime is 20 minutes; proposals last five minutes.
-- Reset starts a fresh Spanish demo and retires the old session. It clears access
+- Reset starts a fresh Spanish session in the configured data mode and retires the old session. It clears access
   to prior tickets and drafts. No production login or durable draft recovery is claimed.
   Database files are temporary and removed when the server closes normally.
 - Confirmation retries reconcile the same draft, never an automatic new write. A
@@ -95,6 +106,12 @@ selection, confirmation and receipt checks stay outside it.
   and packets are inserted as text. No prompts, cookies or request bodies are logged.
 
 ## Verification and remaining work
+
+October 2: the [private-cohort checkpoint](private_cohort_ui.md) adds optional source-backed
+loopback serving. All 319 tests pass, including 21 new private startup/session tests.
+A minimized HTTP smoke check on the existing 50-record cohort verifies owner filtering,
+exact source facts, two simulated receipts and fixed identity/source after reset.
+These are integration checks; no learned-component or final scoring ran.
 
 Verification on 2026-09-29: **225 tests passed** with
 `python -B -m unittest discover -s tests -q`; `node --check bank_service/web/app.js`

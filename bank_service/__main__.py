@@ -1,4 +1,4 @@
-"""Local workflow status and synthetic demonstrations; no network or model calls."""
+"""Local review UI and scripted demonstrations; no provider or model calls."""
 
 import argparse
 from dataclasses import asdict
@@ -18,12 +18,40 @@ def main() -> None:
     demo.add_argument("--language", choices=("es", "pt"), default="es")
     demo.add_argument("--scenario", choices=("all", "inquiry", "intake", "handoff", "safety"), default="all")
     demo.add_argument("--db", type=Path, help="Optional local SQLite path; omitted means temporary storage")
-    web = commands.add_parser("web", help="Start the local bilingual review UI with fictional data")
+    web = commands.add_parser("web", help="Start the loopback review UI; fictional records by default")
     web.add_argument("--port", type=int, default=8765)
+    web.add_argument("--cohort-run", type=Path,
+                     help="Trusted startup path to an existing bounded private cohort")
+    web.add_argument("--customer-id",
+                     help="Fixed local test identity from that private cohort; not bank authentication")
+    web.add_argument("--permission", action="append",
+                     choices=("transaction:read", "intake:create_simulated", "handoff:create_simulated"),
+                     help="Repeat to grant explicit private-mode permissions; default is transaction:read")
     args = parser.parse_args()
     if args.command == "web":
-        from bank_service.web_app import serve
-        serve(args.port)
+        from bank_service.web_app import PrivateCohortConfig, serve
+        if args.cohort_run is None:
+            if args.customer_id is not None or args.permission is not None:
+                parser.error("--customer-id and --permission require --cohort-run")
+            serve(args.port)
+            return
+        if not isinstance(args.customer_id, str) or not args.customer_id.strip():
+            parser.error("--cohort-run requires a nonempty --customer-id")
+        from bank_service.access import Permission
+        from bank_service.cohort_repository import CohortLoadError, load_private_cohort
+        try:
+            permissions = frozenset(Permission(value) for value in
+                                    (args.permission or [Permission.READ_TRANSACTION.value]))
+            config = PrivateCohortConfig(
+                records=load_private_cohort(args.cohort_run),
+                customer_id=args.customer_id,
+                permissions=permissions,
+            )
+        except (CohortLoadError, ValueError, OSError):
+            # Never include paths, identities, record values or loader exceptions.
+            print("Private cohort startup refused.", file=sys.stderr)
+            raise SystemExit(1) from None
+        serve(args.port, config=config)
         return
     if args.command == "demo":
         from bank_service.demo import run_demo

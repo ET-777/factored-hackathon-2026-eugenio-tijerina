@@ -63,7 +63,7 @@ customer transcripts have only 42 normalized distinct texts, all with contradict
 topic labels. Per-text majority agreement is 59,786/171,321 (34.897%), equal to the
 overall majority label. This is a corpus diagnostic, not a measured model result or a
 universal accuracy ceiling under corrected labels. `detected_intents` is
-`consulta_general` in 162,864 rows and missing in 8,457. Use the data for demand and schema evidence; keep training label
+`consulta_general` in 162,864 rows and missing in 8,457. Use category metadata for corpus composition and records for schema feasibility, not verified intent demand; keep training label
 provenance separate, avoid agent-response/outcome fields, and group template paraphrases
 and translations before splitting. Portuguese cases are team-generated, not native
 organizer records. Human language/label review remains required.
@@ -72,13 +72,17 @@ See [evaluation.md](evaluation.md) for predeclared success criteria, development
 the sealed final workload, leakage controls, failure denominators and language breakdowns.
 No model improvement or production efficiency gain has been established in this session.
 
-**October 1 organizer clarification:** generated mock data is conditionally permitted
-with a testing restriction whose scope needs context. The existing constructed
-workloads are preserved diagnostics, not currently established as eligible submission
-performance evidence. The private source-label inventory is complete and lacks three
-intended classes. Next settle the eligible comparison protocol, including Portuguese
-translations/authored cases. This does not change the selected customer workflow or
-authorize reading/replacing the sealed final set.
+**October 2 scoped organizer permission:** the earlier September 29 mock-data reply
+requested context and led to the October 1 eligibility gate. The owner then supplied a
+screenshot of their specific question about generated ES/PT evaluation messages using
+supplied transaction records and separately labeled simulated safety/tool-failure
+scenarios. Diego replied: "Yes just make sure to justify it". The exact question and
+screenshot source limits are in [source_intent_inventory.md](source_intent_inventory.md);
+the live Slack permalink has not yet been retrieved. Justify the missing intent/PT
+coverage, distinguish record/message/fault provenance, and review labels, independent
+families and Portuguese wording before freezing a comparison protocol. The reply does
+not blanket-approve the existing fictional-bank-record workloads or authorize opening
+or replacing their final seal. The selected customer workflow is unchanged.
 
 The [completed source-intent inventory](source_intent_inventory.md) found only two
 balance-request opening families across 42 full-text variants; all are outside this
@@ -95,16 +99,24 @@ and consented handoff. Its demonstration uses independently authored fictional r
 not either evaluation split. These are implementation checks, not final quality scores.
 
 The [local interface](local_ui.md) and keyword baseline now implement the browser
-journey for independently authored demo records. The bounded private source-intent
-inventory is complete and does not support the four-class benchmark. Next resolve
-authored/translated evaluation eligibility and establish reviewed independent class
-coverage before choosing splits, fitting or comparing the learned candidate. Resolve
-evaluation eligibility before component performance scoring. The constructed scenario
-adapter is deferred diagnostic work; retain its native currencies and status meanings
-separately from strict source validation if implemented later. Do not revise
-the sealed final cases to fit implementation. General natural-language understanding,
-full development evaluation, language review, deployment and final evaluation remain pending. Scope is
-selected; no further scope-approval question or source download is needed.
+journey for independently authored demo records. The [October 2 increment](private_cohort_ui.md) connects the
+existing validated private cohort to a separate loopback UI mode, with identity and
+permissions from trusted startup configuration rather than browser input. Preserve
+exact record facts, owner checks, snapshot uncertainty, simulated actions and verified
+receipts; keep source evidence private and the fictional demo unchanged. Do not load
+the full dataset behind the app.
+
+The bounded source-intent inventory is complete and cannot supply the four-class
+benchmark. The scoped generated-message plan now has organizer permission with
+justification; reviewed labels, independent class/family coverage, Portuguese review
+and a comparison protocol remain pending before fitting or threshold selection. Any
+new final workload needs a separate authorized freeze. The constructed scenario
+adapter remains deferred diagnostic work, with native currencies/status meanings
+separate from strict source validation. Do not revise the existing sealed final cases
+to fit implementation. Next establish the reviewed source-grounded authored ES/PT
+workload and shared comparison protocol before fitting. This increment includes no
+training, performance scoring, public release or deployment. Scope is selected; no further scope-approval question or
+source download is needed.
 
 Use [architecture.md](architecture.md) as the tool/data contract and
 [submission_plan.md](submission_plan.md) for the protected 34-hour budget, prototype,
