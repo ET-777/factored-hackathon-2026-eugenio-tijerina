@@ -75,10 +75,16 @@ No model improvement or production efficiency gain has been established in this 
 **October 1 organizer clarification:** generated mock data is conditionally permitted
 with a testing restriction whose scope needs context. The existing constructed
 workloads are preserved diagnostics, not currently established as eligible submission
-performance evidence. First inventory usable source customer-text labels and class
-coverage privately, then settle the eligible comparison protocol, including Portuguese
+performance evidence. The private source-label inventory is complete and lacks three
+intended classes. Next settle the eligible comparison protocol, including Portuguese
 translations/authored cases. This does not change the selected customer workflow or
 authorize reading/replacing the sealed final set.
+
+The [completed source-intent inventory](source_intent_inventory.md) found only two
+balance-request opening families across 42 full-text variants; all are outside this
+transaction workflow. These transcript texts do not substantiate the workflow's exact
+customer-intent demand or supply a four-class benchmark. Keep the metadata/record
+feasibility rationale separate from observed utterance coverage.
 
 ## Next concrete implementation step
 
@@ -89,9 +95,10 @@ and consented handoff. Its demonstration uses independently authored fictional r
 not either evaluation split. These are implementation checks, not final quality scores.
 
 The [local interface](local_ui.md) and keyword baseline now implement the browser
-journey for independently authored demo records. Next inventory the 42 known Spanish
-customer-text groups privately with reviewed four-intent labels and explicit uncertainty,
-checking support and related families before choosing source-data splits. Resolve
+journey for independently authored demo records. The bounded private source-intent
+inventory is complete and does not support the four-class benchmark. Next resolve
+authored/translated evaluation eligibility and establish reviewed independent class
+coverage before choosing splits, fitting or comparing the learned candidate. Resolve
 evaluation eligibility before component performance scoring. The constructed scenario
 adapter is deferred diagnostic work; retain its native currencies and status meanings
 separately from strict source validation if implemented later. Do not revise

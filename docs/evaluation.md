@@ -8,13 +8,22 @@ Diego Ralón's [September 29 organizer reply](https://factored-hackathon.slack.c
 
 The constructed workloads, counts, targets and scoring sequence below are retained as the original diagnostic plan. They are **not currently established as eligible submission performance evidence**. Development-based threshold selection and final scoring below are conditional, not the current next step. Do not claim that synthetic regression results meet the learned-component requirement. Do not run, open, rewrite, retire or reseal the existing final cases to resolve this ambiguity. If eligibility or the evaluation design changes, record that decision separately before any authorized final access; preserve the original commitment and history.
 
-Next perform a bounded **private label/coverage inventory** of the 42 normalized Spanish customer-text groups already identified by the local audit. Read customer inputs only; review labels for `inquiry`, `dispute_intake`, `human_request` and `unsupported`, with an explicit uncertain/unusable outcome. Record source provenance, multiplicities, review status and related template families. Do not copy source text into public documentation, use contradictory source topic labels as truth, or infer intent from agent responses/outcomes. Determine class support and family independence before choosing any grouped source-data train/development/final split. Do not promise that all four classes or enough independent groups exist.
+The bounded **private label/coverage inventory** of the 42 normalized Spanish groups is complete; see the checkpoint below. It reviewed customer inputs only, retaining source provenance, multiplicities, draft status and related request families. No supplied topic labels, agent responses, outcomes or router predictions determined the annotations. Three intended classes have zero support. Next establish an eligible independent workload with reviewed labels before any train/development/final split; do not force these balance templates into the missing classes or promise sufficient source coverage.
 
-This inventory is feasibility evidence, not classifier performance. Authored training phrases remain a candidate with separate provenance; derived utterances, translations and Portuguese evaluation need the clarification in [requirements.md](requirements.md). Supplied transcripts have no verified native Portuguese coverage. Software adapter/runner plumbing can proceed as explicitly labeled diagnostics, but the larger synthetic-schema adapter is deferred behind this inventory. English submission explanations must disclose these source and review limitations while the product retains both languages.
+This inventory is feasibility evidence, not classifier performance. Authored training phrases remain a candidate with separate provenance; derived utterances, translations and Portuguese evaluation need the clarification in [requirements.md](requirements.md). Supplied transcripts have no verified native Portuguese coverage. Software adapter/runner plumbing can proceed as explicitly labeled diagnostics, but the larger synthetic-schema adapter remains deferred behind evaluation eligibility and usable class coverage. English submission explanations must disclose these source and review limitations while the product retains both languages.
 
 The [baseline clarification](https://factored-hackathon.slack.com/archives/C0BUZCY0TUY/p1790697181127899?thread_ts=1790696927.151849) confirms that pattern rules can make the same decision as the learned candidate. Once an eligible workload is established, both routes must share data, permissions, tools, scoring and failure denominators. The existing constructed final set is not silently replaced by a source-derived set; any future benchmark requires its own provenance, split commitment and authorized freeze/scoring sequence.
 
 ## What is being tested
+
+**Source feasibility checkpoint, October 1:** the [completed bounded inventory](source_intent_inventory.md)
+found 1,098 rows, 42 full-text variants and only two balance-request opening families.
+All openings are provisionally `unsupported` under this workflow; inquiry, dispute and
+human-request classes have zero support and every language tag is `es`. The four-class
+source-text comparison is infeasible on this subset. No splits, fitting, tuning or
+performance scoring were performed. Next clarify authored/translated evaluation
+eligibility and establish a reviewed independent workload; do not report repeated
+balance templates as a successful learned benchmark. Existing final cases stay sealed.
 
 The prototype should answer an authenticated customer's transaction questions in Spanish or Portuguese from available records; ask for missing identifiers; decline access to other customers; say when evidence is absent; and create a simulated dispute or handoff only after specific user confirmation. An external state machine authorizes tools and verifies returned receipts. A classifier may propose an intent; it never grants permissions or declares an action successful.
 
@@ -109,6 +118,7 @@ The first-session deliverable was the fixture/measurement contract and sealed co
 The local structured workflow is now implemented. Before running this workload, build
 an explicit adapter for the independent scenario schema: fixture currencies and native
 statuses must remain intact, not silently converted to source-adapter enums. The sealed
-final contents remain untouched. Next inventory private source labels and coverage;
-the scenario adapter and runner remain deferred diagnostic work. The scripted CLI
+final contents remain untouched. Source-label feasibility is now checked; next establish
+eligible evaluation inputs and class coverage. The scenario adapter and runner remain
+deferred diagnostic work. The scripted CLI
 demonstration is not an evaluation run.

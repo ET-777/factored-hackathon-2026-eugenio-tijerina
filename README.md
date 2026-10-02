@@ -22,6 +22,11 @@ eligible submission performance evidence. Next inventory usable private source l
 and class coverage; keep the constructed final cases sealed. See
 [requirements](docs/requirements.md) and the [evaluation eligibility gate](docs/evaluation.md).
 
+The [bounded source-intent review](docs/source_intent_inventory.md) is complete:
+1,098 rows and 42 full-text variants reduce to two balance-request opening families,
+both outside the transaction workflow. These transcripts cannot support a four-intent
+benchmark. Draft labels remain private; eligible ES/PT performance inputs need clarification.
+
 Internal submission target: **October 4, 2026, 16:00 America/Monterrey**.
 Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
 (22:59 America/Monterrey). Approximately 34 work hours total. Video maximum: three minutes.
@@ -33,6 +38,7 @@ Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
 - [Full local-data review and revisions](docs/local_data_review.md): broader evidence from the user-downloaded dataset; the first audit remains historical evidence.
 - [Scope recommendation and implementation handoff](docs/scope.md).
 - [Evaluation plan and eligibility gate](docs/evaluation.md): baseline, proposed learned component, source-label feasibility, and preserved constructed diagnostics/final seal.
+- [Source-intent inventory](docs/source_intent_inventory.md): bounded extraction, provisional label/family counts, first-turn limitations and the prepared organizer question.
 - [Submission plan](docs/submission_plan.md): work budget, deployed prototype, slides, and video.
 - [Run and review the local workflow](docs/local_workflow.md): demo commands, module map,
   confirmation rules, checks, and current limitations.

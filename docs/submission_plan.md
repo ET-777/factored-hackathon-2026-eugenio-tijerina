@@ -14,9 +14,10 @@ participant reported a bounce and no organizer resolution was found.
 Generated mock data is conditionally permitted, with a restriction on testing whose
 scope remains unresolved. Existing software regressions and constructed case contracts
 are diagnostic evidence, not currently established as eligible learned-component
-performance evidence. Preserve the final seal. Prioritize the private source-text
-label/coverage inventory in [evaluation.md](evaluation.md) before the larger synthetic
-scenario adapter or threshold tuning. This changes the order of the evaluation block,
+performance evidence. Preserve the final seal. The private source-text label/coverage
+inventory in [evaluation.md](evaluation.md) is complete and lacks three intended classes.
+Next establish eligible evaluation inputs and reviewed class coverage before the larger
+synthetic scenario adapter or threshold tuning. This changes the order of the evaluation block,
 not the 34-hour total or the protected delivery time.
 
 Use feature branches, small reviewed PRs, clear commits and a tagged submission version
@@ -125,12 +126,13 @@ Use the final **10 seconds** for deployed/repository links and what the offline 
 - English submission message/link bundle ready for `hackathon.admin@factored.ai`, the address still listed by the Hub. Resolve the reported bounce and obtain delivery/acknowledgment evidence. No message is authorized or sent by this documentation update.
 - Track remaining questions in `requirements.md`: generated-mock-data testing scope and Portuguese evaluation, data-use terms, submission address/confirmation, and format/access constraints. The Hub makes the public-repository requirement explicit; no visibility exception or numerical rubric weights were found. The exact cutoff time remains user-reported.
 
-**Next implementation step:** perform a bounded private label/coverage inventory of
-the 42 known normalized Spanish customer-text groups. Review the shared four intents
-without using contradictory source topics or agent outcomes; retain uncertain/unusable
-labels and check family independence/class support before proposing source-data splits.
-Resolve how authored/translated Portuguese evaluation can satisfy organizer guidance
-before threshold tuning or submission performance scoring. The constructed
+**Next implementation step:** the [bounded private label/coverage inventory](source_intent_inventory.md)
+is complete: two balance-request openings produce 42 full-text variants, with zero
+support for inquiry, dispute intake or human request. Do not train or benchmark the
+four-intent router from this subset. Clarify acceptable authored/translated ES/PT
+evaluation and establish reviewed independent class coverage before fitting, tuning or
+submission performance scoring. A concrete organizer message is prepared in the report;
+sending it requires explicit owner authorization. The constructed
 [scenario adapter](evaluation_adapter.md) remains deferred diagnostic work. The [local interface](local_ui.md)
 is ready for the owner's experience and handoff review. The validated source adapter, private cohort,
 guarded inquiry and simulated intake/readback/handoff now have local implementations.
