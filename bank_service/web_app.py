@@ -44,6 +44,7 @@ ACTION_KEYS = {
     "message": {"text"}, "choose": {"transaction_id"}, "inquire": {"transaction_id"},
     "search": {"transaction_date", "amount", "currency"},
     "prepare_intake": {"reason"},
+    "dispute_selected": {"transaction_id"},
     "intake_decision": {"offer_id", "prepare"},
     "prepare_handoff": {"request", "unresolved_questions"},
     "confirm": {"draft_id", "confirmed"}, "cancel": {"draft_id"},
@@ -60,6 +61,8 @@ TEXT = {
         "intake_offer": "¿Quieres que prepare una solicitud de revisión de esta transacción? Es un ticket de demostración, no un reembolso. Puedes responder sí o no, o usar los botones.",
         "intake_declined": "De acuerdo. No preparé ni guardé una solicitud. Puedes seguir consultando tus movimientos.",
         "stale_offer": "Esta opción ya no está vigente. Consulta de nuevo la transacción para solicitar una revisión.",
+        "selected_dispute": "No reconozco esta compra",
+        "selection_changed": "El movimiento seleccionado cambió o ya no está disponible. Revisa el movimiento actual antes de solicitar una revisión.",
         "intake": "Abrir un ticket de revisión de esta transacción (demostración).",
         "handoff": "Guardar una solicitud para revisión humana (cola simulada).",
         "unknown": "No pude verificar el resultado de la solicitud. Conservé la misma referencia: vuelve a comprobarla para evitar crear un duplicado.",
@@ -84,6 +87,8 @@ TEXT = {
         "intake_offer": "Você quer que eu prepare uma solicitação de revisão desta transação? É um ticket de demonstração, não um reembolso. Pode responder sim ou não, ou usar os botões.",
         "intake_declined": "Tudo bem. Não preparei nem salvei uma solicitação. Você pode continuar consultando suas transações.",
         "stale_offer": "Esta opção não está mais vigente. Consulte novamente a transação para solicitar uma revisão.",
+        "selected_dispute": "Não reconheço esta compra",
+        "selection_changed": "A transação selecionada mudou ou não está mais disponível. Confira a transação atual antes de solicitar uma revisão.",
         "intake": "Abrir um ticket de revisão desta transação (demonstração).",
         "handoff": "Salvar uma solicitação para revisão humana (fila simulada).",
         "unknown": "Não consegui verificar o resultado da solicitação. Mantive a mesma referência: verifique-a novamente para evitar criar uma duplicata.",
@@ -479,11 +484,20 @@ class BrowserSession:
         self.authorize(now)
         self.rate_limit()
         action = payload["action"]
+        if action == "dispute_selected":
+            # A rendered shortcut identifies the record it referred to. An old
+            # click must not silently apply to a newer selection or alter it.
+            identifier = _text(payload.get("transaction_id"))
+            if self.selected_id is None or identifier != self.selected_id:
+                raise UiError("selection_changed", 409)
+            get_transaction(self.session, identifier, records=self.records, now=now)
         self.offers_handoff = False
-        if action not in ("message", "intake_decision", "view_case"):
+        if action not in ("message", "dispute_selected", "intake_decision", "view_case"):
             self.intake_offer = None
         if action == "message":
             self.message(_text(payload.get("text")), now)
+        elif action == "dispute_selected":
+            self.message(TEXT[self.language]["selected_dispute"], now)
         elif action in ("choose", "inquire"):
             identifier = _text(payload.get("transaction_id"))
             route = self.pending_route if action == "choose" else None
@@ -662,6 +676,8 @@ class DemoHandler(BaseHTTPRequestHandler):
             status, label = 409, "stale"
         elif code == "stale_offer":
             status, label = 409, "stale_offer"
+        elif code == "selection_changed":
+            status, label = 409, "selection_changed"
         elif code == "transaction_required":
             label = "request"
         elif code in ("csrf_rejected", "invalid_origin", "invalid_host", "session_required"):

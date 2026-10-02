@@ -225,6 +225,27 @@ benchmark performance or independent Portuguese wording review. Ignored backups
 and fictional screenshots are under `.local/review_backups/ux-feedback-20261001/`
 and `.local/ui-review/ux-feedback-20261001-{es,pt}.png`.
 
+### Transaction-specific dispute shortcut, 2026-10-01
+
+The dispute shortcut appears only when the review panel shows a selected movement.
+Its rendered button captures that movement's ID, and its tooltip shows the reference.
+The server checks that the same record is still selected and freshly authorizes its
+actual owner before adding the localized request to chat. A stale click cannot apply
+to a newer selection or discard its offer/draft. A new broad search, failed lookup
+or reset clears selection and hides the shortcut. Customers can still type a broad
+unrecognized-charge request and provide search details.
+The chat follows the newest reply after its controls resize the panel when the
+customer was already near the bottom; otherwise it retains their reading position.
+
+Verification: **279 tests passed**, including five new HTTP regressions for bilingual
+binding, stale clicks, missing selection, reset/browser isolation and owner changes.
+JavaScript syntax and privacy checks passed; all 13 protected hashes matched. ES/PT
+browser checks verified no initial shortcut, transaction switching, the new reference
+and preparation offer, and hiding it after a new search. No browser warnings/errors
+were captured. Core modules and evaluation artifacts remain unchanged. Ignored backup:
+`.local/review_backups/context-dispute-20261001/`; screenshot:
+`.local/ui-review/context-dispute-20261001-es.png`.
+
 The user subsequently authorized GitHub publication. On 2026-09-29, the 63 reviewed
 code/documentation, synthetic fixture and aggregate-evidence files were uploaded to
 [ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro).

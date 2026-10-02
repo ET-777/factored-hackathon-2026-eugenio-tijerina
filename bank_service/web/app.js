@@ -230,9 +230,8 @@ function renderTransactions() {
   });
 }
 
-function renderMessages() {
+function renderMessages(scrollState) {
   const container = $("messages");
-  const nearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 90;
   container.replaceChildren();
   const messages = Array.isArray(serverState.messages) ? serverState.messages : [];
   messages.forEach((message) => {
@@ -251,7 +250,7 @@ function renderMessages() {
     row.append(content);
     container.append(row);
   });
-  if (nearBottom || messages.length <= 2) container.scrollTop = container.scrollHeight;
+  container.scrollTop = scrollState.nearBottom ? container.scrollHeight : scrollState.scrollTop;
 }
 
 function renderCandidates() {
@@ -417,11 +416,18 @@ function renderHandoff() {
 
 function renderPrompts() {
   $("quick-prompts").replaceChildren();
-  strings().prompts.forEach(([label, text]) => {
+  const selectedId = asText(serverState.selected_transaction?.transaction_id);
+  strings().prompts.forEach(([label, text], index) => {
+    if (index === 1 && !selectedId.trim()) return;
     const button = node("button", "prompt-button", label);
     button.type = "button";
     button.dataset.proposal = "true";
-    button.addEventListener("click", () => action("message", {text}));
+    if (index === 1) {
+      // Bind this proposal to the selection that was rendered. The server must
+      // reject a stale ID instead of applying it to a newer selected record.
+      button.title = `${tr("selected")}: ${selectedId}`;
+      button.addEventListener("click", () => action("dispute_selected", {transaction_id: selectedId}));
+    } else button.addEventListener("click", () => action("message", {text}));
     $("quick-prompts").append(button);
   });
 }
@@ -454,10 +460,15 @@ function refreshControls() {
 
 function render() {
   if (!serverState) return;
+  const messages = $("messages");
+  // Capture the reading position before dynamic controls change chat height.
+  const scrollState = {
+    nearBottom: messages.scrollHeight - messages.scrollTop - messages.clientHeight < 90,
+    scrollTop: messages.scrollTop
+  };
   applyLanguage();
   $("customer-label").textContent = asText(serverState.session?.customer_label) || tr("customerFallback");
   renderTransactions();
-  renderMessages();
   renderCandidates();
   renderIntakeOffer();
   renderSelected();
@@ -467,6 +478,8 @@ function render() {
   renderPrompts();
   refreshControls();
   if (!sessionIsActive() && !activeNotice) showNotice(tr("sessionExpired"));
+  // Measure the final synchronous layout before following the newest reply.
+  renderMessages(scrollState);
 }
 
 async function readResponse(response) {

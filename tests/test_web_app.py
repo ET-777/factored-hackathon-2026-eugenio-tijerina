@@ -689,6 +689,99 @@ class WebAppTests(unittest.TestCase):
                 self.assertIsNone(self.state["pending_draft"])
                 self.assertEqual(self.browser().store.count(), 0)
 
+    def test_contextual_dispute_shortcut_requires_a_current_selection(self):
+        for identifier in ("DEMO-TX-001", "DEMO-TX-003", "DEMO-NOT-FOUND"):
+            code, state, _ = self.post("dispute_selected", transaction_id=identifier)
+            self.assertEqual(code, 409)
+            self.assertEqual(state["error"]["code"], "selection_changed")
+            self.assertIsNone(state["selected_transaction"])
+            self.assertIsNone(state["intake_offer"])
+            self.assertIsNone(state["pending_draft"])
+        self.assertEqual(len(self.state["messages"]), 1)
+        self.post("message", text="No reconozco un cargo")
+        self.assertEqual(self.state["messages"][-1]["status"], "needs_filters")
+        self.assertEqual(self.browser().store.count(), 0)
+
+    def test_bilingual_shortcut_binds_to_latest_selected_record_and_only_offers_preparation(self):
+        for language, request in (("es", "No reconozco esta compra"), ("pt", "Não reconheço esta compra")):
+            with self.subTest(language=language):
+                self.post("reset")
+                self.post("language", language=language)
+                self.post("inquire", transaction_id="DEMO-TX-001")
+                self.post("inquire", transaction_id="DEMO-TX-002")
+                code, state, _ = self.post("dispute_selected", transaction_id="DEMO-TX-002")
+                self.assertEqual(code, 200)
+                self.assertEqual(state["selected_transaction"]["transaction_id"], "DEMO-TX-002")
+                self.assertEqual(state["intake_offer"]["transaction_id"], "DEMO-TX-002")
+                self.assertIsNone(state["pending_draft"])
+                self.assertEqual([item["text"] for item in state["messages"] if item["role"] == "user"], [request])
+                self.accept_offer()
+                self.assertEqual(self.state["pending_draft"]["packet"]["facts"]["transaction_id"], "DEMO-TX-002")
+                self.assertEqual(self.state["pending_draft"]["packet"]["request"], request)
+                self.assertEqual(self.browser().store.count(), 0)
+
+    def test_stale_shortcut_cannot_replace_current_offer_or_draft(self):
+        self.post("inquire", transaction_id="DEMO-TX-001")
+        self.post("inquire", transaction_id="DEMO-TX-002")
+        before = list(self.state["messages"])
+        code, state, _ = self.post("dispute_selected", transaction_id="DEMO-TX-001")
+        self.assertEqual(code, 409)
+        self.assertEqual(state["messages"], before)
+        self.assertEqual(state["selected_transaction"]["transaction_id"], "DEMO-TX-002")
+        self.assertIsNone(state["intake_offer"])
+        self.post("dispute_selected", transaction_id="DEMO-TX-002")
+        offer = self.state["intake_offer"]
+        before = list(self.state["messages"])
+        code, state, _ = self.post("dispute_selected", transaction_id="DEMO-TX-001")
+        self.assertEqual(code, 409)
+        self.assertEqual(state["intake_offer"], offer)
+        self.assertEqual(state["messages"], before)
+        self.accept_offer()
+        draft = self.state["pending_draft"]["draft_id"]
+        code, state, _ = self.post("dispute_selected", transaction_id="DEMO-TX-001")
+        self.assertEqual(code, 409)
+        self.assertEqual(state["pending_draft"]["draft_id"], draft)
+        self.assertEqual(self.browser().store.count(), 0)
+
+    def test_shortcut_cannot_reuse_selection_after_search_reset_or_in_another_browser(self):
+        for action, values in (
+            ("message", {"text": "Quiero consultar una compra"}),
+            ("search", {"amount": "25.50", "currency": "USD"}),
+            ("inquire", {"transaction_id": "DEMO-NOT-FOUND"}),
+            ("reset", {}),
+        ):
+            with self.subTest(action=action):
+                self.post("reset")
+                self.post("inquire", transaction_id="DEMO-TX-001")
+                self.post(action, **values)
+                code, state, _ = self.post("dispute_selected", transaction_id="DEMO-TX-001")
+                self.assertEqual(code, 409)
+                self.assertIsNone(state["intake_offer"])
+                self.assertIsNone(state["pending_draft"])
+                self.assertEqual(self.browser().store.count(), 0)
+        self.post("inquire", transaction_id="DEMO-TX-001")
+        self.request("GET", "/api/state", cookie="")
+        code, _, _ = self.post("dispute_selected", transaction_id="DEMO-TX-001")
+        self.assertEqual(code, 409)
+        self.assertEqual(self.browser().store.count(), 0)
+
+    def test_shortcut_checks_fresh_owner_and_does_not_accept_browser_reason(self):
+        self.post("inquire", transaction_id="DEMO-TX-001")
+        code, state, _ = self.post("dispute_selected", transaction_id="DEMO-TX-001", reason="Injected reason")
+        self.assertEqual(code, 400)
+        self.assertIsNone(self.state["intake_offer"])
+        browser = self.browser()
+        entry = browser.records["DEMO-TX-001"]
+        browser.records["DEMO-TX-001"] = replace(entry, record=replace(entry.record, customer_id="OTHER"))
+        before = list(browser.messages)
+        code, state, _ = self.post("dispute_selected", transaction_id="DEMO-TX-001")
+        self.assertEqual(code, 403)
+        self.assertEqual(state["error"]["code"], "access_denied")
+        self.assertEqual(browser.messages, before)
+        self.assertIsNone(browser.intake_offer)
+        self.assertIsNone(browser.pending_draft)
+        self.assertEqual(browser.store.count(), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
