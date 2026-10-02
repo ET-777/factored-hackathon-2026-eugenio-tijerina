@@ -8,7 +8,7 @@ from threading import Thread
 import unittest
 from unittest.mock import patch
 
-from bank_service.access import AccessDenied
+from bank_service.access import AccessDenied, Permission
 from bank_service.case_store import StoreError
 from bank_service.web_app import COOKIE_NAME, DemoServer, _now
 
@@ -66,7 +66,20 @@ class WebAppTests(unittest.TestCase):
         self.post("inquire", transaction_id="DEMO-TX-001")
         code, state, _ = self.post("message", text="No reconozco esta compra")
         self.assertEqual(code, 200)
-        return state["pending_draft"]["draft_id"]
+        self.accept_offer()
+        return self.state["pending_draft"]["draft_id"]
+
+    def accept_offer(self):
+        self.assertIsNone(self.state["pending_draft"])
+        offer = self.state["intake_offer"]
+        self.assertIsNotNone(offer)
+        before = self.browser().store.count()
+        code, state, _ = self.post("intake_decision", offer_id=offer["offer_id"], prepare=True)
+        self.assertEqual(code, 200)
+        self.assertIsNone(state["intake_offer"])
+        self.assertEqual(self.browser().store.count(), before)
+        self.assertIsNotNone(state["pending_draft"])
+        return state
 
     def test_session_minted_by_server_and_only_owned_transactions_are_returned(self):
         self.assertTrue(self.state["session"]["active"])
@@ -91,6 +104,7 @@ class WebAppTests(unittest.TestCase):
                 self.assertEqual(state["selected_transaction"]["amount"], "25.50")
                 phrase = "No reconozco esta compra" if language == "es" else "Não reconheço esta compra"
                 code, state, _ = self.post("message", text=phrase)
+                state = self.accept_offer()
                 draft = state["pending_draft"]
                 self.assertEqual(draft["packet"]["facts"]["amount"], "25.50")
                 self.assertEqual(self.browser().store.count(), 0)
@@ -116,6 +130,8 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
         self.assertIsNone(state["pending_draft"])
         code, state, _ = self.post("choose", transaction_id="DEMO-TX-002")
+        self.assertEqual(state["intake_offer"]["transaction_id"], "DEMO-TX-002")
+        state = self.accept_offer()
         self.assertEqual(state["pending_draft"]["kind"], "intake")
         self.assertEqual(state["pending_draft"]["packet"]["facts"]["transaction_id"], "DEMO-TX-002")
         self.assertEqual(self.browser().store.count(), 0)
@@ -262,6 +278,7 @@ class WebAppTests(unittest.TestCase):
                 self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
                 self.assertIsNone(state["pending_draft"])
                 code, state, _ = self.post("choose", transaction_id="DEMO-TX-002")
+                state = self.accept_offer()
                 packet = state["pending_draft"]["packet"]
                 self.assertEqual(packet["request"], request)
                 self.assertEqual(packet["facts"]["transaction_id"], "DEMO-TX-002")
@@ -318,6 +335,7 @@ class WebAppTests(unittest.TestCase):
         self.post("message", text="USD")
         self.post("message", text="25.50")
         self.post("choose", transaction_id="DEMO-TX-002")
+        self.accept_offer()
         self.assertEqual(self.state["pending_draft"]["packet"]["request"], "No reconozco un cargo")
 
     def test_new_broad_request_clears_old_selection_but_explicit_reference_can_reuse_it(self):
@@ -327,10 +345,12 @@ class WebAppTests(unittest.TestCase):
         self.assertIsNone(self.state["pending_draft"])
         self.post("message", text="25.50 USD")
         self.post("choose", transaction_id="DEMO-TX-002")
+        self.accept_offer()
         identifier = self.state["pending_draft"]["draft_id"]
         self.assertEqual(self.state["pending_draft"]["packet"]["facts"]["transaction_id"], "DEMO-TX-002")
         self.post("cancel", draft_id=identifier)
         self.post("message", text="No reconozco esta compra")
+        self.accept_offer()
         self.assertEqual(self.state["pending_draft"]["packet"]["facts"]["transaction_id"], "DEMO-TX-002")
 
     def test_explicit_new_inquiry_and_unsupported_action_supersede_pending_dispute(self):
@@ -372,6 +392,7 @@ class WebAppTests(unittest.TestCase):
         self.post("message", text="25")
         self.post("message", text="25.50")
         self.post("choose", transaction_id="DEMO-TX-001")
+        self.accept_offer()
         self.post("confirm", draft_id=self.state["pending_draft"]["draft_id"], confirmed=True)
         case_id = self.state["receipts"][0]["case_id"]
         self.post("message", text=human)
@@ -482,6 +503,7 @@ class WebAppTests(unittest.TestCase):
                 self.assertFalse(self.state["offers_handoff"])
                 self.post("message", text="USD")
                 self.post("choose", transaction_id="DEMO-TX-002")
+                self.accept_offer()
                 self.assertEqual(self.state["pending_draft"]["packet"]["request"], request)
                 self.assertEqual(self.state["pending_draft"]["packet"]["facts"]["currency"], "USD")
                 self.assertEqual(self.browser().store.count(), 0)
@@ -510,8 +532,161 @@ class WebAppTests(unittest.TestCase):
                 self.assertIsNone(state["selected_transaction"])
                 self.post("message", text=followup)
                 self.post("choose", transaction_id="DEMO-TX-002")
+                self.accept_offer()
                 self.assertEqual(self.state["pending_draft"]["kind"], "intake")
                 self.assertEqual(self.state["pending_draft"]["packet"]["request"], request)
+                self.assertEqual(self.browser().store.count(), 0)
+
+    def test_bilingual_preparation_agreement_is_separate_from_final_submission(self):
+        for language, request, yes in (
+            ("es", "No reconozco DEMO-TX-001", "Sí, por favor"),
+            ("pt", "Não reconheço DEMO-TX-001", "Sim, por favor"),
+        ):
+            with self.subTest(language=language):
+                self.post("reset")
+                self.post("language", language=language)
+                code, state, _ = self.post("message", text=request)
+                self.assertEqual(code, 200)
+                self.assertEqual(state["messages"][-1]["status"], "intake_offered")
+                self.assertEqual(state["intake_offer"]["transaction_id"], "DEMO-TX-001")
+                self.assertIsNone(state["pending_draft"])
+                self.assertEqual(self.browser().store.count(), 0)
+                _, state, _ = self.post("message", text=yes)
+                draft = state["pending_draft"]
+                self.assertEqual(draft["packet"]["request"], request)
+                self.assertIn("panel lateral" if language == "es" else "painel lateral", state["messages"][-1]["text"])
+                proposed = json.loads(self.browser().actions.review_draft(
+                    self.browser().session, draft["draft_id"], now=_now()))
+                self.assertIs(proposed["consent"], False)
+                self.post("message", text=yes)
+                self.assertEqual(self.state["messages"][-1]["status"], "confirmation_required")
+                self.assertEqual(self.browser().store.count(), 0)
+                self.post("confirm", draft_id=draft["draft_id"], confirmed=True)
+                self.assertEqual(self.browser().store.count(), 1)
+
+    def test_declining_an_offer_by_text_or_button_creates_nothing(self):
+        for language, request, no in (
+            ("es", "No reconozco DEMO-TX-001", "No, gracias"),
+            ("pt", "Não reconheço DEMO-TX-001", "Não, obrigado"),
+        ):
+            for button in (False, True):
+                with self.subTest(language=language, button=button):
+                    self.post("reset")
+                    self.post("language", language=language)
+                    self.post("message", text=request)
+                    identifier = self.state["intake_offer"]["offer_id"]
+                    if button:
+                        self.post("intake_decision", offer_id=identifier, prepare=False)
+                    else:
+                        self.post("message", text=no)
+                    self.assertEqual(self.state["messages"][-1]["status"], "intake_declined")
+                    self.assertIsNone(self.state["pending_draft"])
+                    self.assertIsNone(self.state["intake_offer"])
+                    self.assertEqual(self.browser().store.count(), 0)
+                    code, _, _ = self.post("intake_decision", offer_id=identifier, prepare=True)
+                    self.assertEqual(code, 409)
+
+    def test_offer_tokens_and_decision_types_cannot_override_server_authority(self):
+        self.post("message", text="No reconozco DEMO-TX-001")
+        identifier = self.state["intake_offer"]["offer_id"]
+        for invalid in ("true", 1, None, [], {}):
+            code, _, _ = self.post("intake_decision", offer_id=identifier, prepare=invalid)
+            self.assertEqual(code, 400)
+            self.assertIsNone(self.state["pending_draft"])
+        code, _, _ = self.post("intake_decision", offer_id="missing", prepare=True)
+        self.assertEqual(code, 409)
+        code, _, _ = self.post("intake_decision", offer_id=identifier, prepare=True, transaction_id="DEMO-TX-002")
+        self.assertEqual(code, 400)
+        self.accept_offer()
+        draft = self.state["pending_draft"]["draft_id"]
+        code, _, _ = self.post("intake_decision", offer_id=identifier, prepare=True)
+        self.assertEqual(code, 409)
+        self.assertEqual(self.state["pending_draft"]["draft_id"], draft)
+        self.assertEqual(self.browser().store.count(), 0)
+        self.request("GET", "/api/state", cookie="")
+        code, _, _ = self.post("intake_decision", offer_id=identifier, prepare=True)
+        self.assertEqual(code, 409)
+        self.assertIsNone(self.state["pending_draft"])
+
+    def test_navigation_and_new_requests_invalidate_preparation_offer(self):
+        for action, values in (
+            ("inquire", {"transaction_id": "DEMO-TX-002"}),
+            ("search", {"amount": "25.50", "currency": "USD"}),
+            ("choose", {"transaction_id": "DEMO-NOT-FOUND"}),
+            ("language", {"language": "pt"}),
+            ("message", {"text": "Quiero consultar mis pagos"}),
+            ("message", {"text": "Quiero hablar con una persona"}),
+            ("message", {"text": "Quiero hacer una transaccion"}),
+            ("reset", {}),
+        ):
+            with self.subTest(action=action, values=values):
+                self.post("reset")
+                self.post("message", text="No reconozco DEMO-TX-001")
+                identifier = self.state["intake_offer"]["offer_id"]
+                self.post(action, **values)
+                self.assertIsNone(self.state["intake_offer"])
+                code, _, _ = self.post("intake_decision", offer_id=identifier, prepare=True)
+                self.assertEqual(code, 409)
+                self.assertEqual(self.browser().store.count(), 0)
+
+    def test_offer_expiry_snapshot_and_permissions_are_rechecked(self):
+        for change in ("expiry", "session_expiry", "snapshot", "owner", "permission"):
+            with self.subTest(change=change):
+                self.post("reset")
+                self.post("message", text="No reconozco DEMO-TX-001")
+                identifier = self.state["intake_offer"]["offer_id"]
+                browser = self.browser()
+                offer = browser.intake_offer
+                instant = _now()
+                expected = 409
+                if change == "expiry":
+                    instant = offer.expires_at
+                elif change == "session_expiry":
+                    instant = browser.session.expires_at
+                    expected = 403
+                elif change in ("snapshot", "owner"):
+                    entry = browser.records["DEMO-TX-001"]
+                    record = replace(entry.record, merchant_name="Changed") if change == "snapshot" else replace(entry.record, customer_id="OTHER")
+                    browser.records["DEMO-TX-001"] = replace(entry, record=record)
+                    if change == "owner": expected = 403
+                else:
+                    browser.session = replace(browser.session, permissions=frozenset({Permission.READ_TRANSACTION}))
+                    expected = 403
+                with patch("bank_service.web_app._now", return_value=instant):
+                    code, _, _ = self.post("intake_decision", offer_id=identifier, prepare=True)
+                self.assertEqual(code, expected)
+                self.assertIsNone(browser.pending_draft)
+                self.assertEqual(browser.store.count(), 0)
+
+    def test_ambiguous_offer_reply_never_accepts_a_new_action_request(self):
+        self.post("message", text="No reconozco DEMO-TX-001")
+        identifier = self.state["intake_offer"]["offer_id"]
+        self.post("message", text="confirmo")
+        self.assertEqual(self.state["intake_offer"]["offer_id"], identifier)
+        self.assertIsNone(self.state["pending_draft"])
+        self.post("message", text="sí, quiero transferir 25 USD")
+        self.assertIsNone(self.state["intake_offer"])
+        self.assertIsNone(self.state["pending_draft"])
+        self.assertTrue(self.state["offers_handoff"])
+        self.assertEqual(self.browser().store.count(), 0)
+
+    def test_broad_search_prompt_collects_details_and_making_a_payment_is_unsupported(self):
+        for language, search, make in (
+            ("es", "Quiero consultar una compra", "Quiero hacer una transaccion"),
+            ("pt", "Quero consultar uma compra", "Quero fazer uma transação"),
+        ):
+            with self.subTest(language=language):
+                self.post("reset")
+                self.post("language", language=language)
+                self.post("message", text=search)
+                self.assertEqual(self.state["messages"][-1]["status"], "needs_filters")
+                self.assertEqual(self.state["candidate_ids"], [])
+                self.assertIsNone(self.state["selected_transaction"])
+                self.post("message", text=make)
+                self.assertEqual(self.state["messages"][-1]["status"], "unsupported")
+                self.assertTrue(self.state["offers_handoff"])
+                self.assertEqual(self.state["candidate_ids"], [])
+                self.assertIsNone(self.state["pending_draft"])
                 self.assertEqual(self.browser().store.count(), 0)
 
 

@@ -12,6 +12,7 @@ const COPY = {
     demoBadge: "Demo · simulación", reset: "Nueva sesión", conversationTitle: "Tu asistente",
     conversationSubtitle: "Consulta, revisa y decide con información.", local: "Local",
     loading: "Preparando tu sesión…", chooseTransaction: "Elige el movimiento que quieres revisar",
+    intakeChoice: "Decidir si preparar una solicitud de revisión", prepareIntake: "Sí, preparar solicitud", declineIntake: "No, seguir consultando",
     draftLock: "Revisa la propuesta del panel y confirma o cancela para continuar.", messageLabel: "Escribe tu consulta",
     messagePlaceholder: "Pregunta por una transacción…", sendLabel: "Enviar mensaje",
     composerCaption: "Las acciones necesitan tu confirmación explícita.", detailsTitle: "En revisión",
@@ -49,7 +50,7 @@ const COPY = {
     requestError: "No pudimos completar la solicitud. Vuelve a intentar o inicia una nueva sesión.",
     unexpectedResponse: "La aplicación devolvió una respuesta incompleta. Vuelve a intentar.",
     prompts: [
-      ["Buscar una compra", "Busca la compra de 25.50 USD"],
+      ["Buscar una compra", "Quiero consultar una compra"],
       ["No reconozco un cargo", "No reconozco esta compra"],
       ["Hablar con una persona", "Quiero hablar con una persona"]
     ],
@@ -66,6 +67,7 @@ const COPY = {
     demoBadge: "Demo · simulação", reset: "Nova sessão", conversationTitle: "Seu assistente",
     conversationSubtitle: "Consulte, revise e decida com informação.", local: "Local",
     loading: "Preparando sua sessão…", chooseTransaction: "Escolha a transação que deseja revisar",
+    intakeChoice: "Decidir se deseja preparar uma solicitação de revisão", prepareIntake: "Sim, preparar solicitação", declineIntake: "Não, continuar consultando",
     draftLock: "Revise a proposta no painel e confirme ou cancele para continuar.", messageLabel: "Escreva sua consulta",
     messagePlaceholder: "Pergunte sobre uma transação…", sendLabel: "Enviar mensagem",
     composerCaption: "As ações precisam da sua confirmação explícita.", detailsTitle: "Em revisão",
@@ -103,7 +105,7 @@ const COPY = {
     requestError: "Não conseguimos concluir a solicitação. Tente novamente ou inicie uma nova sessão.",
     unexpectedResponse: "O aplicativo retornou uma resposta incompleta. Tente novamente.",
     prompts: [
-      ["Buscar uma compra", "Busque a compra de 25.50 USD"],
+      ["Buscar uma compra", "Quero consultar uma compra"],
       ["Não reconheço uma cobrança", "Não reconheço esta compra"],
       ["Falar com uma pessoa", "Quero falar com uma pessoa"]
     ],
@@ -196,6 +198,7 @@ function applyLanguage() {
   $("send").setAttribute("aria-label", tr("sendLabel"));
   $("language").setAttribute("aria-label", tr("language"));
   $("quick-prompts").setAttribute("aria-label", language === "pt" ? "Sugestões" : "Sugerencias");
+  $("intake-offer").setAttribute("aria-label", tr("intakeChoice"));
   document.querySelector(".sidebar").setAttribute("aria-label", tr("demoAccount"));
   document.querySelector(".review-panel").setAttribute("aria-label", tr("detailsTitle"));
 }
@@ -269,6 +272,15 @@ function renderCandidates() {
     button.addEventListener("click", () => action("choose", {transaction_id: transactionId}));
     $("candidates").append(button);
   });
+}
+
+function renderIntakeOffer() {
+  const offer = serverState.intake_offer;
+  // This is consent to prepare a proposal, never confirmation of an action.
+  // Only a server-issued offer can expose these controls or bind their request.
+  const validOffer = offer && typeof offer.offer_id === "string" && offer.offer_id.length > 0
+    && typeof offer.transaction_id === "string" && offer.transaction_id.length > 0;
+  $("intake-offer").hidden = !validOffer || Boolean(serverState.pending_draft);
 }
 
 function factRow(label, value) {
@@ -447,6 +459,7 @@ function render() {
   renderTransactions();
   renderMessages();
   renderCandidates();
+  renderIntakeOffer();
   renderSelected();
   renderDraft();
   renderReceipts();
@@ -498,10 +511,21 @@ async function action(name, fields = {}) {
   finally {busy = false; refreshControls();}
 }
 
-$("composer").addEventListener("submit", (event) => {
+function focusComposerIfAvailable() {
+  if (!busy && sessionIsActive() && !$("message-input").disabled && !serverState?.pending_draft) {
+    $("message-input").focus({preventScroll: true});
+  }
+}
+
+$("composer").addEventListener("submit", async (event) => {
   event.preventDefault();
   const text = $("message-input").value.trim();
-  if (text && !$("message-input").disabled) action("message", {text});
+  if (text && !$("message-input").disabled) {
+    await action("message", {text});
+    // Disabling the textarea during the request removes browser focus. Restore
+    // it only after the server response leaves the composer available.
+    focusComposerIfAvailable();
+  }
 });
 $("message-input").addEventListener("input", () => {
   $("message-input").rows = Math.min(4, Math.max(1, $("message-input").value.split("\n").length));
@@ -526,6 +550,17 @@ $("cancel").addEventListener("click", () => {
 $("offer-handoff").addEventListener("click", () => {
   const originalRequest = asText(serverState?.handoff_request);
   action("prepare_handoff", {request: originalRequest.trim() ? originalRequest : strings().prompts[2][1]});
+});
+$("accept-intake").addEventListener("click", () => {
+  const offerId = asText(serverState?.intake_offer?.offer_id);
+  if (offerId) action("intake_decision", {offer_id: offerId, prepare: true});
+});
+$("decline-intake").addEventListener("click", async () => {
+  const offerId = asText(serverState?.intake_offer?.offer_id);
+  if (offerId) {
+    await action("intake_decision", {offer_id: offerId, prepare: false});
+    focusComposerIfAvailable();
+  }
 });
 
 async function initialize() {

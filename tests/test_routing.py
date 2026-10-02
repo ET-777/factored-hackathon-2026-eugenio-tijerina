@@ -74,6 +74,53 @@ class IntentRoutingTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(route_intent(text, language), IntentProposal("unsupported", 1.0, True))
 
+    def test_new_payment_or_transaction_execution_is_unsupported(self):
+        for text, language in (
+            ("Quiero hacer una transacción de 25 USD", "es"),
+            ("Quiero hacer una nueva transacción", "es"),
+            ("Necesito que hagas un pago", "es"),
+            ("Haz un pago con mi tarjeta", "es"),
+            ("Realiza mi pago ahora", "es"),
+            ("Ejecuta una transacción y dime el estado", "es"),
+            ("Necesito pagar 25 MXN", "es"),
+            ("¿Puedes pagar mi factura?", "es"),
+            ("Paga el importe de 25 USD", "es"),
+            ("Quero fazer uma transação de 25 USD", "pt"),
+            ("Preciso fazer uma nova transação", "pt"),
+            ("Faça um pagamento", "pt"),
+            ("Execute uma transação", "pt"),
+            ("Quero efetuar o pagamento", "pt"),
+            ("Preciso que você pague a conta", "pt"),
+            ("Quero pagar e falar com um atendente", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(route_intent(text, language), IntentProposal("unsupported", 1.0, True))
+
+    def test_existing_payment_history_queries_still_route_to_inquiry(self):
+        for text, language in (
+            ("¿Cuál es el estado del pago que hice ayer?", "es"),
+            ("Ya realicé una transacción; quiero ver su importe", "es"),
+            ("Muéstrame el pago que ya ejecuté", "es"),
+            ("¿Qué pasó con la transacción que pagué?", "es"),
+            ("Quero consultar o pagamento que fiz", "pt"),
+            ("Qual é o status da transação que realizei?", "pt"),
+            ("Mostre o pagamento que já paguei", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(route_intent(text, language), IntentProposal("inquiry", 1.0, True))
+
+    def test_negated_new_actions_do_not_override_existing_record_queries(self):
+        for text, language in (
+            ("No quiero hacer un pago, quiero consultar la transacción", "es"),
+            ("No hagas un pago, muéstrame mis pagos", "es"),
+            ("No necesito pagar, solo ver el cargo", "es"),
+            ("Não quero fazer uma transação, quero ver meus pagamentos", "pt"),
+            ("Não faça um pagamento, consulte esta transação", "pt"),
+            ("Não vou pagar, quero consultar o pagamento anterior", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(route_intent(text, language), IntentProposal("inquiry", 1.0, True))
+
     def test_negative_action_is_not_a_dispute_or_human_request(self):
         for text, language, expected in (
             ("No quiero disputar esta compra, solo ver la transacción", "es", "inquiry"),

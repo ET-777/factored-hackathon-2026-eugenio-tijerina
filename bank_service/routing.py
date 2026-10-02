@@ -66,6 +66,12 @@ def _without_accents(text: str) -> str:
 
 
 _UNSUPPORTED_ACTIONS = (
+    # Requests to execute new transactions/payments differ from reading an
+    # existing record. Past forms such as hice/realicé/fiz/realizei/pagué/paguei
+    # are deliberately absent, so questions about completed payments still work.
+    r"\b(?:hacer|haz|haga|hagas|realizar|realiza|ejecutar|ejecuta|efectuar|efectua|procesar|procesa|fazer|faca|realize|executar|execute|efetuar|efetue|processar|processe)\s+(?:(?:un|una|el|la|mi|otro|otra|nuevo|nueva|um|uma|o|a|meu|minha|este|esta|novo|nova)\s+){0,2}(?:transaccion|transacao|pago|pagamento)\b",
+    r"\b(?:quiero|necesito|deseo|puedes|podrias|quero|preciso|desejo|pode|poderia|voy a|vou)\s+(?:que\s+(?:voce\s+)?)?(?:pagar|pagues|pague)\b",
+    r"^(?:pagar|paga)\b",
     r"\b(?:transferir|transfiere|transfiera|transfere|transfira)\b",
     r"\b(?:enviar|envia|enviar|mande|mandar)\s+(?:el\s+|o\s+)?dinero\b",
     r"\b(?:enviar|envie|mandar|mande)\s+(?:o\s+)?dinheiro\b",
@@ -96,7 +102,7 @@ _INQUIRY_REQUESTS = (
 )
 _NEGATED_ACTION = re.compile(
     r"\b(?:no|nao)\s+(?:(?:quiero|quero|deseo|desejo|necesito|preciso|voy a|vou)\s+)?"
-    r"(?:disputar|contestar|reclamar|abrir|crear|criar|transferir|bloquear|reembolsar|hablar|falar)\b[^,;.!?]*"
+    r"(?:disputar|contestar|reclamar|abrir|crear|criar|transferir|bloquear|reembolsar|hablar|falar|hacer|hagas|realizar|realices|ejecutar|ejecutes|efectuar|procesar|pagar|pagues|fazer|faca|realize|executar|execute|efetuar|processar|pague)\b[^,;.!?]*"
 )
 _CONFIRMATION = re.compile(
     r"^(?:si|sim|yes|ok|okay|de acuerdo)[\s.!?]*$"

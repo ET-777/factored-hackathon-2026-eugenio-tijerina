@@ -7,7 +7,7 @@ tool; production hosting/authentication are a separate deployment task.
 
 from collections import deque
 from dataclasses import asdict, dataclass
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from http.cookies import SimpleCookie, CookieError
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -17,6 +17,7 @@ import secrets
 from tempfile import TemporaryDirectory
 from threading import RLock
 import time
+import unicodedata
 from urllib.parse import urlsplit
 
 from bank_service.access import AccessDenied, Permission, require_access
@@ -29,7 +30,7 @@ from bank_service.routing import (
     RoutingError, extract_slots, is_search_followup, refers_to_selected_transaction, route_intent,
 )
 from bank_service.selection import SelectionError, TransactionFilters
-from bank_service.transactions import get_transaction
+from bank_service.transactions import SourcedTransaction, get_transaction
 
 
 MAX_BODY_BYTES = 16 * 1024
@@ -43,6 +44,7 @@ ACTION_KEYS = {
     "message": {"text"}, "choose": {"transaction_id"}, "inquire": {"transaction_id"},
     "search": {"transaction_date", "amount", "currency"},
     "prepare_intake": {"reason"},
+    "intake_decision": {"offer_id", "prepare"},
     "prepare_handoff": {"request", "unresolved_questions"},
     "confirm": {"draft_id", "confirmed"}, "cancel": {"draft_id"},
     "language": {"language"}, "reset": set(), "view_case": {"case_id"},
@@ -54,7 +56,10 @@ TEXT = {
         "invalid": "No pude interpretar esos datos. Revisa la fecha, el importe y la moneda, o selecciona una transacción de la lista.",
         "unsupported": "Esta demostración permite consultar transacciones y abrir solicitudes de revisión. Para esta petición, puedo preparar una derivación a revisión humana si lo deseas.",
         "confirm_button": "Para aprobar una solicitud, revisa el borrador y usa su botón de confirmación.",
-        "draft": "Revisa los detalles de la solicitud antes de confirmar. Aún no se ha guardado.",
+        "draft": "Preparé la solicitud en el panel lateral. Revisa allí sus detalles y usa «Confirmar y guardar» para enviarla a la cola simulada. Aún no se ha guardado.",
+        "intake_offer": "¿Quieres que prepare una solicitud de revisión de esta transacción? Es un ticket de demostración, no un reembolso. Puedes responder sí o no, o usar los botones.",
+        "intake_declined": "De acuerdo. No preparé ni guardé una solicitud. Puedes seguir consultando tus movimientos.",
+        "stale_offer": "Esta opción ya no está vigente. Consulta de nuevo la transacción para solicitar una revisión.",
         "intake": "Abrir un ticket de revisión de esta transacción (demostración).",
         "handoff": "Guardar una solicitud para revisión humana (cola simulada).",
         "unknown": "No pude verificar el resultado de la solicitud. Conservé la misma referencia: vuelve a comprobarla para evitar crear un duplicado.",
@@ -75,7 +80,10 @@ TEXT = {
         "invalid": "Não consegui interpretar esses dados. Confira a data, o valor e a moeda, ou selecione uma transação da lista.",
         "unsupported": "Esta demonstração permite consultar transações e abrir solicitações de revisão. Para este pedido, posso preparar um encaminhamento para revisão humana se você desejar.",
         "confirm_button": "Para aprovar uma solicitação, revise o rascunho e use o botão de confirmação.",
-        "draft": "Revise os detalhes da solicitação antes de confirmar. Ela ainda não foi salva.",
+        "draft": "Preparei a solicitação no painel lateral. Revise seus detalhes ali e use «Confirmar e salvar» para enviá-la à fila simulada. Ela ainda não foi salva.",
+        "intake_offer": "Você quer que eu prepare uma solicitação de revisão desta transação? É um ticket de demonstração, não um reembolso. Pode responder sim ou não, ou usar os botões.",
+        "intake_declined": "Tudo bem. Não preparei nem salvei uma solicitação. Você pode continuar consultando suas transações.",
+        "stale_offer": "Esta opção não está mais vigente. Consulte novamente a transação para solicitar uma revisão.",
         "intake": "Abrir um ticket de revisão desta transação (demonstração).",
         "handoff": "Salvar uma solicitação para revisão humana (fila simulada).",
         "unknown": "Não consegui verificar o resultado da solicitação. Mantive a mesma referência: verifique-a novamente para evitar criar uma duplicata.",
@@ -133,6 +141,34 @@ class PendingSearch:
     currency: str | None = None
 
 
+@dataclass(frozen=True)
+class IntakeOffer:
+    """Consent to preparation only, bound to this session's observed record."""
+
+    offer_id: str
+    transaction_id: str
+    request: str
+    snapshot: SourcedTransaction
+    expires_at: datetime
+
+
+def _intake_preference(text: str, language: str) -> bool | None:
+    # Whole replies only. An action or refund request containing 'yes' is never
+    # consent, and this parser is never used to confirm a stored action.
+    normalized = "".join(character for character in unicodedata.normalize("NFKD", text.lower())
+                         if not unicodedata.combining(character))
+    normalized = " ".join(normalized.strip(" \t\r\n.!?¡¿").replace(",", " ").split())
+    yes = {"es": {"si", "si por favor", "si prepara la solicitud", "de acuerdo"},
+           "pt": {"sim", "sim por favor", "sim prepare a solicitacao", "pode preparar"}}
+    no = {"es": {"no", "no gracias", "no por ahora"},
+          "pt": {"nao", "nao obrigado", "nao obrigada", "nao por enquanto"}}
+    if normalized in yes[language]:
+        return True
+    if normalized in no[language]:
+        return False
+    return None
+
+
 class BrowserSession:
     """A browser token resolves to this exact server-owned session and controller."""
 
@@ -154,6 +190,7 @@ class BrowserSession:
         self.pending_request: str | None = None
         self.pending_route: tuple[str, str] | None = None
         self.pending_search: PendingSearch | None = None
+        self.intake_offer: IntakeOffer | None = None
         self.business_issue: str | None = None
         self.case_ids: list[str] = []
         self.handoff_id: str | None = None
@@ -210,6 +247,7 @@ class BrowserSession:
             "transactions": [], "selected_transaction": None, "candidate_ids": [],
             "pending_draft": None, "receipts": [], "handoff": None, "offers_handoff": False,
             "handoff_request": None,
+            "intake_offer": None,
         }
         if not active:
             state["messages"] = [{"role": "assistant", "status": "access_denied", "text": TEXT[self.language]["denied"]}]
@@ -223,6 +261,13 @@ class BrowserSession:
                                   if get_transaction(self.session, identifier, records=self.records, now=now)]
         if self.selected_id is not None:
             state["selected_transaction"] = self.transaction(self.selected_id, now)
+        if self.intake_offer is not None:
+            offer = self.intake_offer
+            if (now >= offer.expires_at or self.selected_id != offer.transaction_id
+                    or get_transaction(self.session, offer.transaction_id, records=self.records, now=now) != offer.snapshot):
+                self.intake_offer = None
+            else:
+                state["intake_offer"] = {"offer_id": offer.offer_id, "transaction_id": offer.transaction_id}
         if self.pending_draft is not None:
             draft = self.pending_draft
             proposed = json.loads(self.actions.review_draft(self.session, draft.draft_id, now=now))
@@ -284,6 +329,7 @@ class BrowserSession:
         # Clear both UI and controller state before parsing a new query that may
         # fail. A stale selected record must never leak into a later draft.
         self.selected_id, self.candidate_ids = None, ()
+        self.intake_offer = None
         self.conversation.clear_selection(self.session, now=now)
 
     def clear_search(self) -> None:
@@ -300,6 +346,7 @@ class BrowserSession:
         return (issue if len(issue) <= 300 else issue[:297] + "...",)
 
     def prepare(self, kind: str, request: str, now: datetime, questions: tuple[str, ...] | None = None) -> None:
+        self.intake_offer = None
         if kind == "intake":
             reply = self.conversation.prepare_intake(self.session, request, now=now)
             self.business_issue = request
@@ -312,12 +359,50 @@ class BrowserSession:
         self.clear_search()
         self.reply(reply)
 
+    def offer_intake(self, request: str, now: datetime) -> None:
+        if self.selected_id is None:
+            raise UiError("transaction_required")
+        entry = get_transaction(self.session, self.selected_id, records=self.records, now=now)
+        require_access(self.session, entry.record.customer_id, Permission.CREATE_SIMULATED_INTAKE, now=now)
+        self.intake_offer = IntakeOffer(secrets.token_urlsafe(24), self.selected_id, request, entry,
+                                       min(self.session.expires_at, now + timedelta(minutes=5)))
+        self.clear_search()
+        self.append("assistant", TEXT[self.language]["intake_offer"], "intake_offered")
+
+    def decide_intake(self, identifier: str, prepare: bool, now: datetime) -> None:
+        if type(prepare) is not bool:
+            raise UiError("invalid_confirmation")
+        offer = self.intake_offer
+        if (offer is None or identifier != offer.offer_id or now >= offer.expires_at
+                or self.pending_draft is not None or self.selected_id != offer.transaction_id):
+            raise UiError("stale_offer", 409)
+        entry = get_transaction(self.session, offer.transaction_id, records=self.records, now=now)
+        if entry != offer.snapshot:
+            self.intake_offer = None
+            raise UiError("stale_offer", 409)
+        if prepare:
+            # ActionService rechecks the separate intake grant, selection and
+            # source snapshot. Preparation does not persist any case.
+            self.prepare("intake", offer.request, now)
+        else:
+            self.intake_offer = None
+            self.append("assistant", TEXT[self.language]["intake_declined"], "intake_declined")
+
     def message(self, text: str, now: datetime) -> None:
         self.append("user", text, "request")
         proposal = route_intent(text, self.language)
         if self.pending_draft is not None:
             self.append("assistant", TEXT[self.language]["confirm_button"], "confirmation_required")
             return
+        if self.intake_offer is not None:
+            preference = _intake_preference(text, self.language)
+            if preference is not None:
+                self.decide_intake(self.intake_offer.offer_id, preference, now)
+                return
+            if proposal.intent == "unsupported" and not proposal.matched and not is_search_followup(text, self.language):
+                self.append("assistant", TEXT[self.language]["intake_offer"], "intake_offered")
+                return
+            self.intake_offer = None
         self.offers_handoff = False
         if proposal.intent == "human_request":
             self.prepare("handoff", text, now)
@@ -386,7 +471,7 @@ class BrowserSession:
                 self.session, TransactionFilters(context.transaction_date, context.amount, context.currency), now=now))
         if context.kind == "intake":
             if self.selected_id is not None:
-                self.prepare("intake", context.request, now)
+                self.offer_intake(context.request, now)
         elif self.selected_id is not None:
             self.clear_search()
 
@@ -395,6 +480,8 @@ class BrowserSession:
         self.rate_limit()
         action = payload["action"]
         self.offers_handoff = False
+        if action not in ("message", "intake_decision", "view_case"):
+            self.intake_offer = None
         if action == "message":
             self.message(_text(payload.get("text")), now)
         elif action in ("choose", "inquire"):
@@ -408,7 +495,7 @@ class BrowserSession:
             if action == "inquire":
                 self.business_issue = None
             if route is not None:
-                self.prepare(route[0], route[1], now)
+                self.offer_intake(route[1], now)
         elif action == "search":
             self.cancel_for_navigation(now)
             self.clear_search()
@@ -418,6 +505,8 @@ class BrowserSession:
             self.reply(self.conversation.search(self.session, filters, now=now))
         elif action == "prepare_intake":
             self.prepare("intake", _text(payload.get("reason")), now)
+        elif action == "intake_decision":
+            self.decide_intake(_text(payload.get("offer_id")), payload.get("prepare"), now)
         elif action == "prepare_handoff":
             request = _text(payload.get("request"))
             questions = payload.get("unresolved_questions")
@@ -571,6 +660,8 @@ class DemoHandler(BaseHTTPRequestHandler):
                 session.outcome_unverified = True
         elif code in ("stale_draft", "draft_expired", "draft_not_active", "no_pending_action"):
             status, label = 409, "stale"
+        elif code == "stale_offer":
+            status, label = 409, "stale_offer"
         elif code == "transaction_required":
             label = "request"
         elif code in ("csrf_rejected", "invalid_origin", "invalid_host", "session_required"):

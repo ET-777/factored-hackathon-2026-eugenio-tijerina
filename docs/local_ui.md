@@ -16,12 +16,15 @@ python -B -m bank_service web --port 8765
 Open **http://127.0.0.1:8765**. The server binds only to `127.0.0.1`; stop it with
 Ctrl+C. No extra UI dependency, provider account or model call is required.
 
-1. Ask `Quiero consultar una compra de 25,50 USD del 2026-06-16`. Both owned demo
+1. Press `Buscar una compra`: it sends a broad inquiry and asks for search details.
+   Then enter `25,50 USD del 2026-06-16`. Both owned demo
    transactions match; choose a candidate. The amount, currency, status, dates and
    merchant come from that record. Source proof is available in a disclosure panel.
-2. Use `No reconozco esta compra`. Review the proposed ticket's exact request and
-   transaction facts. Confirm or cancel using the proposal's buttons. Typing
-   agreement does not authorize a write. A successful receipt verifies a local
+2. Use `No reconozco esta compra`. First accept or decline the offer to prepare a
+   request, using its buttons or a short `sí`/`no` reply. Acceptance only prepares
+   a draft. The chat directs you to the side panel to review its exact request and
+   transaction facts. Confirm or cancel using the draft's buttons. Typing agreement
+   while that draft is pending does not authorize a write. A successful receipt verifies a local
    simulated ticket; it does not resolve the dispute or promise a refund.
 3. Switch to Portuguese after completing/cancelling the proposal. Ask
    `Quero falar com uma pessoa sobre esta compra`. Review the exact handoff request,
@@ -48,7 +51,8 @@ strings fail safely rather than selecting a convenient interpretation. The trans
 list and suggested prompts provide an alternative when the rules do not understand.
 
 For example, `No reconozco un cargo` → `dólares` → `25,5` → choose a candidate
-prepares a ticket using the original dispute reason and that candidate's exact facts.
+offers to prepare a ticket. Accepting preserves the original dispute reason and
+that candidate's exact facts in an unconfirmed draft.
 `25 dólares` has no match in these fixtures; it is not rounded to `25.50 USD`.
 As a prototype interpretation chosen by the team, the word `dólares` means USD and
 the chat displays that interpretation. `$` and `pesos` require an explicit code.
@@ -185,6 +189,41 @@ Next implement that scenario adapter, train the local classifier on independent
 bilingual training phrases, and compare it to these keyword rules on development
 cases. Keep final contents sealed until freeze. Source-update replay, operational
 tracing, language review, deployment, slides and video remain.
+
+### Owner-requested interaction revisions, 2026-10-01
+
+The search shortcut now asks broadly for a purchase, without prescribing an amount
+or currency. Available fictional record options remain. Approved answers show the
+native facts and historical-snapshot note without the unrelated blanket disclaimer;
+other statuses receive a brief relevant source-limit note. No settlement or refund
+claim is inferred from approval. Explicit requests to make or execute a new payment
+or transaction are unsupported; inquiries about past payments remain supported.
+
+After identifying a disputed movement, the assistant asks whether to prepare a
+request. An opaque server-owned offer binds the original request, selected record,
+source snapshot and at most five minutes of validity to that browser session.
+Acceptance creates no stored case and no final consent. The chat explains where to
+review and submit the draft in the side panel. Declining creates nothing. New
+requests, navigation, language changes and reset invalidate the offer; acceptance
+rechecks authorization and record freshness. Only the separate final confirmation
+can save a simulated ticket. The explicit `prepare_intake` API remains a deliberate
+preparation command for structured callers, never a save command.
+
+After Enter sends a message, focus returns to the composer when the response leaves
+it available. A pending draft still requires side-panel confirmation or cancellation.
+
+Verification: **274 tests passed**, including seven new HTTP consent/navigation/
+freshness checks and five routing/response checks. JavaScript syntax and the privacy
+checker passed; all 12 protected before-edit hashes matched. Source adapters,
+permissions, action/store/controller modules, demo records, audit findings and both
+public evaluation artifacts remained unchanged. Final case contents were not read.
+Browser review in Spanish and Portuguese verified broad search, approved-record
+wording, offer acceptance/decline, side-panel instructions, unsupported transaction
+creation and Enter focus. Spanish final submission returned a verified simulated
+receipt; no browser warnings/errors were captured. These checks do not establish
+benchmark performance or independent Portuguese wording review. Ignored backups
+and fictional screenshots are under `.local/review_backups/ux-feedback-20261001/`
+and `.local/ui-review/ux-feedback-20261001-{es,pt}.png`.
 
 The user subsequently authorized GitHub publication. On 2026-09-29, the 63 reviewed
 code/documentation, synthetic fixture and aggregate-evidence files were uploaded to

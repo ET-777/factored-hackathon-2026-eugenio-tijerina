@@ -1,4 +1,4 @@
-"""Skeleton for grounded Spanish/Portuguese transaction answers.
+"""Grounded Spanish/Portuguese transaction answers.
 
 Public entry point: answer_transaction. It must authorize through get_transaction
 before rendering facts. The private formatter assumes a validated repository entry.
@@ -28,7 +28,6 @@ LABELS = {
         "unknown_merchant": "No disponible en el registro",
         "unknown_timezone": "zona horaria no indicada",
         "historical": "Datos de una instantánea histórica.",
-        "limits": "El registro no informa el motivo del estado, los plazos de liquidación ni las reglas de reembolso.",
     },
     "pt": {
         "transaction_id": "Transação",
@@ -41,7 +40,6 @@ LABELS = {
         "unknown_merchant": "Não informado no registro",
         "unknown_timezone": "fuso horário não informado",
         "historical": "Dados de um retrato histórico.",
-        "limits": "O registro não informa o motivo do status, os prazos de liquidação nem as regras de reembolso.",
     },
 }
 
@@ -50,6 +48,23 @@ STATUS_LABELS = {
     "Declined": {"es": "Rechazada", "pt": "Recusada"},
     "Pending": {"es": "Pendiente", "pt": "Pendente"},
     "Reversed": {"es": "Revertida", "pt": "Revertida"},
+}
+
+# Notes address only the recorded status and information absent from this record.
+# Approved records need no unrelated blanket reason/settlement/refund disclaimer.
+STATUS_NOTES = {
+    "Declined": {
+        "es": "El registro no incluye el motivo del rechazo.",
+        "pt": "O registro não informa o motivo da recusa.",
+    },
+    "Pending": {
+        "es": "El registro no incluye un plazo de actualización de este estado.",
+        "pt": "O registro não informa um prazo para atualização desse status.",
+    },
+    "Reversed": {
+        "es": "El registro no confirma un reembolso.",
+        "pt": "O registro não confirma um reembolso.",
+    },
 }
 
 TYPE_LABELS = {
@@ -119,8 +134,10 @@ def _format_transaction(entry: SourcedTransaction, language: str) -> Transaction
         f"{labels['process_date']}: {fact_values['process_date']}",
         f"{labels['merchant']}: {fact_values['merchant']}",
         labels["historical"],
-        labels["limits"],
     ]
+    status_note = STATUS_NOTES.get(record.transaction_status)
+    if status_note is not None:
+        lines.append(status_note[language])
 
     return TransactionAnswer(language=language, text="\n".join(lines), sources=entry.sources)
 

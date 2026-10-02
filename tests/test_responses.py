@@ -58,7 +58,6 @@ class TransactionResponseTests(unittest.TestCase):
                 "Estado registrado: Aprobada (Approved)",
                 "Fecha de proceso en la fuente: 2026-06-17",
                 "Datos de una instantánea histórica.",
-                "El registro no informa el motivo del estado, los plazos de liquidación ni las reglas de reembolso.",
             ),
             "pt": (
                 'Transação: "SYNTH-TX"',
@@ -67,7 +66,6 @@ class TransactionResponseTests(unittest.TestCase):
                 "Status registrado: Aprovada (Approved)",
                 "Data de processamento na fonte: 2026-06-17",
                 "Dados de um retrato histórico.",
-                "O registro não informa o motivo do status, os prazos de liquidação nem as regras de reembolso.",
             ),
         }
         for language, expected_lines in cases.items():
@@ -79,6 +77,36 @@ class TransactionResponseTests(unittest.TestCase):
                     self.assertIn(expected, answer.text.splitlines())
                 self.assertNotIn(self.record.customer_id, answer.text)
                 self.assertNotIn(self.record.product_id, answer.text)
+
+    def test_approved_answer_omits_irrelevant_blanket_limits(self):
+        for language in ("es", "pt"):
+            with self.subTest(language=language):
+                answer = self.answer(language)
+                self.assertEqual(len(answer.text.splitlines()), 8)
+                self.assertIs(answer.sources, self.sources)
+                for unrelated_word in ("motivo", "liquidación", "liquidação", "reembolso"):
+                    self.assertNotIn(unrelated_word, answer.text)
+
+    def test_other_status_notes_state_only_relevant_missing_source_information(self):
+        for status, language, expected in (
+            ("Declined", "es", "El registro no incluye el motivo del rechazo."),
+            ("Declined", "pt", "O registro não informa o motivo da recusa."),
+            ("Pending", "es", "El registro no incluye un plazo de actualización de este estado."),
+            ("Pending", "pt", "O registro não informa um prazo para atualização desse status."),
+            ("Reversed", "es", "El registro no confirma un reembolso."),
+            ("Reversed", "pt", "O registro não confirma um reembolso."),
+        ):
+            with self.subTest(status=status, language=language):
+                answer = self.answer(language, replace(self.record, transaction_status=status))
+                lines = answer.text.splitlines()
+                self.assertEqual(len(lines), 9)
+                self.assertEqual(lines[-1], expected)
+                self.assertIn(responses.LABELS[language]["historical"], lines)
+                self.assertIs(answer.sources, self.sources)
+                self.assertNotIn("insuficient", answer.text.casefold())
+                self.assertNotIn("24 horas", answer.text.casefold())
+                if status != "Reversed":
+                    self.assertNotIn("reembolso", answer.text)
 
     def test_preserves_precise_amount_and_native_currency_without_conversion(self):
         for language in ("es", "pt"):
@@ -117,7 +145,7 @@ class TransactionResponseTests(unittest.TestCase):
         ):
             with self.subTest(language=language):
                 lines = self.answer(language, record).text.splitlines()
-                self.assertEqual(len(lines), 9)
+                self.assertEqual(len(lines), 8)
                 merchant_line = next(line for line in lines if line.startswith(merchant_prefix))
                 self.assertEqual(json.loads(merchant_line[len(merchant_prefix):]), merchant)
                 self.assertEqual(json.loads(lines[0].split(": ", 1)[1]), identifier)
