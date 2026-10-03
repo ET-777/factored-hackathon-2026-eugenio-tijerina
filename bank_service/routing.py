@@ -165,6 +165,8 @@ _NAMED_AMOUNT = re.compile(
 _SLOT_REPLY_PREFIX = re.compile(
     r"^(?:de|del|en|em|son|sao|es|e|fue|foi|por)\s+", re.IGNORECASE,
 )
+# Detect a date attempt before validating exact ISO width/calendar values.
+_DATE_ATTEMPT = re.compile(r"(?<![\w-])\d{1,6}-\d{1,4}-\d{1,4}(?![\w-])")
 _AMOUNT_AFTER = re.compile(
     r"\b(?P<currency>" + _CURRENCY + r")\b\s+(?P<value>" + _VALUE + r")(?![\w-]|[.,](?=\d))",
     re.IGNORECASE,
@@ -227,7 +229,7 @@ def extract_slots(text: str, language: str) -> RequestSlots:
     transaction_id = _one_value(identifiers, "ambiguous_transaction_id")
 
     dates = set()
-    for match in re.finditer(r"(?<![\w-])\d{4}-\d{1,2}-\d{1,2}(?![\w-])", checked):
+    for match in _DATE_ATTEMPT.finditer(checked):
         raw = match.group(0)
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
             raise RoutingError("invalid_date")
@@ -311,11 +313,19 @@ def refers_to_selected_transaction(text: str, language: str) -> bool:
     ))
 
 
+def is_greeting(text: str, language: str) -> bool:
+    """Recognize only a complete ES/PT greeting, without a business request."""
+    normalized = _without_accents(_checked_text(text, language)).casefold().strip(" \t\r\n.!¡?¿")
+    pattern = (r"(?:hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches)"
+               if language == "es" else r"(?:ola|oi|bom dia|boa tarde|boa noite)")
+    return re.fullmatch(pattern, normalized) is not None
+
+
 def is_search_followup(text: str, language: str) -> bool:
     """Recognize one slot-only reply for an unfinished server-owned search.
 
     This predicate does not validate the value, preserve an intent, or read any
-    conversation state. The caller uses it only with an active unfinished search
+    conversation state. The caller can start an inquiry or continue a prior search,
     and still calls extract_slots(), permission checks and record selection.
     Full matching deliberately excludes new requests and typed consent.
     """
@@ -328,7 +338,7 @@ def is_search_followup(text: str, language: str) -> bool:
         normalized = normalized[:-1].rstrip()
     if _DIRECT_ID.fullmatch(normalized):
         return True
-    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", normalized):
+    if _DATE_ATTEMPT.fullmatch(normalized):
         return True
     unit = "(?:" + _CURRENCY + r"|dolar(?:es)?|dollars?|pesos?)"
     if re.fullmatch(unit + r"|\$", normalized, re.IGNORECASE):

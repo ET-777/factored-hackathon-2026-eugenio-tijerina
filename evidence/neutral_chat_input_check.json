@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "status": "passed_owner_feedback_regression_not_evaluation",
+  "fixture_provenance": "independently_authored_synthetic_component_records",
+  "source_data_read": false,
+  "development_scored": false,
+  "original_final_accessed": false,
+  "canonical_training_rows_sha256": "378c21e885e3219e96898c6d0978ec1c600258108cdbca7fd2e1f02927e88f9c",
+  "learned_parameters_changed": false,
+  "training_messages_changed": false,
+  "passed_stages": [
+    "es_greeting_neutral",
+    "es_invalid_date_0",
+    "es_invalid_date_1",
+    "es_no_match",
+    "es_inquiry_not_dispute",
+    "es_explicit_dispute_preserved",
+    "pt_greeting_neutral",
+    "pt_invalid_date_0",
+    "pt_invalid_date_1",
+    "pt_no_match",
+    "pt_inquiry_not_dispute",
+    "pt_explicit_dispute_preserved"
+  ],
+  "implementation_sha256": {
+    "bank_service/routing.py": "b397dc249cc16c71929aa82303095a35d5d9cf7e83c471ba40f2e136962db604",
+    "bank_service/web_app.py": "d10f1ac2ebcff775f4dd9f568748544368a21d4d80b5d1b434851262bc8b43c2"
+  }
+}

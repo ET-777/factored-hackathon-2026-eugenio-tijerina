@@ -111,13 +111,13 @@ benchmark. The scoped generated-message plan now has organizer permission with
 justification. The [authored workload](routing_workload.md) supplies 96 training and
 32 development draft messages grouped by family; a second Codex semantic review
 is complete. A fixed [local learned preview](learned_routing.md) fits training only.
-Spanish owner review, Portuguese human review and a comparison protocol remain
-pending before submission-grade scoring or threshold selection. Any
+Spanish wording/labels are owner-approved as of October 3. Portuguese human review
+and a comparison protocol remain pending before submission-grade scoring or threshold selection. Any
 new final workload needs a separate authorized freeze. The constructed scenario
 adapter remains deferred diagnostic work, with native currencies/status meanings
 separate from strict source validation. Do not revise the existing sealed final cases
-to fit implementation. Next review the authored Spanish labels and wording, resolve
-or disclose the Portuguese review gap, and freeze a shared source-grounded comparison
+to fit implementation. Next resolve or disclose the Portuguese review gap and freeze
+a shared source-grounded comparison
 protocol before development scoring. This increment has experimental local training,
 but no performance scoring, public release or deployment. Scope is selected; no further scope-approval question or
 source download is needed.

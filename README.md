@@ -14,7 +14,8 @@ native amounts and return no match when the available records lack that currency
 the default fictional demo records are USD-only. An optional local private-cohort
 mode serves an existing validated source snapshot with a fixed startup test identity.
 The offline character n-gram classifier has a training-only preview. Its authored
-96-message training and 32-message development drafts await human review;
+96-message training and 32-message development drafts have owner-approved Spanish
+wording/labels; Portuguese human review remains pending;
 development remains unscored. The scenario runner, deployment and final evaluation
 remain pending. No comparative performance result is claimed.
 
@@ -24,8 +25,9 @@ Diego permits authored ES/PT evaluation messages using supplied transaction reco
 and separately labeled simulated safety/tool-failure scenarios: "Yes just make sure
 to justify it". Record their purpose, provenance and limits; this does not approve
 redistributing source data or every pre-existing fictional-record workload.
-Draft families and labels are now documented; owner Spanish review, Portuguese
-human review and the comparison protocol remain pending. Keep the existing final cases sealed. See
+Draft families and labels are documented. Spanish wording/labels were approved on
+October 3; Portuguese human review and the comparison protocol remain pending.
+Keep the existing final cases sealed. See
 [requirements](docs/requirements.md) and the [evaluation eligibility gate](docs/evaluation.md).
 
 The [bounded source-intent review](docs/source_intent_inventory.md) is complete:
@@ -56,7 +58,7 @@ Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
 - [Experimental learned routing](docs/learned_routing.md): local training-only preview,
   fixed algorithm, shared service guards and review status.
 - [Spanish review checklist](docs/routing_review_es.md): 64 authored training/development
-  messages to review before scoring, without classifier predictions.
+  messages with October 3 owner wording/label approval, without classifier predictions.
 - [Deferred diagnostic scenario adapter](docs/evaluation_adapter.md): preserve the
   independent constructed schema without weakening source validation.
 

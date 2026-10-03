@@ -24,8 +24,9 @@ any new source-grounded final workload needs a separate authorized freeze. The c
 increment adds a [training-only learned preview](learned_routing.md) to implemented
 [private-cohort serving](private_cohort_ui.md). The authored drafts contain 96
 training messages and 32 unscored development messages; second Codex semantic review
-is complete. Spanish owner review, Portuguese human review and the shared comparison
-protocol remain pending. Experimental local training has run; comparative performance
+is complete. Spanish wording and intent labels were owner-approved on October 3;
+Portuguese human review and the shared comparison protocol remain pending.
+Experimental local training has run; comparative performance
 evaluation, public release and deployment have not. The 34-hour total and protected delivery time are unchanged.
 
 Use feature branches, small reviewed PRs, clear commits and a tagged submission version
@@ -140,8 +141,9 @@ Use the final **10 seconds** for deployed/repository links and what the offline 
 is complete: two balance-request openings produce 42 full-text variants, with zero
 support for inquiry, dispute intake or human request. Do not train or benchmark the
 four-intent router from this subset. Private-cohort serving and an experimental
-training-only learned router now exist. Review the [Spanish draft checklist](routing_review_es.md),
-resolve or disclose Portuguese human review, and freeze a source-grounded paired
+training-only learned router now exist. The [Spanish checklist](routing_review_es.md)
+is owner-approved for wording and labels. Resolve or disclose Portuguese human review
+and freeze a source-grounded paired
 comparison protocol before scoring development. Any new final workload requires a
 separate authorized freeze. The constructed [scenario adapter](evaluation_adapter.md)
 remains deferred diagnostic work. Keep source evidence private, preserve the fictional

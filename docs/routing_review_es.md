@@ -1,8 +1,10 @@
 # Revisión humana del español: solicitudes de enrutamiento
 
-Estado: **pendiente de revisión del propietario**. Hay 64 mensajes en español: 48 de entrenamiento y 16 de desarrollo. Son textos redactados por Codex; no son conversaciones reales ni contienen valores copiados de registros bancarios. No se muestran predicciones ni puntuaciones.
+Estado: **redacción y etiquetas de intención en español aprobadas por el propietario el 2026-10-03**. Hay 64 mensajes en español: 48 de entrenamiento y 16 de desarrollo. Son textos redactados por Codex; no son conversaciones reales ni contienen valores copiados de registros bancarios. No se muestran predicciones ni puntuaciones. El [registro de revisión](../evidence/routing_language_review.json) vincula la aprobación a los hashes exactos de ambos archivos y de sus filas en español.
 
 Esta revisión cubre solo el español. El portugués tuvo una revisión adicional de Codex y sigue pendiente de revisión humana por una persona competente en ese idioma.
+
+La aprobación cubre la redacción y las etiquetas de intención; no demuestra independencia semántica entre familias, calidad del modelo ni validación del portugués. Los textos, etiquetas e IDs de entrenamiento y desarrollo permanecen intactos. Su estado JSON original se conserva como metadato histórico; el registro separado determina el estado actual de revisión lingüística de estos archivos exactos.
 
 ## Qué revisar
 
@@ -187,4 +189,4 @@ Estas familias se reservan para desarrollo. Sus mensajes no se usan para ajustar
 
 ## Registro de esta revisión
 
-No se registra una aprobación por anticipado. Los dos archivos JSON conservan `draft_pending_owner_and_portuguese_review` hasta que exista evidencia explícita de la revisión correspondiente. Una revisión de Codex no equivale a una revisión humana. Ningún caso final se abrió, redactó ni modificó para preparar esta tabla.
+La aprobación explícita del español recibida el 2026-10-03 está registrada en [routing_language_review.json](../evidence/routing_language_review.json); el portugués sigue pendiente de revisión humana competente. Los dos archivos JSON conservan `draft_pending_owner_and_portuguese_review` como metadato histórico sin modificar sus bytes. El registro separado vincula el estado actual a los archivos y filas exactos. Una revisión de Codex no equivale a una revisión humana. Ningún caso final se abrió, redactó ni modificó para preparar esta tabla o registrar la aprobación.

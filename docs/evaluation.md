@@ -12,7 +12,7 @@ The existing constructed workloads, counts, targets and scoring sequence below a
 
 The bounded **private label/coverage inventory** of the 42 normalized Spanish groups is complete; see the checkpoint below. It reviewed customer inputs only, retaining source provenance, multiplicities, draft status and related request families. No supplied topic labels, agent responses, outcomes or router predictions determined the annotations. Three intended classes have zero support. This is the justification for the permitted generated-message plan, not usable four-class training support. Establish a reviewed independent workload before any new train/development/final split; do not force these balance templates into the missing classes.
 
-This inventory is feasibility evidence, not classifier performance. The [authored routing drafts](routing_workload.md) contain 96 training messages and 32 development messages, with disjoint family IDs and separately recorded provenance. A second Codex semantic review permits a training-only local preview; both files remain pending human review and development stays unscored. The owner can review Spanish only; fluent Portuguese human review is unresolved. Private cohort serving is implemented. The larger synthetic-schema adapter and comparative service runner remain deferred. English submission explanations must disclose source, generation and review limitations while the product retains both languages.
+This inventory is feasibility evidence, not classifier performance. The [authored routing drafts](routing_workload.md) contain 96 training messages and 32 development messages, with disjoint family IDs and separately recorded provenance. A second Codex semantic review permits a training-only local preview. On October 3 the owner approved all 64 Spanish messages for wording and intent labels; the [hash-bound review record](../evidence/routing_language_review.json) governs current language status while original JSON metadata is preserved. Portuguese fluent-human review remains pending and development stays unscored. Private cohort serving is implemented. The larger synthetic-schema adapter and comparative service runner remain deferred. English submission explanations must disclose source, generation and review limitations while the product retains both languages.
 
 The [baseline clarification](https://factored-hackathon.slack.com/archives/C0BUZCY0TUY/p1790697181127899?thread_ts=1790696927.151849) confirms that pattern rules can make the same decision as the learned candidate. Once the scoped workload and protocol are reviewed, both routes must share data, permissions, tools, scoring and failure denominators. The existing constructed final set is not silently replaced by a source-grounded set; any future benchmark requires its own provenance, split commitment and authorized freeze/scoring sequence.
 
@@ -125,8 +125,8 @@ final contents remain untouched. Source-label feasibility is now checked and the
 generated-message evaluation plan has permission with justification; reviewed labels,
 class/family coverage and the comparison protocol remain pending. The current next
 implementation increment adds an experimental [training-only learned preview](learned_routing.md)
-to the implemented [private-cohort UI](private_cohort_ui.md). Next complete Spanish
-owner review, disclose or resolve Portuguese human review, and declare a paired
+to the implemented [private-cohort UI](private_cohort_ui.md). Spanish wording/labels
+are approved. Next disclose or resolve Portuguese human review and declare a paired
 source-grounded comparison protocol before development scoring. The scenario
 adapter and runner remain deferred diagnostic work. The scripted demonstration,
 training-only preview and private source-backed smoke checks are not benchmark runs.

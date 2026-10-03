@@ -1,9 +1,14 @@
 # Authored routing workload: training and development drafts
 
-Status: **draft_pending_owner_and_portuguese_review**. These files are Codex-authored
+Language-review status: **Spanish wording and intent labels approved by the owner on
+2026-10-03; Portuguese fluent human review pending**. The [hash-bound review
+record](../evidence/routing_language_review.json) covers 48 TRAIN and 16 DEVELOPMENT
+Spanish messages. The JSON files retain their original draft status and bytes as
+historical artifact metadata; the separate record governs current language-review
+status for these exact artifacts. These files are Codex-authored
 requests for the selected four-intent routing task. They are engineered examples,
 not observed customer demand, representative production language, or a
-human-validated benchmark. No fitting, threshold selection, performance scoring,
+fully human-validated bilingual benchmark. No fitting, threshold selection, performance scoring,
 new final-case authoring, or final freeze was performed while creating them.
 
 ## Why authored messages are justified
@@ -31,8 +36,9 @@ authored allegations to be recorded as such, never verified bank outcomes.
 - [routing_development.json](../evaluation/routing_development.json): 32 messages
   in 8 different families.
 
-Both files use `schema_version: 1`, `provenance: codex_authored`, and the pending
-review status above. Each example has an ASCII `id` and `family_id`, a language
+Both files retain `schema_version: 1`, `provenance: codex_authored`, and the original
+`draft_pending_owner_and_portuguese_review` metadata. No workload bytes were changed
+to record the owner's approval. Each example has an ASCII `id` and `family_id`, a language
 (`es` or `pt`), text, and one intent. The author read the selected scope, the
 source-intent annotation rubric, and evaluation readiness gates. The author did
 not inspect baseline patterns, candidate predictions, trained weights, source
@@ -97,8 +103,12 @@ viewing classifier rules or predictions and found no forced-label ambiguity or
 wording correction. That review confirmed the shared semantics of the broad
 development summary family and the training inquiry families, and the distinction
 between withdrawal-dispute intent and the demo's purchase-only intake eligibility.
-It does not establish human/native language validation; the pending JSON review
-status is unchanged. The owner's Spanish-only checklist is
+That Codex review does not establish human/native language validation. On 2026-10-03
+the owner explicitly approved Spanish wording and intent labels for all 64 ES
+messages in the [separate review record](../evidence/routing_language_review.json).
+This approval does not establish family semantic independence, model quality or
+Portuguese validation. The JSON's original draft status and every text/label/ID
+remain unchanged. The owner's Spanish-only checklist is
 [routing_review_es.md](routing_review_es.md), containing all 64 ES messages with
 their proposed labels and family grouping. Portuguese human review remains pending.
 
@@ -209,9 +219,11 @@ and retain the prior record. This command prepares contexts without evaluating t
    and Portuguese phrasing without viewing classifier rules, predictions, or scores.
    Record concerns and corrections; this is a second model review, not independent
    human validation.
-2. Keep both artifacts marked as pending owner and Portuguese review. A reviewer
-   should accept, correct, or quarantine unclear examples under the fixed rubric;
-   do not resolve ambiguity by observing which router predicts a desired answer.
+2. Preserve both artifacts' original draft metadata and unchanged bytes. The separate
+   hash-bound review record now records the owner's Spanish wording/label approval;
+   Portuguese fluent human review remains pending. Future corrections require a
+   deliberate artifact revision and new review hashes. Do not resolve ambiguity by
+   observing which router predicts a desired answer.
 3. The current increment permits a fixed training-only fitting preview after the
    independent semantic draft review, under the root agent's shared protocol.
    Keep this draft provenance visible. Development remains unscored; no threshold

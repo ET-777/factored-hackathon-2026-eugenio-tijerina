@@ -32,7 +32,7 @@ from bank_service.demo_fixtures import demo_records, demo_session
 from bank_service.records import TransactionRecord
 from bank_service.responses import ResponseFormatError
 from bank_service.routing import (
-    IntentProposal, RoutingError, extract_slots, is_search_followup, refers_to_selected_transaction, route_intent,
+    IntentProposal, RoutingError, extract_slots, is_greeting, is_search_followup, refers_to_selected_transaction, route_intent,
 )
 from bank_service.selection import MAX_SEARCH_RECORDS, SelectionError, TransactionFilters
 from bank_service.transactions import SourceReference, SourcedTransaction, get_transaction
@@ -488,10 +488,19 @@ class BrowserSession:
             if preference is not None:
                 self.decide_intake(self.intake_offer.offer_id, preference, now)
                 return
-        # Slot-only turns continue the original server-owned request. Neither
-        # classifier can reinterpret a currency/amount as a fresh business intent.
-        continuing = self.pending_search is not None and is_search_followup(text, self.language)
-        proposal = (IntentProposal("inquiry", 1.0, True) if continuing else
+        if is_greeting(text, self.language):
+            if self.intake_offer is not None:
+                self.append("assistant", TEXT[self.language]["intake_offer"], "intake_offered")
+            elif self.pending_search is not None:
+                self.append("assistant", TEXT[self.language]["followup"], "needs_filters")
+            else:
+                self.append("assistant", self.text("greeting"), "greeting")
+            return
+        # Details alone start an inquiry or continue the server-owned request.
+        # Neither classifier may infer a dispute/handoff from a date or amount.
+        slot_only = is_search_followup(text, self.language)
+        continuing = self.pending_search is not None and slot_only
+        proposal = (IntentProposal("inquiry", 1.0, True) if slot_only else
                     route_intent(text, self.language) if self.router is None else
                     self.router.route_intent(text, self.language))
         if (not isinstance(proposal, IntentProposal)

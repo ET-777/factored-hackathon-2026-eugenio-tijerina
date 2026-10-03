@@ -5,7 +5,7 @@ from decimal import Decimal
 import unittest
 
 from bank_service.routing import (
-    IntentProposal, RoutingError, extract_slots, is_search_followup,
+    IntentProposal, RoutingError, extract_slots, is_greeting, is_search_followup,
     refers_to_selected_transaction, route_intent,
 )
 from bank_service.records import SUPPORTED_CURRENCIES
@@ -13,6 +13,25 @@ from bank_service.selection import TransactionFilters
 
 
 class IntentRoutingTests(unittest.TestCase):
+    def test_pure_greetings_do_not_include_business_requests_or_consent(self):
+        for text, language in (("¡Hola!", "es"), ("Buenos días", "es"),
+                               ("Olá!", "pt"), ("Oi", "pt"), ("Boa tarde", "pt")):
+            with self.subTest(text=text):
+                self.assertTrue(is_greeting(text, language))
+        for text, language in (("Hola, no reconozco esta compra", "es"),
+                               ("Oi, quero falar com uma pessoa", "pt"),
+                               ("sí", "es"), ("sim", "pt"), ("25 USD", "es")):
+            with self.subTest(text=text):
+                self.assertFalse(is_greeting(text, language))
+
+    def test_malformed_date_fragments_remain_slots_and_require_strict_iso(self):
+        for language in ("es", "pt"):
+            for text in ("20226-17-05", "2026-17-05", "2026-6-16", "16-06-2026", "2026-02-30"):
+                with self.subTest(text=text, language=language):
+                    self.assertTrue(is_search_followup(text, language))
+                    with self.assertRaisesRegex(RoutingError, "^invalid_date$"):
+                        extract_slots(text, language)
+
     def test_bilingual_inquiry_and_normalization(self):
         cases = (
             ("¿Cuál es el estado de esta transacción?", "es"),

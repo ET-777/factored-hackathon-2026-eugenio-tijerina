@@ -64,13 +64,15 @@ The classifier does not move money, issue a refund or contact a bank.
 The [workload rationale](routing_workload.md) documents organizer permission, authored
 provenance, grouping, source-binding expectations and limits. A second Codex reviewer
 checked all 128 TRAIN/DEVELOPMENT messages without viewing model predictions or rules
-and proposed no corrections. Both files remain **draft_pending_owner_and_portuguese_review**.
-The owner can review Spanish only; Portuguese fluent human review remains pending and
+and proposed no corrections. Their original JSON draft metadata is retained unchanged.
+The [October 3 language-review record](../evidence/routing_language_review.json) binds
+the owner's Spanish wording/label approval to all 64 ES messages. Portuguese fluent human review remains pending and
 must be resolved or disclosed explicitly. A second model review does not replace it.
 
-The next owner task is the [64-message Spanish checklist](routing_review_es.md): check
-wording, intent labels and family overlap, then report corrections by ID or approve
-the Spanish wording/labels. Do not use router responses to decide gold labels.
+The [64-message Spanish checklist](routing_review_es.md) is approved for wording and
+intent labels. This does not prove semantic family independence or model quality.
+Do not use router responses to decide gold labels. Next declare the paired comparison
+protocol and resolve or explicitly disclose the Portuguese human-review limitation.
 
 The new **32-message development draft is unscored**. Its eight families are separate
 from TRAIN, but this is a small engineered balanced workload with semantic overlap
@@ -113,3 +115,32 @@ The working-tree artifact check passed 86 eligible files, zero violations and 8/
 exclusion probes. It did not read dictionary credentials or scan Git history. Existing
 source/access/action/record/store/response/demo modules and the original public
 development/final commitment have no diff. Original final contents were not read.
+
+## Neutral chat input correction, October 3
+
+The owner reported a dispute offer after starting with «Hola» and providing dates.
+A TRAIN-only diagnostic reproduced the raw classifier proposing dispute intake for
+the greeting. Pure greetings now receive a greeting or the current search/offer
+reminder before either router runs. A greeting containing a business request still
+goes through normal routing. This is a shared conversation rule, not retraining or
+evidence that the classifier learned to interpret greetings correctly.
+
+Standalone dates, amounts, currencies and recognized record references now start an
+inquiry without consulting either business classifier. If an unfinished request
+already exists, the same details continue its original inquiry/dispute intent.
+Date attempts with a mistyped year, swapped components or invalid calendar value
+reach strict ISO validation; the app does not guess or rewrite the date. Existing
+permission checks, preparation consent and final confirmation are unchanged.
+
+**375 tests passed**, including the neutral greeting/date sequence, an explicit
+dispute followed by corrections, and preservation of offers/drafts. A separate
+12-stage HTTP regression used synthetic component records and the unchanged local
+TRAIN model in both languages; its [evidence](../evidence/neutral_chat_input_check.json)
+is diagnostic, not a held-out performance score. No source row or screenshot fact
+was copied into fixtures. The approved workload texts, labels and model parameters
+are unchanged; development remains unscored and original final cases unread.
+
+Stop and restart existing review servers to load the correction. Use the same
+updated shared code for the keyword and learned modes. Saved owner-local launchers
+remain available locally; they are ignored conveniences, not repository setup
+dependencies. The published startup commands above remain available.

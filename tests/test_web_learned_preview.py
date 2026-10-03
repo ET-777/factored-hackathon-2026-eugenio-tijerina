@@ -20,13 +20,91 @@ class CountingRouter:
 
 
 class LearnedPreviewWorkflowTests(unittest.TestCase):
-    def browser(self, proposal):
+    def browser(self, proposal, *, single_owned=False):
         directory = TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         router = CountingRouter(proposal)
-        browser = BrowserSession(Path(directory.name) / "cases.sqlite3", router=router)
+        config = None
+        if single_owned:
+            records = demo_records()
+            del records["DEMO-TX-002"]
+            config = PrivateCohortConfig(records, DEMO_CUSTOMER, frozenset(Permission))
+        browser = BrowserSession(Path(directory.name) / "cases.sqlite3", config=config, router=router)
         self.addCleanup(browser.close)
         return browser, router
+
+    def test_greeting_and_corrected_date_sequence_never_assume_dispute(self):
+        for learned in (False, True):
+            for language, greeting in (("es", "Hola"), ("pt", "Olá")):
+                with self.subTest(learned=learned, language=language):
+                    browser, router = self.browser(IntentProposal("dispute_intake", 1.0, True), single_owned=True)
+                    if not learned:
+                        browser.router = None
+                    now = _now()
+                    browser.act({"action": "language", "language": language}, now)
+                    browser.message(greeting, now)
+                    self.assertIsNone(browser.pending_search)
+                    self.assertEqual(browser.messages[-1]["status"], "greeting")
+                    for text in ("20226-17-05", "2026-17-05"):
+                        with self.assertRaisesRegex(RoutingError, "^invalid_date$"):
+                            browser.message(text, now)
+                        self.assertEqual(browser.pending_search.kind, "inquiry")
+                        self.assertIsNone(browser.intake_offer)
+                    browser.message("2026-05-17", now)
+                    self.assertEqual(browser.messages[-1]["status"], "no_match")
+                    browser.message("2026-06-16", now)
+                    self.assertEqual(browser.selected_id, "DEMO-TX-001")
+                    self.assertEqual(browser.messages[-1]["status"], "answered")
+                    self.assertIsNone(browser.intake_offer)
+                    self.assertIsNone(browser.pending_draft)
+                    self.assertIsNone(browser.business_issue)
+                    self.assertEqual(browser.store.count(), 0)
+                    self.assertEqual(router.calls, 0)
+
+    def test_fresh_money_currency_and_reference_never_use_business_classifier(self):
+        for intent in ("dispute_intake", "human_request"):
+            for text in ("25.50", "COP", "25.50 USD", "DEMO-TX-001"):
+                with self.subTest(intent=intent, text=text):
+                    browser, router = self.browser(IntentProposal(intent, 1.0, True), single_owned=True)
+                    browser.message(text, _now())
+                    self.assertEqual(router.calls, 0)
+                    self.assertIsNone(browser.intake_offer)
+                    self.assertIsNone(browser.pending_draft)
+                    self.assertIsNone(browser.business_issue)
+                    self.assertEqual(browser.store.count(), 0)
+
+    def test_greetings_and_corrected_details_preserve_explicit_dispute_and_consent(self):
+        for learned in (False, True):
+            for language, greeting, request in (
+                ("es", "Hola", "No reconozco un cargo"),
+                ("pt", "Olá", "Não reconheço uma compra"),
+            ):
+                with self.subTest(learned=learned, language=language):
+                    browser, router = self.browser(IntentProposal("dispute_intake", 0.9, True), single_owned=True)
+                    if not learned:
+                        browser.router = None
+                    now = _now()
+                    browser.act({"action": "language", "language": language}, now)
+                    browser.message(request, now)
+                    browser.message(greeting, now)
+                    self.assertEqual(browser.pending_search.request, request)
+                    for text in ("20226-17-05", "2026-17-05"):
+                        with self.assertRaises(RoutingError):
+                            browser.message(text, now)
+                    browser.message("2026-05-17", now)
+                    browser.message("2026-06-16", now)
+                    offer = browser.intake_offer
+                    self.assertIsNotNone(offer)
+                    self.assertEqual(offer.request, request)
+                    browser.message(greeting, now)
+                    self.assertIs(browser.intake_offer, offer)
+                    self.assertIsNone(browser.pending_draft)
+                    browser.act({"action": "intake_decision", "offer_id": offer.offer_id, "prepare": True}, now)
+                    draft = browser.pending_draft
+                    browser.message(greeting, now)
+                    self.assertIs(browser.pending_draft, draft)
+                    self.assertEqual(browser.store.count(), 0)
+                    self.assertEqual(router.calls, 1 if learned else 0)
 
     def test_learned_proposal_collects_slots_without_reclassifying_them(self):
         browser, router = self.browser(IntentProposal("dispute_intake", 0.8, True))

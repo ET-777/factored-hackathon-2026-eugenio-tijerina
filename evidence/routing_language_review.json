@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-03",
+  "review_source": "explicit_owner_approval_in_project_conversation",
+  "owner_statement": "I approve the spanish ckecklist wording and labels.",
+  "current_language_review_status": {
+    "spanish_owner_wording_and_intent_labels": "approved",
+    "portuguese_fluent_human_review": "pending"
+  },
+  "approved_scope": {
+    "language": "es",
+    "fields": [
+      "text",
+      "intent"
+    ],
+    "train_examples": 48,
+    "development_examples": 16,
+    "total_examples": 64,
+    "reviewer_role": "project_owner",
+    "independent_external_reviewer": false
+  },
+  "approval_limits": [
+    "Does not establish semantic independence of scenario families.",
+    "Does not establish model quality, routing improvement or service-completion performance.",
+    "Does not approve Portuguese wording or intent labels.",
+    "Does not establish native source-language coverage or representative production language.",
+    "Does not authorize opening/changing the original final cases or a new final freeze."
+  ],
+  "canonicalization": {
+    "row_selection": "language_exactly_es",
+    "row_fields": [
+      "id",
+      "family_id",
+      "language",
+      "text",
+      "intent"
+    ],
+    "row_order": "id_ascending",
+    "encoding": "UTF-8",
+    "json_sort_keys": true,
+    "json_ensure_ascii": false,
+    "json_separators": [
+      ",",
+      ":"
+    ],
+    "trailing_newline": false,
+    "value_normalization": "none_exact_decoded_row_values"
+  },
+  "artifacts": {
+    "train": {
+      "artifact_review_status": "draft_pending_owner_and_portuguese_review",
+      "canonical_es_rows_sha256": "0b93ff148bfdf4ef98c90344402f5eb70cba816c840afe20d375b4a5f510072f",
+      "es_examples": 48,
+      "es_families": 12,
+      "es_intent_counts": {
+        "dispute_intake": 12,
+        "human_request": 12,
+        "inquiry": 12,
+        "unsupported": 12
+      },
+      "file_sha256": "41c3b99d7e38b33661625be83c062ad26e22c94900026fd53105680aa16891ab",
+      "path": "evaluation/routing_train.json"
+    },
+    "development": {
+      "artifact_review_status": "draft_pending_owner_and_portuguese_review",
+      "canonical_es_rows_sha256": "94d329fdbfc1e7fde49205d99e988c8e136b13fb908ca784ce25c798ecbe1a21",
+      "es_examples": 16,
+      "es_families": 8,
+      "es_intent_counts": {
+        "dispute_intake": 4,
+        "human_request": 4,
+        "inquiry": 4,
+        "unsupported": 4
+      },
+      "file_sha256": "ca86b398928b8fbdb62ba02007f9e4f1b64d08c3489d7353bedda027b03f25fe",
+      "path": "evaluation/routing_development.json"
+    }
+  },
+  "combined_spanish_review": {
+    "canonical_es_rows_sha256": "0d256703305c083e93c91bb4fd246a3f800212393b62204342a3ada897b5eb8d",
+    "es_examples": 64,
+    "es_families": 20
+  },
+  "artifact_metadata_policy": "The original draft_pending_owner_and_portuguese_review status and all TRAIN/DEVELOPMENT JSON bytes remain unchanged as historical artifact metadata. This separate hash-bound review record governs current language-review status for these exact artifacts.",
+  "actions_in_this_review": {
+    "workload_bytes_changed": false,
+    "source_bindings_read_or_changed": false,
+    "model_fitting": false,
+    "threshold_selection": false,
+    "development_scoring": false,
+    "original_final_accessed_or_changed": false
+  }
+}
