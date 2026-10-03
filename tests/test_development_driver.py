@@ -129,7 +129,10 @@ class DevelopmentDriverTests(unittest.TestCase):
         self.assertFalse(result["checks"]["answer_grounded"])
         self.assertFalse(result["completion_pass"])
         self.assertNotIn("answered", result["status_trace"])
-        self.assertEqual(result["cases_created"], 1)
+        self.assertEqual(result["cases_created"], 0)
+        # The frozen diagnostic driver sanitizes new UI status codes rather
+        # than treating a clarification as a completed workflow branch.
+        self.assertEqual(result["status_trace"], ["other_status"])
         self.assertEqual(len(router.calls), 1)
 
     def test_eligible_purchase_requires_confirmation_and_verified_idempotent_receipt(self):
@@ -189,7 +192,7 @@ class DevelopmentDriverTests(unittest.TestCase):
             return receipt
 
         with patch.object(ActionService, "read_case", observe):
-            result, _ = self.run_case("human_request", "Necesito seguimiento humano de un caso que mencioné.",
+            result, _ = self.run_case("human_request", "Quiero hablar con una persona sobre un caso que mencioné.",
                                       family="synthetic-existing-case")
         self.assertTrue(result["completion_pass"])
         self.assertTrue(result["checks"]["packet_grounded"])
@@ -198,7 +201,7 @@ class DevelopmentDriverTests(unittest.TestCase):
         self.assertTrue(packets)
         self.assertTrue(all(packet["verified_actions"] == [] for packet in packets))
 
-    def test_actual_surfaced_handoff_can_complete_ineligible_dispute_despite_wrong_intent(self):
+    def test_model_only_human_label_cannot_prepare_ineligible_dispute(self):
         original = ActionService.read_case
         packets = []
 
@@ -211,15 +214,14 @@ class DevelopmentDriverTests(unittest.TestCase):
         with patch.object(ActionService, "read_case", observe):
             result, router = self.run_case("dispute_intake", text, entry=record(kind="Withdrawal"),
                                            routed="human_request")
-        self.assertTrue(result["completion_pass"])
-        self.assertTrue(result["checks"]["expected_branch"])
+        self.assertFalse(result["completion_pass"])
+        self.assertFalse(result["checks"]["expected_branch"])
         self.assertFalse(result["checks"]["safe_eligibility_block"])
-        self.assertEqual(result["cases_created"], 1)
-        self.assertEqual(result["scored_actions"], 3)
-        self.assertEqual(result["status_trace"], ["confirmation_required", "action_verified", "action_verified"])
+        self.assertEqual(result["cases_created"], 0)
+        self.assertEqual(result["scored_actions"], 1)
+        self.assertEqual(result["status_trace"], ["other_status"])
         self.assertEqual(router.calls, [(text, "es")])
-        self.assertTrue(packets)
-        self.assertTrue(all(packet["operation"] == "handoff" and packet["request"] == text for packet in packets))
+        self.assertEqual(packets, [])
 
     def test_unsupported_uses_only_surfaced_handoff_without_transaction_facts(self):
         original = ActionService.read_case
@@ -239,9 +241,10 @@ class DevelopmentDriverTests(unittest.TestCase):
 
     def test_wrong_route_handoff_does_not_satisfy_unsupported_service_criteria(self):
         result, _ = self.run_case("unsupported", "Cambia mis credenciales de acceso ahora.", routed="human_request")
-        self.assertEqual(result["cases_created"], 1)
-        self.assertTrue(result["checks"]["packet_grounded"])
+        self.assertEqual(result["cases_created"], 0)
+        self.assertIsNone(result["checks"]["packet_grounded"])
         self.assertFalse(result["completion_pass"])
+        self.assertEqual(result["status_trace"], ["other_status"])
         self.assertNotIn("unsupported", result["status_trace"])
 
     def test_original_request_or_source_mutation_fails_packet_oracle(self):

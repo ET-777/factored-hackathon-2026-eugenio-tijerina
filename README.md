@@ -22,8 +22,10 @@ See [development results](docs/development_results.md) for failures and limits.
 Subsequent [shared workflow fixes](docs/post_development_fixes.md) add consented
 human review for ineligible disputes, requested channel-limit explanations and
 explicit previous-case continuation handling. Complete plain read/search requests
-also bypass business classification and request missing details. Those fixes have regression checks;
-the first comparison scores still describe the earlier frozen code.
+also bypass business classification and request missing details.
+Chat prepares a human handoff only from explicit positive human-request wording,
+while model-only human predictions clarify without creating a draft or new offer.
+These fixes have regression checks; the first comparison scores still describe the earlier frozen code.
 Human output review, broader scenario evaluation, deployment and final evaluation
 remain pending. These are authored development results, not final performance.
 

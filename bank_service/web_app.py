@@ -32,7 +32,8 @@ from bank_service.demo_fixtures import demo_records, demo_session
 from bank_service.records import TransactionRecord
 from bank_service.responses import ResponseFormatError, TransactionAnswer, with_requested_record_limits
 from bank_service.routing import (
-    IntentProposal, RoutingError, extract_slots, is_case_continuation, is_explicit_inquiry, is_greeting,
+    IntentProposal, RoutingError, extract_slots, is_case_continuation, is_explicit_human_request,
+    is_explicit_inquiry, is_greeting,
     is_search_followup, refers_to_selected_transaction, route_intent,
 )
 from bank_service.selection import MAX_SEARCH_RECORDS, SelectionError, TransactionFilters
@@ -63,6 +64,7 @@ TEXT = {
         "denied": "No puedo acceder a esa información con esta sesión. Puedes iniciar una nueva sesión de demostración.",
         "invalid": "No pude interpretar esos datos. Revisa la fecha, el importe y la moneda, o selecciona una transacción de la lista.",
         "unsupported": "Esta demostración permite consultar transacciones y abrir solicitudes de revisión. Para esta petición, puedo preparar una derivación a revisión humana si lo deseas.",
+        "request_scope": "Puedo ayudarte a consultar una transacción o solicitar su revisión. ¿Qué necesitas hacer?",
         "confirm_button": "Para aprobar una solicitud, revisa el borrador y usa su botón de confirmación.",
         "draft": "Preparé la solicitud en el panel lateral. Revisa allí sus detalles y usa «Confirmar y guardar» para enviarla a la cola simulada. Aún no se ha guardado.",
         "intake_offer": "¿Quieres que prepare una solicitud de revisión de esta transacción? Es un ticket de demostración, no un reembolso. Puedes responder sí o no, o usar los botones.",
@@ -95,6 +97,7 @@ TEXT = {
         "denied": "Não posso acessar essas informações com esta sessão. Você pode iniciar uma nova sessão de demonstração.",
         "invalid": "Não consegui interpretar esses dados. Confira a data, o valor e a moeda, ou selecione uma transação da lista.",
         "unsupported": "Esta demonstração permite consultar transações e abrir solicitações de revisão. Para este pedido, posso preparar um encaminhamento para revisão humana se você desejar.",
+        "request_scope": "Posso ajudar a consultar uma transação ou solicitar sua revisão. O que você precisa fazer?",
         "confirm_button": "Para aprovar uma solicitação, revise o rascunho e use o botão de confirmação.",
         "draft": "Preparei a solicitação no painel lateral. Revise seus detalhes ali e use «Confirmar e salvar» para enviá-la à fila simulada. Ela ainda não foi salva.",
         "intake_offer": "Você quer que eu prepare uma solicitação de revisão desta transação? É um ticket de demonstração, não um reembolso. Pode responder sim ou não, ou usar os botões.",
@@ -643,6 +646,17 @@ class BrowserSession:
                 or not 0 <= proposal.confidence <= 1
                 or (not proposal.matched and proposal.intent != "unsupported")):
             raise RoutingError("invalid_intent_proposal")
+        explicit_human = is_explicit_human_request(text, self.language)
+        if explicit_human:
+            # A positive user request, rather than a model score, determines
+            # preparation intent. Final storage still requires confirmation.
+            proposal = IntentProposal("human_request", 1.0, True)
+        elif proposal.intent == "human_request":
+            # A closed-set model label cannot supply the customer's request to
+            # prepare a handoff. Do not turn unrelated/vague text into either a
+            # draft or a new handoff offer, and keep any prior business context.
+            self.append("assistant", TEXT[self.language]["request_scope"], "needs_request")
+            return
         if self.handoff_offer is not None:
             if proposal.intent == "unsupported" and not proposal.matched and not slot_only:
                 self.append("assistant", TEXT[self.language]["handoff_offer"], "handoff_offered")

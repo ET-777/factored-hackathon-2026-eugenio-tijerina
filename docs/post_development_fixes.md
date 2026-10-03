@@ -107,3 +107,45 @@ After narrowing the guard to exclude ambiguous «revisar» requests, the full su
 passed **469 tests**. The scoped privacy check passed 107 eligible files with zero
 violations and eight of eight exclusion probes. All seven protected artifact
 hashes still match the pre-fix checkpoint; original final contents remain unread.
+
+## Human-request boundary correction, October 3
+
+The owner then reported unrelated messages («quiero comer» and «hello») preparing
+human-handoff drafts. A TRAIN-only diagnostic reproduced both raw predictions as
+`human_request`. The classifier has no reliable general out-of-domain detector:
+familiar character fragments can receive a winning intent even when the message
+does not express a banking request. A model score cannot establish a customer's
+request to prepare a ticket.
+
+The shared workflow now requires a complete positive human-request clause before
+preparing a handoff from chat. It supports bounded Spanish/Portuguese request
+wording and human-contact shortcuts. Negated or narrative mentions do not qualify;
+an explicit refusal to prepare a ticket also vetoes preparation. When only the
+classifier predicts a human request, unclear wording receives a scope clarification
+without creating a new draft or handoff offer. An explicit human request can override a wrong valid model label,
+but permissions, source checks and the separate final confirmation still apply.
+Prior search, selection, banking issue and unaccepted consent offers are preserved
+when the classifier alone predicts a human request. Existing consent-bound
+escalation for ineligible intake and previous-case continuation is unchanged.
+
+Standalone «hello», «hi» and «hey» are greeting aliases, answered in the selected
+Spanish or Portuguese language. Mixed greeting/business messages still go through
+request handling; this does not add English business-language support.
+
+These are conversation-policy repairs, not retraining or general language
+understanding. The raw model, TRAIN/DEV labels, first measured scores and protected
+evaluation artifacts remain unchanged. The new regression includes the screenshot
+sequence through isolated HTTP with the existing TRAIN model and fictional
+records, plus forced wrong predictions, negation/narrative wording, preserved
+context and separate confirmation of explicitly requested human drafts.
+Other model-predicted intents retain their existing handling; this boundary does
+not establish reliable detection of every unrelated message. Synthetic diagnostic
+assertions that previously expected model-only handoff drafts now expect no case
+and incomplete workflow results. The frozen driver, scoring rules and first-run
+artifacts were not changed or rerun.
+
+The complete suite passed **485 tests** after this correction. The scoped privacy
+check passed 108 eligible files with zero violations and eight of eight exclusion
+probes. All seven protected artifact hashes matched their original checkpoint.
+Original final contents, dictionary credentials and private source rows were not
+read in this increment; no provider calls, public release or deployment occurred.

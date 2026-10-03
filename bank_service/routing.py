@@ -314,11 +314,71 @@ def refers_to_selected_transaction(text: str, language: str) -> bool:
 
 
 def is_greeting(text: str, language: str) -> bool:
-    """Recognize only a complete ES/PT greeting, without a business request."""
+    """Recognize a complete greeting, retaining the selected ES/PT response.
+
+    Common standalone English greetings are courtesy aliases only, not English
+    business-language support. A greeting mixed with a request is excluded.
+    """
     normalized = _without_accents(_checked_text(text, language)).casefold().strip(" \t\r\n.!¡?¿")
     pattern = (r"(?:hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches)"
                if language == "es" else r"(?:ola|oi|bom dia|boa tarde|boa noite)")
-    return re.fullmatch(pattern, normalized) is not None
+    return re.fullmatch(r"(?:" + pattern + r"|hello|hi|hey)", normalized) is not None
+
+
+def is_explicit_human_request(text: str, language: str) -> bool:
+    """Require positive human-request wording, never just a model label.
+
+    This bounded check establishes only the request to prepare a human summary;
+    it never grants access, confirms storage or verifies bank case history.
+    Complete positive request clauses are required; narrative mentions and
+    unclear negation need clarification. Existing unsupported-action priority
+    still applies across the whole message.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold()
+    # A request for a person is not permission to prepare a ticket when another
+    # clause explicitly refuses preparation. A failed past attempt ("no pude
+    # crear...") does not match this bounded refusal grammar.
+    declined_preparation = (
+        r"\b(?:no|nao|nunca|sin|sem)\s+"
+        r"(?:(?:quiero|quero|necesito|preciso|deseo|desejo|permito|autorizo|solicito)\s+)?"
+        r"(?:(?:que|me|voce|se|realmente|mesmo|un|una|um|uma|ningun|ninguna|nenhum|nenhuma)\s+){0,4}"
+        r"(?:preparar|prepara|prepare|prepares|crear|crea|cree|crees|criar|crie|abrir|abra|abras|"
+        r"guardar|guarda|guarde|guardes|salvar|salve|enviar|envia|envie|envies|"
+        r"ticket|caso|solicitud|solicitacao|pedido|resumen|resumo|borrador|rascunho)\b"
+    )
+    if re.search(declined_preparation, normalized):
+        return False
+    proposal = route_intent(normalized, language)
+    if proposal.intent == "unsupported" and proposal.matched:
+        return False
+    target = (
+        r"(?:(?:un|una|um|uma|el|la|o|a)\s+)?"
+        r"(?:persona|pessoa|agente|atendente|humano|humana|asesor|assessor)"
+        r"(?:\s+(?:real|humano|humana))?"
+    )
+    prefix = (
+        r"(?:quiero|quisiera|necesito|deseo|me gustaria|puedo|puedes|podrias|"
+        r"quero|queria|preciso|desejo|gostaria de|posso|pode|poderia)"
+    )
+    contact = (
+        r"(?:hablar|hablarme|conversar|falar|contactar|conectar|comunicarme|"
+        r"conectame|comunicame|pasame)\s+(?:con|com|a)\s+" + target
+    )
+    request = (
+        r"(?:por\s+favor\s+)?(?:"
+        + r"(?:" + prefix + r"\s+)?(?:por\s+favor\s+)?" + contact
+        + r"|(?:" + prefix + r")\s+(?:de\s+)?" + target
+        + r"|atencion\s+humana|atendimento\s+human[oa])"
+        + r"(?:\s+(?:sobre|por|acerca de|a respeito de)\s+[^,;.!?]+)?"
+        + r"(?:\s+por\s+favor)?"
+    )
+    for clause in re.split(r"[,;.!?\n]+", normalized):
+        clause = clause.strip(" \t\r\n¡¿")
+        if re.search(r"\b(?:no|nao|nunca|jamas|jamais|ni|nem|sin|sem)\b", clause):
+            continue
+        if re.fullmatch(request, clause):
+            return True
+    return False
 
 
 def is_explicit_inquiry(text: str, language: str) -> bool:
