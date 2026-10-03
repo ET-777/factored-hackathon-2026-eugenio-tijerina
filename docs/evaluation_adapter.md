@@ -1,13 +1,14 @@
 # Deferred adapter for independently authored diagnostic scenarios
 
 Status: deferred contract review only. No scenario adapter, development workload run, or
-final workload run is implemented by this document. The current UI and keyword
-router use separate fictional demo records. The sealed final cases were not read
+final workload run is implemented by this document. The UI now supports fictional
+demo records or a bounded private cohort, with keyword or experimental learned routing.
+The sealed final cases were not read
 for this review and must remain untouched until the freeze and authorized scoring
-sequence in [evaluation.md](evaluation.md), including its October 1 eligibility gate.
-The organizer's conditional mock-data reply does not establish these constructed
-scenarios as eligible learned-component performance evidence. First inventory usable
-private source labels and coverage; this adapter is not a prerequisite to that review.
+sequence in [evaluation.md](evaluation.md). The scoped October 2 organizer reply does
+not establish all these old fictional-record scenarios as eligible learned-component
+performance evidence. Source coverage is now inventoried; the new [authored routing
+drafts](routing_workload.md) and private context bindings are separate from this adapter.
 
 ## Why an explicit adapter is necessary
 

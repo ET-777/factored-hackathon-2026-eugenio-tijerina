@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "status": "private_context_bindings_not_workflow_results",
+  "cohort_records": 50,
+  "summary": {
+    "development": {
+      "bound_examples": 32,
+      "bound_families": 8,
+      "examples": 32,
+      "families": 8,
+      "unavailable_examples": 0
+    },
+    "train": {
+      "bound_examples": 96,
+      "bound_families": 12,
+      "examples": 96,
+      "families": 12,
+      "unavailable_examples": 0
+    }
+  },
+  "customer_and_transaction_anchors": "disjoint_across_twenty_families",
+  "authored_allegations": "unverified",
+  "review_status": "draft_pending_owner_and_portuguese_review",
+  "source_records_tracked_or_published": false,
+  "source_records_fabricated": false,
+  "original_source_files_rehashed": false,
+  "bound_workflow_cases_executed": false,
+  "development_scored": false,
+  "original_final_accessed": false,
+  "public_fields": "aggregate_counts_only_no_private_identity_source_reference_or_hash"
+}

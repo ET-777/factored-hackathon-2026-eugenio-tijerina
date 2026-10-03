@@ -78,12 +78,13 @@ in both the UI and authorized controller, preventing a later draft from attachin
 an earlier transaction.
 
 The rule's 0/1 confidence value is a match indicator, not a calibrated probability.
-This is not the planned learned component or an unrestricted conversational model.
-The proposed character n-gram classifier will suggest the same intents while permission,
+The default is keyword routing. An optional experimental [local character n-gram
+classifier](learned_routing.md) now suggests the same intents while permission,
 selection, confirmation and receipt checks stay outside it. The October 2 organizer
 answer permits justified authored ES/PT evaluation messages using supplied transaction
-records and labeled simulated scenarios. Reviewed examples and the comparison protocol
-are still required before fitting or scoring; the existing final set stays sealed.
+records and labeled simulated scenarios. The experimental preview fits only the
+authored TRAIN draft; reviewed examples and a declared comparison protocol remain
+required before development scoring. The existing final set stays sealed.
 
 ## Session and storage behavior
 

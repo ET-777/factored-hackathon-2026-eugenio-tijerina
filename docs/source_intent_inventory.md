@@ -149,3 +149,8 @@ source-grounded authored ES/PT workload and shared comparison protocol. Keep sou
 evidence private. The synthetic scenario adapter remains deferred; no training,
 tuning, performance scoring, public release, deployment or
 additional Slack message is part of this increment.
+
+The subsequent [learned-preview increment](learned_routing.md) supplies authored
+TRAIN/DEVELOPMENT drafts, private source-context bindings and training-only local
+fitting. The source inventory above remains coverage evidence. Human review and a
+comparison protocol are pending; no development or final score is claimed.

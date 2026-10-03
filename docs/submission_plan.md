@@ -19,12 +19,14 @@ source status are in [source_intent_inventory.md](source_intent_inventory.md); a
 Slack permalink has not yet been retrieved. This supersedes the earlier pending gate
 for that proposal, not every fictional-bank-record case. Justify the lack of intent/PT
 coverage, distinguish provenance, and establish reviewed labels, independent families
-and a comparison protocol before fitting or tuning. Preserve the existing final seal;
+and a comparison protocol before submission-grade scoring or tuning. Preserve the existing final seal;
 any new source-grounded final workload needs a separate authorized freeze. The current
-increment connects [private-cohort loopback serving](private_cohort_ui.md), with its
-integration checks completed. Next establish the reviewed source-grounded authored
-ES/PT workload and shared comparison protocol. No model training, performance
-evaluation, public release or deployment has run. The 34-hour total and protected delivery time are unchanged.
+increment adds a [training-only learned preview](learned_routing.md) to implemented
+[private-cohort serving](private_cohort_ui.md). The authored drafts contain 96
+training messages and 32 unscored development messages; second Codex semantic review
+is complete. Spanish owner review, Portuguese human review and the shared comparison
+protocol remain pending. Experimental local training has run; comparative performance
+evaluation, public release and deployment have not. The 34-hour total and protected delivery time are unchanged.
 
 Use feature branches, small reviewed PRs, clear commits and a tagged submission version
 for new increments, following organizer judging advice. Preserve prior history and
@@ -37,8 +39,9 @@ The user delegated workflow selection to Codex. The [completed local review](loc
 The prototype is one Python application. Its local workflow now has a validated record
 adapter, small private source cohort, independently authored demo records, trusted demo
 sessions, guarded tools and structured simulated handoff. The [local UI](local_ui.md)
-and keyword baseline are now implemented. The evaluation scenario adapter, learned
-classifier, real authentication integration and deployment remain future work. Quarantine transactions
+and keyword baseline are implemented, with an experimental local learned router.
+The evaluation scenario runner, real authentication integration and deployment
+remain future work. Quarantine transactions
 predating the supplied customer registration or product opening date; passing current
 owner/currency joins does not establish historical ownership. Preserve native amounts,
 currencies and snapshot uncertainty. The app must not load the whole 5.35 GB download.
@@ -136,13 +139,11 @@ Use the final **10 seconds** for deployed/repository links and what the offline 
 **Next implementation step:** the [bounded private label/coverage inventory](source_intent_inventory.md)
 is complete: two balance-request openings produce 42 full-text variants, with zero
 support for inquiry, dispute intake or human request. Do not train or benchmark the
-four-intent router from this subset. Connect the existing validated private cohort to
-a separate [loopback interface mode](local_ui.md), with trusted startup identity and
-permissions, exact native facts, guarded inquiry and simulated intake/readback/handoff.
-Keep its evidence private and the fictional demo unchanged. The permitted generated
-ES/PT evaluation plan still needs reviewed labels, independent families and a protocol
-before training or scoring; any new final workload requires a separate authorized
-freeze. The constructed [scenario adapter](evaluation_adapter.md) remains deferred
-diagnostic work. This increment includes no training, evaluation, publishing or
-deployment. Do not place the full dataset behind the app or alter existing final cases
-to fit implementation.
+four-intent router from this subset. Private-cohort serving and an experimental
+training-only learned router now exist. Review the [Spanish draft checklist](routing_review_es.md),
+resolve or disclose Portuguese human review, and freeze a source-grounded paired
+comparison protocol before scoring development. Any new final workload requires a
+separate authorized freeze. The constructed [scenario adapter](evaluation_adapter.md)
+remains deferred diagnostic work. Keep source evidence private, preserve the fictional
+demo and final seal, and do not place the full dataset behind the app. Deployment,
+public release and delivery artifacts still need completion.

@@ -105,8 +105,9 @@ no dictionary access or exact-credential comparison; it does not scan Git histor
 Backups of edited existing files are under the ignored
 `.local/review_backups/workflow-20260928T232229/` directory.
 
-- The controller accepts structured commands. Natural-language extraction, keyword
-  routing, the learned classifier and their comparison are still pending.
+- The controller accepts structured commands. The later loopback UI adds keyword
+  routing, bounded slot extraction and an experimental learned router. Their
+  comparative evaluation remains pending.
 - This is a local library plus scripted CLI, not a deployed web application. Trusted
   sessions are server-created demo objects, not an authentication provider. Serialize
   turns for each conversation; concurrent web serving has not been qualified.
@@ -134,8 +135,10 @@ remains unchanged; the full dataset is not loaded behind the app.
 The scoped generated ES/PT evaluation plan now has organizer permission with
 justification; see [evaluation.md](evaluation.md). Reviewed labels, independent families,
 Portuguese review and the comparison protocol remain pending. The [scenario
-adapter](evaluation_adapter.md) is deferred diagnostic work. This increment includes
-no model training, performance evaluation, public release or deployment. Next establish
-the reviewed source-grounded authored workload and shared comparison protocol. Keep the existing
+adapter](evaluation_adapter.md) is deferred diagnostic work. The later [learned
+preview](learned_routing.md) fits the authored TRAIN draft locally without scoring
+development. Next complete human review and declare the shared source-grounded
+comparison protocol. No comparative performance, public release or deployment is
+claimed. Keep the existing
 final set sealed; any new source-grounded final workload requires a separate authorized
 freeze rather than changing old cases to fit the implementation.

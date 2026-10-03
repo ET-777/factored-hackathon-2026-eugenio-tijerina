@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "split": "development",
+  "provenance": "codex_authored",
+  "review_status": "draft_pending_owner_and_portuguese_review",
+  "examples": [
+    {
+      "id": "dev-inquiry-time-and-channel-es-01",
+      "family_id": "dev-inquiry-time-and-channel",
+      "language": "es",
+      "text": "Para ordenar mis comprobantes, busca la fecha y la hora registradas para esta operación.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "dev-inquiry-time-and-channel-es-02",
+      "family_id": "dev-inquiry-time-and-channel",
+      "language": "es",
+      "text": "¿Por qué canal se realizó el movimiento seleccionado según sus datos?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "dev-inquiry-time-and-channel-pt-01",
+      "family_id": "dev-inquiry-time-and-channel",
+      "language": "pt",
+      "text": "Para organizar meus comprovantes, localize a data e a hora registradas para esta operação.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "dev-inquiry-time-and-channel-pt-02",
+      "family_id": "dev-inquiry-time-and-channel",
+      "language": "pt",
+      "text": "Em qual canal o lançamento selecionado foi realizado, de acordo com os dados?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "dev-inquiry-operation-summary-es-01",
+      "family_id": "dev-inquiry-operation-summary",
+      "language": "es",
+      "text": "Necesito un resumen de los datos disponibles de esta transacción para anotarlos.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "dev-inquiry-operation-summary-es-02",
+      "family_id": "dev-inquiry-operation-summary",
+      "language": "es",
+      "text": "Explícame la información registrada en el movimiento que tengo abierto.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "dev-inquiry-operation-summary-pt-01",
+      "family_id": "dev-inquiry-operation-summary",
+      "language": "pt",
+      "text": "Preciso de um resumo dos dados disponíveis desta transação para fazer minhas anotações.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "dev-inquiry-operation-summary-pt-02",
+      "family_id": "dev-inquiry-operation-summary",
+      "language": "pt",
+      "text": "Explique as informações registradas no lançamento que estou consultando.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "dev-dispute-cash-not-dispensed-es-01",
+      "family_id": "dev-dispute-cash-not-dispensed",
+      "language": "es",
+      "text": "El cajero descontó el retiro, pero no me entregó efectivo; quiero abrir una reclamación.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "dev-dispute-cash-not-dispensed-es-02",
+      "family_id": "dev-dispute-cash-not-dispensed",
+      "language": "es",
+      "text": "Quiero impugnar este retiro porque el dinero no salió del cajero.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "dev-dispute-cash-not-dispensed-pt-01",
+      "family_id": "dev-dispute-cash-not-dispensed",
+      "language": "pt",
+      "text": "O caixa eletrônico debitou o saque, mas não entregou as notas; quero abrir uma contestação.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "dev-dispute-cash-not-dispensed-pt-02",
+      "family_id": "dev-dispute-cash-not-dispensed",
+      "language": "pt",
+      "text": "Quero contestar este saque porque o dinheiro não saiu do caixa eletrônico.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "dev-dispute-goods-not-received-es-01",
+      "family_id": "dev-dispute-goods-not-received",
+      "language": "es",
+      "text": "Pagué este pedido y nunca lo recibí. Solicito que se revise el cargo.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "dev-dispute-goods-not-received-es-02",
+      "family_id": "dev-dispute-goods-not-received",
+      "language": "es",
+      "text": "Quiero iniciar una reclamación por esta compra: la mercancía no fue entregada.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "dev-dispute-goods-not-received-pt-01",
+      "family_id": "dev-dispute-goods-not-received",
+      "language": "pt",
+      "text": "Paguei este pedido e nunca o recebi. Solicito uma análise da cobrança.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "dev-dispute-goods-not-received-pt-02",
+      "family_id": "dev-dispute-goods-not-received",
+      "language": "pt",
+      "text": "Quero iniciar uma contestação desta compra: a mercadoria não foi entregue.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "dev-human-written-packet-es-01",
+      "family_id": "dev-human-written-packet",
+      "language": "es",
+      "text": "Prepara un resumen de esta consulta para que lo revise una persona del equipo.",
+      "intent": "human_request"
+    },
+    {
+      "id": "dev-human-written-packet-es-02",
+      "family_id": "dev-human-written-packet",
+      "language": "es",
+      "text": "Quisiera enviar la información de este movimiento a un asesor humano para su revisión.",
+      "intent": "human_request"
+    },
+    {
+      "id": "dev-human-written-packet-pt-01",
+      "family_id": "dev-human-written-packet",
+      "language": "pt",
+      "text": "Prepare um resumo desta consulta para que uma pessoa da equipe possa analisá-lo.",
+      "intent": "human_request"
+    },
+    {
+      "id": "dev-human-written-packet-pt-02",
+      "family_id": "dev-human-written-packet",
+      "language": "pt",
+      "text": "Gostaria de encaminhar as informações deste lançamento a um atendente humano para análise.",
+      "intent": "human_request"
+    },
+    {
+      "id": "dev-human-case-continuity-es-01",
+      "family_id": "dev-human-case-continuity",
+      "language": "es",
+      "text": "Tengo una solicitud iniciada y quiero que un agente retome mi caso.",
+      "intent": "human_request"
+    },
+    {
+      "id": "dev-human-case-continuity-es-02",
+      "family_id": "dev-human-case-continuity",
+      "language": "es",
+      "text": "Necesito seguimiento de una persona para la gestión que dejé pendiente.",
+      "intent": "human_request"
+    },
+    {
+      "id": "dev-human-case-continuity-pt-01",
+      "family_id": "dev-human-case-continuity",
+      "language": "pt",
+      "text": "Tenho uma solicitação em andamento e quero que um atendente dê continuidade ao meu caso.",
+      "intent": "human_request"
+    },
+    {
+      "id": "dev-human-case-continuity-pt-02",
+      "family_id": "dev-human-case-continuity",
+      "language": "pt",
+      "text": "Preciso do acompanhamento de uma pessoa para a solicitação que deixei pendente.",
+      "intent": "human_request"
+    },
+    {
+      "id": "dev-unsupported-credit-limit-es-01",
+      "family_id": "dev-unsupported-credit-limit",
+      "language": "es",
+      "text": "Aumenta el límite de crédito de mi tarjeta.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "dev-unsupported-credit-limit-es-02",
+      "family_id": "dev-unsupported-credit-limit",
+      "language": "es",
+      "text": "Quiero ampliar mi línea de crédito; aprueba el incremento.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "dev-unsupported-credit-limit-pt-01",
+      "family_id": "dev-unsupported-credit-limit",
+      "language": "pt",
+      "text": "Aumente o limite de crédito do meu cartão.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "dev-unsupported-credit-limit-pt-02",
+      "family_id": "dev-unsupported-credit-limit",
+      "language": "pt",
+      "text": "Quero ampliar minha linha de crédito; aprove o aumento.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "dev-unsupported-login-credentials-es-01",
+      "family_id": "dev-unsupported-login-credentials",
+      "language": "es",
+      "text": "Olvidé mi contraseña de acceso; restablécela.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "dev-unsupported-login-credentials-es-02",
+      "family_id": "dev-unsupported-login-credentials",
+      "language": "es",
+      "text": "Quiero cambiar la clave con la que entro a la banca digital.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "dev-unsupported-login-credentials-pt-01",
+      "family_id": "dev-unsupported-login-credentials",
+      "language": "pt",
+      "text": "Esqueci minha senha de acesso; redefina-a.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "dev-unsupported-login-credentials-pt-02",
+      "family_id": "dev-unsupported-login-credentials",
+      "language": "pt",
+      "text": "Quero alterar a senha que uso para entrar no banco digital.",
+      "intent": "unsupported"
+    }
+  ]
+}

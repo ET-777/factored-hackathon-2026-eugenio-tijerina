@@ -14,6 +14,7 @@ from decimal import Decimal, InvalidOperation
 from http.cookies import SimpleCookie, CookieError
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import math
 from pathlib import Path
 import secrets
 from tempfile import TemporaryDirectory
@@ -31,7 +32,7 @@ from bank_service.demo_fixtures import demo_records, demo_session
 from bank_service.records import TransactionRecord
 from bank_service.responses import ResponseFormatError
 from bank_service.routing import (
-    RoutingError, extract_slots, is_search_followup, refers_to_selected_transaction, route_intent,
+    IntentProposal, RoutingError, extract_slots, is_search_followup, refers_to_selected_transaction, route_intent,
 )
 from bank_service.selection import MAX_SEARCH_RECORDS, SelectionError, TransactionFilters
 from bank_service.transactions import SourceReference, SourcedTransaction, get_transaction
@@ -246,9 +247,12 @@ def _intake_preference(text: str, language: str) -> bool | None:
 class BrowserSession:
     """A browser token resolves to this exact server-owned session and controller."""
 
-    def __init__(self, database: Path, *, config: PrivateCohortConfig | None = None):
+    def __init__(self, database: Path, *, config: PrivateCohortConfig | None = None, router=None):
         if config is not None and not isinstance(config, PrivateCohortConfig):
             raise ValueError("invalid_private_cohort_config")
+        if router is not None and not callable(getattr(router, "route_intent", None)):
+            raise ValueError("invalid_routing_component")
+        self.router = router
         self.lock = RLock()
         self.retired = False
         self.csrf_token = secrets.token_urlsafe(32)
@@ -329,7 +333,7 @@ class BrowserSession:
             "language": self.language, "csrf_token": self.csrf_token, "data_mode": self.data_mode,
             "session": {"customer_label": self.text("customer_label") if self.data_mode == "private_cohort" else "Cliente demo A",
                         "expires_at": self.session.expires_at.isoformat(), "active": active},
-            "simulation": True, "route_mode": "keyword_baseline", "messages": [],
+            "simulation": True, "route_mode": "keyword_baseline" if self.router is None else "learned_preview", "messages": [],
             "transactions": [], "selected_transaction": None, "candidate_ids": [],
             "pending_draft": None, "receipts": [], "handoff": None, "offers_handoff": False,
             "handoff_request": None,
@@ -476,7 +480,6 @@ class BrowserSession:
 
     def message(self, text: str, now: datetime) -> None:
         self.append("user", text, "request")
-        proposal = route_intent(text, self.language)
         if self.pending_draft is not None:
             self.append("assistant", TEXT[self.language]["confirm_button"], "confirmation_required")
             return
@@ -485,6 +488,21 @@ class BrowserSession:
             if preference is not None:
                 self.decide_intake(self.intake_offer.offer_id, preference, now)
                 return
+        # Slot-only turns continue the original server-owned request. Neither
+        # classifier can reinterpret a currency/amount as a fresh business intent.
+        continuing = self.pending_search is not None and is_search_followup(text, self.language)
+        proposal = (IntentProposal("inquiry", 1.0, True) if continuing else
+                    route_intent(text, self.language) if self.router is None else
+                    self.router.route_intent(text, self.language))
+        if (not isinstance(proposal, IntentProposal)
+                or proposal.intent not in ("inquiry", "dispute_intake", "human_request", "unsupported")
+                or type(proposal.matched) is not bool
+                or type(proposal.confidence) not in (int, float)
+                or not math.isfinite(proposal.confidence)
+                or not 0 <= proposal.confidence <= 1
+                or (not proposal.matched and proposal.intent != "unsupported")):
+            raise RoutingError("invalid_intent_proposal")
+        if self.intake_offer is not None:
             if proposal.intent == "unsupported" and not proposal.matched and not is_search_followup(text, self.language):
                 self.append("assistant", TEXT[self.language]["intake_offer"], "intake_offered")
                 return
@@ -505,7 +523,6 @@ class BrowserSession:
             self.append("assistant", TEXT[self.language]["unsupported"], "unsupported")
             return
         self.handoff_request = None
-        continuing = self.pending_search is not None and is_search_followup(text, self.language)
         if not continuing:
             kind = "intake" if proposal.intent == "dispute_intake" else "inquiry"
             self.pending_search = PendingSearch(kind, text)
@@ -652,10 +669,13 @@ class DemoServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, port: int = 8765, *, config: PrivateCohortConfig | None = None):
+    def __init__(self, port: int = 8765, *, config: PrivateCohortConfig | None = None, router=None):
         if config is not None and not isinstance(config, PrivateCohortConfig):
             raise ValueError("invalid_private_cohort_config")
+        if router is not None and not callable(getattr(router, "route_intent", None)):
+            raise ValueError("invalid_routing_component")
         self._config = config
+        self._router = router
         self._sessions: dict[str, BrowserSession] = {}
         self._session_lock = RLock()
         self._minted_sessions = 0
@@ -673,7 +693,8 @@ class DemoServer(ThreadingHTTPServer):
             if len(self._sessions) >= MAX_SESSIONS or self._minted_sessions >= MAX_MINTED_SESSIONS:
                 raise UiError("session_capacity", 503)
             token = secrets.token_urlsafe(32)
-            session = BrowserSession(Path(self._temporary.name) / f"{token}.sqlite3", config=self._config)
+            session = BrowserSession(Path(self._temporary.name) / f"{token}.sqlite3", config=self._config,
+                                     router=self._router)
             self._sessions[token] = session
             self._minted_sessions += 1
             return token, session
@@ -872,10 +893,10 @@ class DemoHandler(BaseHTTPRequestHandler):
                 self._error(error)
 
 
-def serve(port: int = 8765, *, config: PrivateCohortConfig | None = None) -> None:
+def serve(port: int = 8765, *, config: PrivateCohortConfig | None = None, router=None) -> None:
     if type(port) is not int or not 0 <= port <= 65535:
         raise ValueError("invalid_port")
-    server = DemoServer(port, config=config)
+    server = DemoServer(port, config=config, router=router)
     label = "fictional-data" if config is None else "private-cohort"
     print(f"Local {label} review UI: http://127.0.0.1:{server.server_address[1]}", flush=True)
     try:

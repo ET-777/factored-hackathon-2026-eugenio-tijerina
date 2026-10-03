@@ -335,6 +335,51 @@ class SlotExtractionTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertFalse(refers_to_selected_transaction(text, "es"))
 
+    def test_operation_movement_and_contracted_references_are_clearly_singular(self):
+        for text, language in (
+            ("¿Cuál es el importe de esta operación?", "es"),
+            ("Dime la fecha de ese movimiento", "es"),
+            ("Quiero revisar la operación seleccionada", "es"),
+            ("¿Qué pasó con el movimiento seleccionado?", "es"),
+            ("Dime el estado del pago elegido", "es"),
+            ("Qual é o valor desta operação?", "pt"),
+            ("Quando ocorreu esse movimento?", "pt"),
+            ("Quero saber o valor desse débito", "pt"),
+            ("Consulte essa movimentação", "pt"),
+            ("Quero detalhes daquele lançamento", "pt"),
+            ("Qual é o status da operação selecionada?", "pt"),
+            ("Mostre o pagamento escolhido", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(refers_to_selected_transaction(text, language))
+
+    def test_plural_broad_and_new_record_queries_are_not_selected_references(self):
+        for text, language in (
+            ("Enséñame mis movimientos", "es"),
+            ("Muéstrame estas operaciones", "es"),
+            ("Quiero ver los movimientos seleccionados", "es"),
+            ("Busca otra operación", "es"),
+            ("Busca una nueva operación como esta compra", "es"),
+            ("Busca otras operaciones como este movimiento", "es"),
+            ("¿Cuál es el importe de una operación?", "es"),
+            ("Mostre meus movimentos", "pt"),
+            ("Quero ver essas operações", "pt"),
+            ("Consulte os movimentos selecionados", "pt"),
+            ("Quero outra operação como essa compra", "pt"),
+            ("Quero outras operações como esse movimento", "pt"),
+            ("Qual é o valor de uma operação?", "pt"),
+            ("Qual é o status da transação?", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertFalse(refers_to_selected_transaction(text, language))
+
+    def test_reference_flag_does_not_replace_explicit_id_or_filter_slots(self):
+        text = "Revise esta operação DEMO-TX-002 de 25,50 MXN em 2026-06-17"
+        self.assertTrue(refers_to_selected_transaction(text, "pt"))
+        slots = extract_slots(text, "pt")
+        self.assertEqual(slots.transaction_id, "DEMO-TX-002")
+        self.assertEqual(slots.filters, TransactionFilters(date(2026, 6, 17), Decimal("25.50"), "MXN"))
+
     def test_search_followup_accepts_only_bounded_slot_replies(self):
         for text, language in (
             ("USD", "es"), ("MXN", "es"), ("BRL", "pt"),

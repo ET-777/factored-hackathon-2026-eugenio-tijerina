@@ -1,4 +1,4 @@
-"""Local review UI and scripted demonstrations; no provider or model calls."""
+"""Local UI with optional offline learned routing; no external provider calls."""
 
 import argparse
 from dataclasses import asdict
@@ -20,6 +20,8 @@ def main() -> None:
     demo.add_argument("--db", type=Path, help="Optional local SQLite path; omitted means temporary storage")
     web = commands.add_parser("web", help="Start the loopback review UI; fictional records by default")
     web.add_argument("--port", type=int, default=8765)
+    web.add_argument("--router", choices=("keyword", "learned-preview"), default="keyword",
+                     help="Experimental learned preview uses only the fixed authored training artifact")
     web.add_argument("--cohort-run", type=Path,
                      help="Trusted startup path to an existing bounded private cohort")
     web.add_argument("--customer-id",
@@ -30,10 +32,22 @@ def main() -> None:
     args = parser.parse_args()
     if args.command == "web":
         from bank_service.web_app import PrivateCohortConfig, serve
+        router = None
+        if args.router == "learned-preview":
+            from bank_service.route_loader import load_preview_router
+            try:
+                router = load_preview_router()
+            except ValueError:
+                print("Learned preview startup refused.", file=sys.stderr)
+                raise SystemExit(1) from None
+            print("Experimental local router: authored draft training; language review pending.", flush=True)
         if args.cohort_run is None:
             if args.customer_id is not None or args.permission is not None:
                 parser.error("--customer-id and --permission require --cohort-run")
-            serve(args.port)
+            if router is None:
+                serve(args.port)
+            else:
+                serve(args.port, router=router)
             return
         if not isinstance(args.customer_id, str) or not args.customer_id.strip():
             parser.error("--cohort-run requires a nonempty --customer-id")
@@ -51,7 +65,10 @@ def main() -> None:
             # Never include paths, identities, record values or loader exceptions.
             print("Private cohort startup refused.", file=sys.stderr)
             raise SystemExit(1) from None
-        serve(args.port, config=config)
+        if router is None:
+            serve(args.port, config=config)
+        else:
+            serve(args.port, config=config, router=router)
         return
     if args.command == "demo":
         from bank_service.demo import run_demo
@@ -62,8 +79,9 @@ def main() -> None:
         "status": "local_structured_workflow",
         "languages": ["es", "pt"],
         "banking_actions": "simulated_only",
-        "model_implemented": False,
-        "input_mode": "structured_commands_or_keyword_routing_and_explicit_confirmation",
+        "model_implemented": True,
+        "learned_component_stage": "experimental_train_only_preview_not_evaluated",
+        "input_mode": "keyword_default_or_learned_preview_and_explicit_confirmation",
         "workflow_implemented": True,
         "evaluation_run": False,
         "web_interface": "local_loopback_demo",

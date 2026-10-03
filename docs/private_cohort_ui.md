@@ -82,6 +82,7 @@ cohort repository, conversation/store and public evaluation files have no diff.
 Final case contents were not read. New browser rendering was not visually reviewed;
 independent Portuguese review and learned-component performance remain separate work.
 
-Next establish a justified source-grounded authored ES/PT workload with reviewed
-labels and independent request families, then commit the shared baseline/candidate
-protocol before fitting. Keep the existing sealed final set untouched.
+The subsequent [learned-routing preview](learned_routing.md) fits an authored TRAIN
+draft locally and prepares separate unscored development contexts. Human review and
+the shared baseline/candidate protocol remain pending before comparative scoring.
+Keep the existing sealed final set untouched.

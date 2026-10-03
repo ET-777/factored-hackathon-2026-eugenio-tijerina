@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-10-03T02:42:56.513755+00:00",
+  "status": "experimental_train_only_preview_not_evaluated",
+  "training_file": "evaluation/routing_train.json",
+  "training_file_sha256": "41c3b99d7e38b33661625be83c062ad26e22c94900026fd53105680aa16891ab",
+  "canonical_training_rows_sha256": "378c21e885e3219e96898c6d0978ec1c600258108cdbca7fd2e1f02927e88f9c",
+  "training_rows": 96,
+  "training_families": 12,
+  "vocabulary_size": 6304,
+  "class_counts": {
+    "dispute_intake": 24,
+    "human_request": 24,
+    "inquiry": 24,
+    "unsupported": 24
+  },
+  "language_counts": {
+    "es": 48,
+    "pt": 48
+  },
+  "algorithm": "multinomial_naive_bayes_character_ngrams",
+  "ngram_sizes": [
+    3,
+    4,
+    5
+  ],
+  "smoothing_alpha": 1.0,
+  "priors": "empirical_training_counts",
+  "normalization": "NFKC_casefold_accent_fold_whitespace_collapse",
+  "threshold_selection": "none",
+  "confidence": "uncalibrated_normalized_model_score",
+  "fit_seconds": 0.00618,
+  "runtime": "Python 3.11.0",
+  "operating_system": "Windows",
+  "file_hash_scope": "exact_local_filesystem_bytes_Git_may_normalize_line_endings",
+  "semantic_training_identity": "canonical_training_rows_sha256",
+  "implementation_sha256": {
+    "bank_service/learned_routing.py": "4a0bd7ef1764847567ddc869a3f0d230072e746ef7a26e633b561642af810955",
+    "bank_service/route_loader.py": "095dd9d81a21a7127a47d9234f01a06990b514eb10195846955a3f01d3bbc043",
+    "bank_service/routing.py": "5d23dd9c88dd98b2a4b8eab17500d4bdec8b003156fa86ef86dd8e95618f1a07",
+    "bank_service/web_app.py": "830266bca7b97f005ebb201bc164c54ea231ac8921e2c894ffa8b4ba761f5c26",
+    "bank_service/web/app.js": "0248afda84879e944616a10211e0578e3097a8181f672f531d504c09062e1c87",
+    "bank_service/__main__.py": "29b9c006cdd025b103df2a85cdf3b95cab166f5ea000f3dc023e7cf2556131ff"
+  },
+  "review": {
+    "second_codex_semantic_review": "complete_no_label_changes",
+    "spanish_owner_review": "pending",
+    "portuguese_fluent_human_review": "pending"
+  },
+  "inputs": "authored_training_text_and_labels_only",
+  "source_rows_used_as_features": false,
+  "development_scored": false,
+  "original_final_accessed": false,
+  "performance_results": null,
+  "external_provider_calls": 0,
+  "external_provider_cost": 0,
+  "local_hardware_cost": "not_measured",
+  "verification": {
+    "unit_and_integration_tests_passed": 370,
+    "javascript_syntax_and_es_pt_copy_checks": "passed",
+    "private_train_only_http_probe": "14_stages_passed_not_benchmark",
+    "keyword_and_learned_source_record_parity": "verified_same_authorized_snapshot",
+    "working_tree_artifact_check": {
+      "eligible_files": 86,
+      "violations": 0,
+      "exclusion_probes_passed": 8,
+      "dictionary_credentials_read": false,
+      "git_history_scanned": false
+    },
+    "diagnostic_repairs": [
+      "Shared selected-reference helper extended after TRAIN-only context failure",
+      "Local probe action name corrected to existing intake_decision endpoint"
+    ],
+    "failed_probe_outputs": "preserved_in_ignored_local_directory"
+  }
+}

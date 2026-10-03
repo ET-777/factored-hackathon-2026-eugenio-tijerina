@@ -5,7 +5,7 @@ Private development repository: [ET-777/factored-hackathon-2026-claro](https://g
 Keep it private during development; public visibility requires new explicit owner authorization.
 The application currently runs locally; a hosted prototype is still pending.
 
-**Status: local bilingual web UI and keyword baseline, with grounded inquiry,
+**Status: local bilingual web UI, keyword baseline and experimental learned router, with grounded inquiry,
 clarification, confirmed simulated intake/handoff and verified SQLite receipts.**
 The keyword UI retains an unfinished search across amount/currency replies and
 summarizes distinct handoff steps without inventing unresolved questions.
@@ -13,7 +13,9 @@ Supported transaction currencies are **MXN, COP, ARS and USD**. Searches preserv
 native amounts and return no match when the available records lack that currency;
 the default fictional demo records are USD-only. An optional local private-cohort
 mode serves an existing validated source snapshot with a fixed startup test identity.
-The learned classifier, evaluation scenario adapter, deployment and final evaluation
+The offline character n-gram classifier has a training-only preview. Its authored
+96-message training and 32-message development drafts await human review;
+development remains unscored. The scenario runner, deployment and final evaluation
 remain pending. No comparative performance result is claimed.
 
 Organizer guidance reviewed October 1 requires English submission deliverables and
@@ -22,8 +24,8 @@ Diego permits authored ES/PT evaluation messages using supplied transaction reco
 and separately labeled simulated safety/tool-failure scenarios: "Yes just make sure
 to justify it". Record their purpose, provenance and limits; this does not approve
 redistributing source data or every pre-existing fictional-record workload.
-Reviewed labels, independent request families and the comparison protocol remain
-to be established. Keep the existing final cases sealed. See
+Draft families and labels are now documented; owner Spanish review, Portuguese
+human review and the comparison protocol remain pending. Keep the existing final cases sealed. See
 [requirements](docs/requirements.md) and the [evaluation eligibility gate](docs/evaluation.md).
 
 The [bounded source-intent review](docs/source_intent_inventory.md) is complete:
@@ -51,6 +53,10 @@ Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
   keyword input limits, session/reset behavior and current verification.
 - [Private-cohort UI](docs/private_cohort_ui.md): optional loopback mode, trusted startup
   identity/permissions, source snapshot limits and local integration checks.
+- [Experimental learned routing](docs/learned_routing.md): local training-only preview,
+  fixed algorithm, shared service guards and review status.
+- [Spanish review checklist](docs/routing_review_es.md): 64 authored training/development
+  messages to review before scoring, without classifier predictions.
 - [Deferred diagnostic scenario adapter](docs/evaluation_adapter.md): preserve the
   independent constructed schema without weakening source validation.
 
@@ -72,14 +78,17 @@ By default the browser uses fictional records and a server-owned demo session. C
 isolated per browser session and temporary; resetting starts a fresh demonstration.
 The UI stays on the loopback interface. The optional private-cohort mode loads only
 an existing bounded cohort at startup; it never scans the full download. See its
-[startup instructions](docs/private_cohort_ui.md). Neither mode loads evaluation cases.
+[startup instructions](docs/private_cohort_ui.md). Neither mode loads service evaluation cases.
+Adding `--router learned-preview` explicitly fits only `evaluation/routing_train.json`;
+it never loads development or final cases. The default remains keyword routing.
 
 The bare module reports status; `demo` exercises the real local workflow using newly
 authored fictional records and explicitly scripted confirmation. It creates a temporary
 SQLite database by default. An optional `--db .local/demo/cases.sqlite3` keeps simulated
 cases between runs; each run is a new conversation. The demo never loads the source
 cohort or either evaluation split. Only the explicit `web` command starts a web
-server. Neither command calls a model, cloud provider or real bank tool. Trusted
+server. Only the explicit learned-preview flag invokes the local classifier; no
+command calls a cloud provider or real bank tool. Trusted
 demo sessions are not production authentication.
 
 `python -B scripts/verify_evaluation.py` is the separate seal-integrity check described
@@ -92,9 +101,10 @@ That reads credentials only in memory and reports counts, never their values.
 ## Repository contents
 
 ```text
-bank_service/                  guarded workflow, keyword routing, local UI, synthetic demo
+bank_service/                  guarded workflow, keyword/learned routing, local UI, synthetic demo
 docs/                          source-backed requirements, audit, scope and evaluation
 evaluation/development.json    public, team-authored development cases
+evaluation/routing_*.json      authored TRAIN/DEVELOPMENT routing drafts; review pending
 evaluation/final_manifest.json public final-set commitment; no final case content
 evaluation/final_private/      ignored, sealed local cases and labels
 evidence/                      aggregate audit evidence only
@@ -137,5 +147,6 @@ models, move money, or submit material to organizers. Actions are simulated inta
 and handoff only;
 there is no real chargeback, reimbursement, fraud determination, or lending decision.
 The user delegated the workflow decision; transaction inquiry with confirmed simulated
-intake and human handoff is selected in `docs/scope.md`. Training, learned inference,
-end-to-end evaluation, language review, deployment and submission remain future work.
+intake and human handoff is selected in `docs/scope.md`. Experimental local training
+and learned inference exist. Comparative/end-to-end evaluation, human language
+review, deployment and submission remain future work.

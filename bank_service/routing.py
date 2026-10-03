@@ -288,9 +288,25 @@ def refers_to_selected_transaction(text: str, language: str) -> bool:
     new search filters. It is only useful while a server-owned selection exists.
     """
     normalized = _without_accents(_checked_text(text, language)).casefold()
+    noun = (
+        r"(?:compra|cargo|cobro|transaccion|transacao|pago|pagamento|debito|"
+        r"operacion|operacao|movimiento|movimento|movimentacao|lancamento)"
+    )
+    # A request for another/new record is not a reference to the selection, even
+    # when the customer mentions the selected record as a comparison.
+    new_noun = (
+        r"(?:compras?|cargos?|cobros?|transaccion(?:es)?|transacao|transacoes|pagos?|"
+        r"pagamentos?|debitos?|operacion(?:es)?|operacao|operacoes|movimientos?|"
+        r"movimentos?|movimentacao|movimentacoes|lancamentos?)"
+    )
+    if re.search(r"\b(?:otr[oa]s?|outr[oa]s?|nuev[oa]s?|nov[oa]s?)\s+" + new_noun + r"\b", normalized):
+        return False
     return bool(re.search(
-        r"\b(?:esta|este|esa|ese|essa|esse|aquela|aquele)\s+"
-        r"(?:compra|cargo|cobro|transaccion|transacao|pago|pagamento|debito)\b",
+        r"\b(?:esta|este|esa|ese|aquella|aquel|essa|esse|aquela|aquele|"
+        r"desta|deste|dessa|desse|daquela|daquele|nesta|neste|nessa|nesse|naquela|naquele)\s+"
+        + noun + r"\b|"
+        r"\b(?:el|la|del|o|a|do|da|no|na)\s+" + noun
+        + r"\s+(?:seleccionad[oa]|selecionad[oa]|elegid[oa]|escolhid[oa])\b",
         normalized,
     ))
 

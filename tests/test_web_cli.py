@@ -101,5 +101,48 @@ class PrivateWebCliTests(unittest.TestCase):
         serve.assert_not_called()
 
 
+class LearnedWebCliTests(unittest.TestCase):
+    def test_default_does_not_fit_training(self):
+        with (
+            patch("sys.argv", ["bank_service", "web"]),
+            patch("bank_service.web_app.serve") as serve,
+            patch("bank_service.route_loader.load_preview_router") as fit,
+        ):
+            main()
+        fit.assert_not_called()
+        serve.assert_called_once_with(8765)
+
+    def test_explicit_preview_passes_router_and_discloses_pending_review(self):
+        router, output = object(), StringIO()
+        with (
+            patch("sys.argv", ["bank_service", "web", "--router", "learned-preview", "--port", "8767"]),
+            patch("bank_service.web_app.serve") as serve,
+            patch("bank_service.route_loader.load_preview_router", return_value=router) as fit,
+            redirect_stdout(output),
+        ):
+            main()
+        fit.assert_called_once_with()
+        serve.assert_called_once_with(8767, router=router)
+        self.assertIn("authored draft training; language review pending", output.getvalue())
+
+    def test_invalid_training_stops_before_server_or_private_source_load(self):
+        errors, output = StringIO(), StringIO()
+        with (
+            patch("sys.argv", ["bank_service", "web", "--router", "learned-preview",
+                               "--cohort-run", "unused", "--customer-id", "private-unused"]),
+            patch("bank_service.web_app.serve") as serve,
+            patch("bank_service.cohort_repository.load_private_cohort") as load,
+            patch("bank_service.route_loader.load_preview_router", side_effect=ValueError("private-detail")),
+            redirect_stderr(errors), redirect_stdout(output),
+        ):
+            with self.assertRaises(SystemExit) as failure:
+                main()
+        self.assertEqual(failure.exception.code, 1)
+        self.assertEqual(errors.getvalue(), "Learned preview startup refused.\n")
+        self.assertEqual(output.getvalue(), "")
+        serve.assert_not_called()
+        load.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

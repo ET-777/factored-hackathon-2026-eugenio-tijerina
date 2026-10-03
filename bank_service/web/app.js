@@ -141,8 +141,10 @@ let activeNotice = "";
 const $ = (id) => document.getElementById(id);
 const strings = () => {
   const language = serverState?.language === "pt" ? "pt" : "es";
-  return serverState?.data_mode === "private_cohort"
+  const copy = serverState?.data_mode === "private_cohort"
     ? {...COPY[language], ...PRIVATE_COPY[language]} : COPY[language];
+  return {...copy, local: serverState?.route_mode === "learned_preview"
+    ? "IA local · experimental" : language === "pt" ? "Regras locais" : "Reglas locales"};
 };
 const tr = (key) => strings()[key];
 const asText = (value) => typeof value === "string" ? value : "";
