@@ -32,7 +32,7 @@ from bank_service.demo_fixtures import demo_records, demo_session
 from bank_service.records import TransactionRecord
 from bank_service.responses import ResponseFormatError, TransactionAnswer, with_requested_record_limits
 from bank_service.routing import (
-    IntentProposal, RoutingError, extract_slots, is_case_continuation, is_greeting,
+    IntentProposal, RoutingError, extract_slots, is_case_continuation, is_explicit_inquiry, is_greeting,
     is_search_followup, refers_to_selected_transaction, route_intent,
 )
 from bank_service.selection import MAX_SEARCH_RECORDS, SelectionError, TransactionFilters
@@ -627,7 +627,12 @@ class BrowserSession:
         # Neither classifier may infer a dispute/handoff from a date or amount.
         slot_only = is_search_followup(text, self.language)
         continuing = self.pending_search is not None and slot_only
-        proposal = (IntentProposal("inquiry", 1.0, True) if slot_only else
+        # Complete plain read requests have the same shared protection as
+        # details alone. A classifier must not invent a dispute or handoff from
+        # an explicit request to view/search a payment. Fresh requests replace
+        # an unfinished dispute; only slot replies continue its prior intent.
+        plain_inquiry = is_explicit_inquiry(text, self.language)
+        proposal = (IntentProposal("inquiry", 1.0, True) if slot_only or plain_inquiry else
                     route_intent(text, self.language) if self.router is None else
                     self.router.route_intent(text, self.language))
         if (not isinstance(proposal, IntentProposal)

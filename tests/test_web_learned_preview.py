@@ -160,7 +160,7 @@ class LearnedPreviewWorkflowTests(unittest.TestCase):
                     self.assertEqual(browser.selected_id, "DEMO-TX-001")
                     self.assertIsNone(browser.pending_search)
                     self.assertEqual(browser.store.count(), 0)
-                    self.assertEqual(router.calls, 1 if learned else 0)
+                    self.assertEqual(router.calls, 0)
                     browser.message(text + " 9999 USD", now)
                     self.assertIsNone(browser.selected_id)
                     self.assertEqual(browser.store.count(), 0)

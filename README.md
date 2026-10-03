@@ -21,7 +21,8 @@ from 6/16 to 15/16 and mechanical workflow completion from 8/16 to 12/16.
 See [development results](docs/development_results.md) for failures and limits.
 Subsequent [shared workflow fixes](docs/post_development_fixes.md) add consented
 human review for ineligible disputes, requested channel-limit explanations and
-explicit previous-case continuation handling. Those fixes have regression checks;
+explicit previous-case continuation handling. Complete plain read/search requests
+also bypass business classification and request missing details. Those fixes have regression checks;
 the first comparison scores still describe the earlier frozen code.
 Human output review, broader scenario evaluation, deployment and final evaluation
 remain pending. These are authored development results, not final performance.

@@ -321,6 +321,50 @@ def is_greeting(text: str, language: str) -> bool:
     return re.fullmatch(pattern, normalized) is not None
 
 
+def is_explicit_inquiry(text: str, language: str) -> bool:
+    """Recognize a complete, plain read/search request before model routing.
+
+    A read verb and transaction noun are both required. The whole-message
+    grammar deliberately excludes unknown tails, negation, support cases,
+    consent and mixed action requests. Existing higher-priority baseline intents
+    must agree that this is an inquiry. This flag never selects a record or
+    supplies missing search details, permission or action consent.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold().strip()
+    if route_intent(text, language).intent != "inquiry":
+        return False
+    if language == "es":
+        greeting = r"(?:hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches)"
+        prefix = (
+            r"(?:quiero|quisiera|necesito|deseo|me gustaria|puedo|puedes|podrias|"
+            r"ayudame a|me ayudas a|puedes ayudarme a|podrias ayudarme a)"
+        )
+        verb = r"(?:ver|consultar|buscar|busca|busco|encontrar|localizar|mostrar|mostrarme|muestra|muestrame|ensena|ensename)"
+        article = r"(?:un|una|el|la|los|las|mi|mis|este|esta|estos|estas|ese|esa|esos|esas)"
+        noun = r"(?:pagos?|cargos?|cobros?|compras?|transaccion(?:es)?|movimientos?|operacion(?:es)?|debitos?)"
+        detail = r"(?:los\s+)?(?:datos|detalles)\s+(?:de|del)\s+"
+    else:
+        greeting = r"(?:ola|oi|bom dia|boa tarde|boa noite)"
+        prefix = (
+            r"(?:quero|queria|preciso|desejo|gostaria de|posso|pode|poderia|"
+            r"me ajude a|pode me ajudar a|poderia me ajudar a)"
+        )
+        verb = r"(?:ver|consultar|consulte|buscar|busque|encontrar|localizar|conferir|confira|verificar|mostrar|mostre)"
+        article = r"(?:um|uma|o|a|os|as|meu|meus|minha|minhas|este|esta|estes|estas|esse|essa|esses|essas|deste|desta|desse|dessa)"
+        noun = r"(?:pagamentos?|compras?|cobrancas?|transacao|transacoes|debitos?|movimentos?|movimentacao|movimentacoes|operacao|operacoes|lancamentos?)"
+        detail = r"(?:os\s+)?(?:dados|detalhes)\s+(?:(?:de|do|da)\s+)?"
+    pattern = (
+        r"[\s¡!¿?]*" + r"(?:" + greeting + r"\s*[,!:]?\s+)?"
+        + r"(?:por\s+favor\s*[,!:]?\s+)?"
+        + r"(?:" + prefix + r"\s+)?"
+        + r"(?:por\s+favor\s+)?" + verb + r"\s+"
+        + r"(?:" + detail + r")?"
+        + r"(?:" + article + r"\s+)?" + noun
+        + r"(?:\s*[,!:]?\s+por\s+favor)?[\s.!?¡¿]*"
+    )
+    return re.fullmatch(pattern, normalized) is not None
+
+
 def is_case_continuation(text: str, language: str) -> bool:
     """Recognize a request about a customer-claimed existing support case.
 

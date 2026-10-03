@@ -77,3 +77,33 @@ available):
 The private-cohort launcher may select an eligible purchase by default. The
 ineligible branch is covered by the isolated regression fixtures; do not alter
 source records merely to make that branch appear in the live preview.
+
+## Plain inquiry correction, October 3
+
+An owner screenshot showed the learned preview refusing the short request
+«ver un pago». A bounded TRAIN-only diagnostic reproduced that raw prediction;
+«quiero ver un pago» was instead classified as dispute intake, and analogous
+Portuguese requests could be classified as human requests. The normalized model
+score was high for some wrong answers, so it cannot establish correct intent.
+
+The shared conversation now recognizes complete plain read/search requests such
+as «ver un pago», «quiero consultar una transacción» and «ver um pagamento» before
+either router. It requires a read verb and a transaction noun, accepts bounded
+polite wording, and excludes negation, consent, support-case requests and unknown
+or mixed tails. Missing details are still requested; no fixture amount, currency
+or record is supplied automatically. A new read request replaces an unfinished
+dispute instead of inheriting its intake intent. Explicit selected-record
+references still require the real server-owned selection.
+
+This is another shared conversation rule, not model retraining or evidence of
+improved classifier accuracy. The classifier implementation, training data,
+development workload and first scores remain unchanged. Unfamiliar or mixed
+wording continues through the experimental router; general language coverage is
+still limited. New isolated HTTP regressions use the unchanged local TRAIN model
+with fictional records and verify the screenshot sequence, bilingual detail
+collection and withdrawal of unaccepted dispute proposals without writes.
+
+After narrowing the guard to exclude ambiguous «revisar» requests, the full suite
+passed **469 tests**. The scoped privacy check passed 107 eligible files with zero
+violations and eight of eight exclusion probes. All seven protected artifact
+hashes still match the pre-fix checkpoint; original final contents remain unread.
