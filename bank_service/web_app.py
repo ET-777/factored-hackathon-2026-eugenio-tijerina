@@ -30,9 +30,10 @@ from bank_service.case_store import CaseStore, StoreError
 from bank_service.conversation import Conversation, ConversationError, ConversationReply
 from bank_service.demo_fixtures import demo_records, demo_session
 from bank_service.records import TransactionRecord
-from bank_service.responses import ResponseFormatError
+from bank_service.responses import ResponseFormatError, TransactionAnswer, with_requested_record_limits
 from bank_service.routing import (
-    IntentProposal, RoutingError, extract_slots, is_greeting, is_search_followup, refers_to_selected_transaction, route_intent,
+    IntentProposal, RoutingError, extract_slots, is_case_continuation, is_greeting,
+    is_search_followup, refers_to_selected_transaction, route_intent,
 )
 from bank_service.selection import MAX_SEARCH_RECORDS, SelectionError, TransactionFilters
 from bank_service.transactions import SourceReference, SourcedTransaction, get_transaction
@@ -51,6 +52,7 @@ ACTION_KEYS = {
     "prepare_intake": {"reason"},
     "dispute_selected": {"transaction_id"},
     "intake_decision": {"offer_id", "prepare"},
+    "handoff_decision": {"offer_id", "prepare"},
     "prepare_handoff": {"request", "unresolved_questions"},
     "confirm": {"draft_id", "confirmed"}, "cancel": {"draft_id"},
     "language": {"language"}, "reset": set(), "view_case": {"case_id"},
@@ -81,6 +83,12 @@ TEXT = {
         "dollars": "En esta demo interpreto «dólares» como USD; no hago una conversión de moneda.",
         "amount": "Indica el importe de la transacción o una fecha en formato AAAA-MM-DD para continuar la búsqueda.",
         "followup": "Para continuar, indica una fecha en formato AAAA-MM-DD, el importe y su moneda, o elige una coincidencia de la lista.",
+        "ineligible_intake": "Este movimiento no admite el ticket de revisión de compras de esta demostración. Puedo preparar un resumen para revisión humana con tu solicitud y los datos del movimiento.",
+        "case_continuation": "No puedo verificar a qué caso anterior te refieres con la información disponible. Puedo preparar un resumen para revisión humana indicando que ese caso anterior no está verificado.",
+        "session_cases": "Puedes consultar los recibos simulados de esta sesión en «Solicitudes guardadas».",
+        "handoff_offer": "¿Quieres que prepare ese resumen para revisión humana? Puedes responder sí o no, o usar los botones. Aún no se ha guardado ninguna solicitud.",
+        "handoff_unavailable": "Esta sesión no permite guardar una solicitud para revisión humana. No se ha preparado ni guardado una solicitud.",
+        "handoff_declined": "De acuerdo. No preparé ni guardé un resumen para revisión humana. Puedes seguir consultando.",
     },
     "pt": {
         "greeting": "Olá. Posso ajudar a encontrar uma transação fictícia, consultar seus dados ou abrir uma solicitação de revisão. Do que você precisa?",
@@ -107,6 +115,12 @@ TEXT = {
         "dollars": "Nesta demonstração interpreto «dólares» como USD; não faço conversão de moeda.",
         "amount": "Informe o valor da transação ou uma data no formato AAAA-MM-DD para continuar a pesquisa.",
         "followup": "Para continuar, informe uma data no formato AAAA-MM-DD, o valor e a moeda, ou escolha uma correspondência na lista.",
+        "ineligible_intake": "Esta transação não permite o ticket de revisão de compras desta demonstração. Posso preparar um resumo para revisão humana com seu pedido e os dados da transação.",
+        "case_continuation": "Não consigo verificar a qual caso anterior você se refere com as informações disponíveis. Posso preparar um resumo para revisão humana indicando que esse caso anterior não foi verificado.",
+        "session_cases": "Você pode consultar os recibos simulados desta sessão em «Solicitações salvas».",
+        "handoff_offer": "Você quer que eu prepare esse resumo para revisão humana? Pode responder sim ou não, ou usar os botões. Nenhuma solicitação foi salva ainda.",
+        "handoff_unavailable": "Esta sessão não permite salvar uma solicitação para revisão humana. Nenhuma solicitação foi preparada ou salva.",
+        "handoff_declined": "Tudo bem. Não preparei nem salvei um resumo para revisão humana. Você pode continuar consultando.",
     },
 }
 
@@ -227,6 +241,18 @@ class IntakeOffer:
     expires_at: datetime
 
 
+@dataclass(frozen=True)
+class HandoffOffer:
+    """Preparation consent bound to the observed context, never a stored action."""
+
+    offer_id: str
+    transaction_id: str | None
+    request: str
+    snapshot: SourcedTransaction | None
+    reason: str
+    expires_at: datetime
+
+
 def _intake_preference(text: str, language: str) -> bool | None:
     # Whole replies only. An action or refund request containing 'yes' is never
     # consent, and this parser is never used to confirm a stored action.
@@ -276,6 +302,7 @@ class BrowserSession:
         self.pending_route: tuple[str, str] | None = None
         self.pending_search: PendingSearch | None = None
         self.intake_offer: IntakeOffer | None = None
+        self.handoff_offer: HandoffOffer | None = None
         self.business_issue: str | None = None
         self.case_ids: list[str] = []
         self.handoff_id: str | None = None
@@ -338,6 +365,7 @@ class BrowserSession:
             "pending_draft": None, "receipts": [], "handoff": None, "offers_handoff": False,
             "handoff_request": None,
             "intake_offer": None,
+            "handoff_offer": None,
         }
         if not active:
             state["messages"] = [{"role": "assistant", "status": "access_denied", "text": self.text("denied")}]
@@ -358,6 +386,13 @@ class BrowserSession:
                 self.intake_offer = None
             else:
                 state["intake_offer"] = {"offer_id": offer.offer_id, "transaction_id": offer.transaction_id}
+        if self.handoff_offer is not None:
+            try:
+                offer = self.bound_handoff_offer(self.handoff_offer.offer_id, now)
+            except (UiError, AccessDenied):
+                self.clear_handoff_offer()
+            else:
+                state["handoff_offer"] = {"offer_id": offer.offer_id, "transaction_id": offer.transaction_id}
         if self.pending_draft is not None:
             draft = self.pending_draft
             proposed = json.loads(self.actions.review_draft(self.session, draft.draft_id, now=now))
@@ -390,6 +425,9 @@ class BrowserSession:
         if reply.status in ("answered", "needs_filters", "no_match", "ambiguous"):
             self.selected_id = reply.selected_id
         text = reply.text
+        if reply.status == "answered" and self.pending_search is not None:
+            text = with_requested_record_limits(
+                TransactionAnswer(reply.language, reply.text, reply.sources), self.pending_search.request).text
         if reply.draft is not None:
             self.pending_draft = reply.draft
             self.outcome_unverified = False
@@ -420,10 +458,59 @@ class BrowserSession:
         # fail. A stale selected record must never leak into a later draft.
         self.selected_id, self.candidate_ids = None, ()
         self.intake_offer = None
+        self.clear_handoff_offer()
         self.conversation.clear_selection(self.session, now=now)
 
     def clear_search(self) -> None:
         self.pending_search, self.pending_route = None, None
+
+    def clear_handoff_offer(self) -> None:
+        self.handoff_offer = None
+        self.offers_handoff = False
+        self.handoff_request = None
+
+    def bound_handoff_offer(self, identifier: str, now: datetime) -> HandoffOffer:
+        self.authorize(now)
+        offer = self.handoff_offer
+        if (offer is None or identifier != offer.offer_id or now >= offer.expires_at
+                or self.pending_draft is not None or self.selected_id != offer.transaction_id):
+            raise UiError("stale_offer", 409)
+        current = None if offer.transaction_id is None else get_transaction(
+            self.session, offer.transaction_id, records=self.records, now=now)
+        if current != offer.snapshot:
+            self.clear_handoff_offer()
+            raise UiError("stale_offer", 409)
+        require_access(self.session, self.session.customer_id, Permission.CREATE_SIMULATED_HANDOFF, now=now)
+        return offer
+
+    def offer_human_review(self, request: str, reason: str, now: datetime) -> None:
+        self.authorize(now)
+        entry = None if self.selected_id is None else get_transaction(
+            self.session, self.selected_id, records=self.records, now=now)
+        self.clear_handoff_offer()
+        self.intake_offer = None
+        self.clear_search()
+        self.business_issue = request
+        try:
+            require_access(self.session, self.session.customer_id, Permission.CREATE_SIMULATED_HANDOFF, now=now)
+        except AccessDenied:
+            self.append("assistant", TEXT[self.language]["handoff_unavailable"], "handoff_unavailable")
+            return
+        self.handoff_offer = HandoffOffer(
+            secrets.token_urlsafe(24), self.selected_id, request, entry, reason,
+            min(self.session.expires_at, now + timedelta(minutes=5)))
+        self.offers_handoff, self.handoff_request = True, request
+        self.append("assistant", TEXT[self.language]["handoff_offer"], "handoff_offered")
+
+    def decide_handoff(self, identifier: str, prepare: bool, now: datetime) -> None:
+        if type(prepare) is not bool:
+            raise UiError("invalid_confirmation")
+        offer = self.bound_handoff_offer(identifier, now)
+        if prepare:
+            self.prepare("handoff", offer.request, now)
+        else:
+            self.clear_handoff_offer()
+            self.append("assistant", TEXT[self.language]["handoff_declined"], "handoff_declined")
 
     def unresolved_questions(self) -> tuple[str, ...]:
         issue = self.business_issue
@@ -436,6 +523,14 @@ class BrowserSession:
         return (issue if len(issue) <= 300 else issue[:297] + "...",)
 
     def prepare(self, kind: str, request: str, now: datetime, questions: tuple[str, ...] | None = None) -> None:
+        reason = "unsupported_request" if request == self.handoff_request else "human_requested"
+        if kind == "handoff" and self.handoff_offer is not None:
+            # Also preserve the older explicit preparation port: it must match
+            # the current server-owned request and snapshot, never replace them.
+            offer = self.bound_handoff_offer(self.handoff_offer.offer_id, now)
+            if request != offer.request or questions is not None:
+                raise UiError("stale_offer", 409)
+            reason = offer.reason
         self.intake_offer = None
         if kind == "intake":
             reply = self.conversation.prepare_intake(self.session, request, now=now)
@@ -443,16 +538,22 @@ class BrowserSession:
         else:
             reply = self.conversation.prepare_handoff(
                 self.session, request,
-                escalation_reason="unsupported_request" if request == self.handoff_request else "human_requested",
+                escalation_reason=reason,
                 unresolved_questions=self.unresolved_questions() if questions is None else questions, now=now)
         self.pending_request = request
         self.clear_search()
+        self.clear_handoff_offer()
         self.reply(reply)
 
     def offer_intake(self, request: str, now: datetime) -> None:
         if self.selected_id is None:
             raise UiError("transaction_required")
         entry = get_transaction(self.session, self.selected_id, records=self.records, now=now)
+        if (entry.record.transaction_type != "Purchase"
+                or entry.record.transaction_status not in ("Approved", "Pending")):
+            self.append("assistant", TEXT[self.language]["ineligible_intake"], "intake_ineligible")
+            self.offer_human_review(request, "ineligible_intake", now)
+            return
         require_access(self.session, entry.record.customer_id, Permission.CREATE_SIMULATED_INTAKE, now=now)
         self.intake_offer = IntakeOffer(secrets.token_urlsafe(24), self.selected_id, request, entry,
                                        min(self.session.expires_at, now + timedelta(minutes=5)))
@@ -483,18 +584,44 @@ class BrowserSession:
         if self.pending_draft is not None:
             self.append("assistant", TEXT[self.language]["confirm_button"], "confirmation_required")
             return
+        if self.handoff_offer is not None:
+            preference = _intake_preference(text, self.language)
+            if preference is not None:
+                self.decide_handoff(self.handoff_offer.offer_id, preference, now)
+                return
         if self.intake_offer is not None:
             preference = _intake_preference(text, self.language)
             if preference is not None:
                 self.decide_intake(self.intake_offer.offer_id, preference, now)
                 return
         if is_greeting(text, self.language):
-            if self.intake_offer is not None:
+            if self.handoff_offer is not None:
+                self.append("assistant", TEXT[self.language]["handoff_offer"], "handoff_offered")
+            elif self.intake_offer is not None:
                 self.append("assistant", TEXT[self.language]["intake_offer"], "intake_offered")
             elif self.pending_search is not None:
                 self.append("assistant", TEXT[self.language]["followup"], "needs_filters")
             else:
                 self.append("assistant", self.text("greeting"), "greeting")
+            return
+        if is_case_continuation(text, self.language):
+            self.intake_offer = None
+            self.clear_handoff_offer()
+            self.clear_search()
+            try:
+                slots = extract_slots(text, self.language)
+            except RoutingError:
+                self.clear_record_selection(now)
+                raise
+            if slots.transaction_id is not None:
+                self.clear_record_selection(now)
+                self.reply(self.conversation.inquire(self.session, slots.transaction_id, now=now))
+            elif slots.filters != TransactionFilters() or slots.needs_currency:
+                self.clear_record_selection(now)
+            self.append("assistant", TEXT[self.language]["case_continuation"], "case_unverified")
+            if self.case_ids:
+                self.append("assistant", TEXT[self.language]["session_cases"], "session_case_receipts")
+            self.offer_human_review(text, "existing_case_unverified", now)
             return
         # Details alone start an inquiry or continue the server-owned request.
         # Neither classifier may infer a dispute/handoff from a date or amount.
@@ -511,12 +638,16 @@ class BrowserSession:
                 or not 0 <= proposal.confidence <= 1
                 or (not proposal.matched and proposal.intent != "unsupported")):
             raise RoutingError("invalid_intent_proposal")
+        if self.handoff_offer is not None:
+            if proposal.intent == "unsupported" and not proposal.matched and not slot_only:
+                self.append("assistant", TEXT[self.language]["handoff_offer"], "handoff_offered")
+                return
+        self.clear_handoff_offer()
         if self.intake_offer is not None:
             if proposal.intent == "unsupported" and not proposal.matched and not is_search_followup(text, self.language):
                 self.append("assistant", TEXT[self.language]["intake_offer"], "intake_offered")
                 return
             self.intake_offer = None
-        self.offers_handoff = False
         if proposal.intent == "human_request":
             self.prepare("handoff", text, now)
             return
@@ -598,7 +729,8 @@ class BrowserSession:
             if self.selected_id is None or identifier != self.selected_id:
                 raise UiError("selection_changed", 409)
             get_transaction(self.session, identifier, records=self.records, now=now)
-        self.offers_handoff = False
+        if action not in ("message", "view_case", "prepare_handoff", "handoff_decision"):
+            self.clear_handoff_offer()
         if action not in ("message", "dispute_selected", "intake_decision", "view_case"):
             self.intake_offer = None
         if action == "message":
@@ -608,6 +740,8 @@ class BrowserSession:
         elif action in ("choose", "inquire"):
             identifier = _text(payload.get("transaction_id"))
             route = self.pending_route if action == "choose" else None
+            if action == "inquire":
+                self.clear_search()
             self.cancel_for_navigation(now)
             self.selected_id, self.candidate_ids = None, ()
             method = self.conversation.choose if action == "choose" else self.conversation.inquire
@@ -628,6 +762,8 @@ class BrowserSession:
             self.prepare("intake", _text(payload.get("reason")), now)
         elif action == "intake_decision":
             self.decide_intake(_text(payload.get("offer_id")), payload.get("prepare"), now)
+        elif action == "handoff_decision":
+            self.decide_handoff(_text(payload.get("offer_id")), payload.get("prepare"), now)
         elif action == "prepare_handoff":
             request = _text(payload.get("request"))
             questions = payload.get("unresolved_questions")

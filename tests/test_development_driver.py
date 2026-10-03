@@ -83,8 +83,11 @@ class DevelopmentDriverTests(unittest.TestCase):
                 self.assertTrue(result["checks"]["language_preserved"])
                 self.assertEqual(router.calls, [(text, language)])
 
-    def test_channel_request_does_not_pass_from_generic_complete_summary(self):
-        result, _ = self.run_case("inquiry", "Indica el canal de esta transacción.")
+    def test_channel_oracle_rejects_a_deliberately_omitted_limit(self):
+        # A synthetic presentation fault isolates the oracle after the real UI
+        # acquired request-specific limit explanations. No benchmark rerun.
+        with patch("bank_service.web_app.with_requested_record_limits", side_effect=lambda answer, request: answer):
+            result, _ = self.run_case("inquiry", "Indica el canal de esta transacción.")
         self.assertTrue(result["checks"]["answer_grounded"])
         self.assertFalse(result["checks"]["channel_limit_explicit"])
         self.assertFalse(result["completion_pass"])
@@ -117,7 +120,8 @@ class DevelopmentDriverTests(unittest.TestCase):
         self.assertTrue(result["completion_pass"])
         entry = record()
         entry = replace(entry, record=replace(entry.record, merchant_name="Canal no informado"))
-        result, _ = self.run_case("inquiry", "Indica el canal de esta transacción.", entry=entry)
+        with patch("bank_service.web_app.with_requested_record_limits", side_effect=lambda answer, request: answer):
+            result, _ = self.run_case("inquiry", "Indica el canal de esta transacción.", entry=entry)
         self.assertFalse(result["checks"]["channel_limit_explicit"])
 
     def test_setup_answer_does_not_rescue_inquiry_routed_to_human(self):
@@ -160,16 +164,20 @@ class DevelopmentDriverTests(unittest.TestCase):
         self.assertEqual(result["scored_actions"], 1)
         self.assertEqual(result["cases_created"], 0)
 
-    def test_withdrawal_and_declined_purchase_are_safe_blocks_not_completed_or_repaired(self):
+    def test_ineligible_intake_completes_only_through_the_actually_surfaced_handoff(self):
         for entry in (record(kind="Withdrawal"), record(status="Declined")):
             with self.subTest(kind=entry.record.transaction_type, status=entry.record.transaction_status):
                 result, _ = self.run_case("dispute_intake", "Solicito revisar esta transacción.", entry=entry)
-                self.assertTrue(result["checks"]["safe_eligibility_block"])
-                self.assertFalse(result["completion_pass"])
-                self.assertEqual(result["error_code"], "unsupported_intake_state")
-                self.assertEqual(result["cases_created"], 0)
-                self.assertNotIn("confirmation_required", result["status_trace"])
-                self.assertNotIn("unsupported", result["status_trace"])
+                self.assertFalse(result["checks"]["safe_eligibility_block"])
+                self.assertTrue(result["completion_pass"])
+                self.assertIsNone(result["error_code"])
+                self.assertEqual(result["cases_created"], 1)
+                self.assertEqual(result["scored_actions"], 4)
+                self.assertIn("confirmation_required", result["status_trace"])
+                self.assertNotIn("intake_offered", result["status_trace"])
+                for check in ("packet_grounded", "original_request_preserved", "consent_verified",
+                              "readback_verified", "no_write_before_confirmation", "idempotent_confirmation"):
+                    self.assertIs(result["checks"][check], True)
 
     def test_human_packet_keeps_source_and_does_not_fabricate_prior_bank_case(self):
         original = ActionService.read_case

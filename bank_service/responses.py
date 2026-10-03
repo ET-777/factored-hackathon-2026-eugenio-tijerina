@@ -10,6 +10,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 import json
+import re
+import unicodedata
 
 from bank_service.access import TrustedSession
 from bank_service.records import TransactionRecord
@@ -76,6 +78,14 @@ TYPE_LABELS = {
     "Adjustment": {"es": "Ajuste", "pt": "Ajuste"},
 }
 
+# The validated record adapter exposes no channel field. State that limit only
+# when the customer asks about it, rather than attach a blanket disclaimer.
+CHANNEL_LIMITS = {
+    "es": "El registro disponible no informa el canal de esta transacción.",
+    "pt": "O registro disponível não informa o canal desta transação.",
+}
+_CHANNEL_WORD = re.compile(r"\b(?:canal(?:es)?|canais|channels?)\b")
+
 
 class ResponseFormatError(ValueError):
     """Fixed error codes only; never include record contents in error messages."""
@@ -86,6 +96,42 @@ class TransactionAnswer:
     language: str
     text: str
     sources: tuple[SourceReference, ...]
+
+
+def with_requested_record_limits(
+    answer: TransactionAnswer, request: str,
+) -> TransactionAnswer:
+    """Add a requested field limit to an already authorized, grounded answer.
+
+    This helper performs no retrieval or action and cannot grant access. The
+    caller must supply the original customer request, including after search
+    clarification or selection. Record values are never treated as assertions
+    when checking whether the dedicated explanation is already present.
+    """
+
+    if not isinstance(answer, TransactionAnswer):
+        raise ResponseFormatError("invalid_answer")
+    if not isinstance(answer.language, str) or answer.language not in CHANNEL_LIMITS:
+        raise ResponseFormatError("unsupported_language")
+    if (not isinstance(answer.text, str) or not answer.text.strip()
+            or not isinstance(answer.sources, tuple) or not answer.sources
+            or not all(isinstance(ref, SourceReference) for ref in answer.sources)):
+        raise ResponseFormatError("invalid_answer")
+    if not isinstance(request, str):
+        raise ResponseFormatError("invalid_request")
+
+    normalized_request = unicodedata.normalize("NFKC", request).casefold()
+    if not _CHANNEL_WORD.search(normalized_request):
+        return answer
+
+    limit = CHANNEL_LIMITS[answer.language]
+    if limit in answer.text.splitlines():
+        return answer
+    return TransactionAnswer(
+        language=answer.language,
+        text=f"{answer.text}\n{limit}",
+        sources=answer.sources,
+    )
 
 
 def _quote_field(value: str) -> str:

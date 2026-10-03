@@ -56,7 +56,7 @@ const COPY = {
     ],
     statuses: {Approved: "Aprobado", Declined: "Rechazado", Pending: "Pendiente", Reversed: "Revertido"},
     types: {Deposit: "Depósito", Withdrawal: "Retiro", Transfer: "Transferencia", Purchase: "Compra", Payment: "Pago", Adjustment: "Ajuste"},
-    reasons: {human_requested: "La persona solicita atención humana", unsupported_request: "La solicitud necesita atención fuera de este asistente", tool_failure: "No se pudo completar una operación", missing_information: "Se necesita información adicional", unresolved: "La consulta requiere revisión adicional"},
+    reasons: {human_requested: "La persona solicita atención humana", unsupported_request: "La solicitud necesita atención fuera de este asistente", ineligible_intake: "El movimiento requiere revisión fuera del ticket de compras", existing_case_unverified: "Se solicita seguimiento a un caso anterior que este asistente no puede verificar", tool_failure: "No se pudo completar una operación", missing_information: "Se necesita información adicional", unresolved: "La consulta requiere revisión adicional"},
     steps: {search_attempted: "Se buscaron movimientos", search_needs_filters: "Se solicitaron detalles para buscar", search_no_match: "La búsqueda no encontró coincidencias", search_ambiguous: "Se encontraron varias coincidencias", transaction_answered: "Se explicaron los datos del movimiento", choice_rejected: "Se rechazó una selección que no estaba disponible", intake_prepared: "Se preparó una solicitud de revisión", handoff_prepared: "Se preparó un resumen para revisión humana", action_verified: "Se guardó y verificó una solicitud", action_cancelled: "Se canceló una propuesta", confirmation_failed: "No se pudo verificar la confirmación"}
   },
   pt: {
@@ -111,7 +111,7 @@ const COPY = {
     ],
     statuses: {Approved: "Aprovado", Declined: "Recusado", Pending: "Pendente", Reversed: "Estornado"},
     types: {Deposit: "Depósito", Withdrawal: "Saque", Transfer: "Transferência", Purchase: "Compra", Payment: "Pagamento", Adjustment: "Ajuste"},
-    reasons: {human_requested: "A pessoa solicita atendimento humano", unsupported_request: "A solicitação precisa de atendimento fora deste assistente", tool_failure: "Não foi possível concluir uma operação", missing_information: "São necessárias informações adicionais", unresolved: "A consulta precisa de revisão adicional"},
+    reasons: {human_requested: "A pessoa solicita atendimento humano", unsupported_request: "A solicitação precisa de atendimento fora deste assistente", ineligible_intake: "A transação precisa de revisão fora do ticket de compras", existing_case_unverified: "Foi solicitado acompanhamento de um caso anterior que este assistente não consegue verificar", tool_failure: "Não foi possível concluir uma operação", missing_information: "São necessárias informações adicionais", unresolved: "A consulta precisa de revisão adicional"},
     steps: {search_attempted: "Foram pesquisadas transações", search_needs_filters: "Foram solicitados detalhes para pesquisar", search_no_match: "A pesquisa não encontrou correspondências", search_ambiguous: "Foram encontradas várias correspondências", transaction_answered: "Os dados da transação foram explicados", choice_rejected: "Foi rejeitada uma seleção que não estava disponível", intake_prepared: "Foi preparada uma solicitação de revisão", handoff_prepared: "Foi preparado um resumo para revisão humana", action_verified: "Uma solicitação foi salva e verificada", action_cancelled: "Uma proposta foi cancelada", confirmation_failed: "Não foi possível verificar a confirmação"}
   }
 };
@@ -474,6 +474,8 @@ function refreshControls() {
   $("cancel").disabled = busy || !active || !pending;
   $("offer-handoff").disabled = locked;
   $("offer-handoff").hidden = !serverState?.offers_handoff || pending || !active;
+  $("decline-handoff").disabled = locked;
+  $("decline-handoff").hidden = !serverState?.handoff_offer || pending || !active;
   $("draft-lock-note").hidden = !pending;
   $("composer").setAttribute("aria-busy", String(busy));
   const expiry = Date.parse(serverState?.session?.expires_at);
@@ -586,8 +588,14 @@ $("cancel").addEventListener("click", () => {
   if (draftId) action("cancel", {draft_id: draftId});
 });
 $("offer-handoff").addEventListener("click", () => {
+  const offerId = asText(serverState?.handoff_offer?.offer_id);
+  if (offerId) return action("handoff_decision", {offer_id: offerId, prepare: true});
   const originalRequest = asText(serverState?.handoff_request);
   action("prepare_handoff", {request: originalRequest.trim() ? originalRequest : strings().prompts[2][1]});
+});
+$("decline-handoff").addEventListener("click", () => {
+  const offerId = asText(serverState?.handoff_offer?.offer_id);
+  if (offerId) action("handoff_decision", {offer_id: offerId, prepare: false});
 });
 $("accept-intake").addEventListener("click", () => {
   const offerId = asText(serverState?.intake_offer?.offer_id);

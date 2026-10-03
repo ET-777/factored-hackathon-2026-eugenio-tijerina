@@ -321,6 +321,89 @@ def is_greeting(text: str, language: str) -> bool:
     return re.fullmatch(pattern, normalized) is not None
 
 
+def is_case_continuation(text: str, language: str) -> bool:
+    """Recognize a request about a customer-claimed existing support case.
+
+    This predicate never verifies that a case exists or retrieves its status.
+    It requires a support-case reference and a continuation/status request;
+    explicit requests to open a new case and negated follow-up requests are
+    excluded. The caller must explain the unavailable history and obtain any
+    separate consent needed to prepare a human-review packet.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold()
+    noun = (
+        r"(?:caso|reclamo|reclamacion|queja|ticket|solicitud\s+de\s+revision)"
+        if language == "es" else
+        r"(?:caso|reclamacao|queixa|chamado|protocolo|pedido\s+de\s+revisao)"
+    )
+    case = r"\b" + noun + r"\b"
+    if not re.search(case, normalized):
+        return False
+    no_existing_case = (
+        r"\b(?:no|nao)\s+(?:tengo|tenho|hay|ha|existe|abri|"
+        r"he\s+abierto|registrei|presente|envie|mandei)\b"
+    )
+    if re.search(
+        no_existing_case + r"[^.;!?]{0,55}" + case + r"|"
+        + case + r"[^.;!?]{0,55}" + no_existing_case,
+        normalized,
+    ):
+        return False
+    # Infinitives distinguish a requested new case from a past action such as
+    # "presenté"/"registré", whose accents disappear during normalization.
+    if re.search(
+        r"\b(?:abrir|crear|criar|registrar|iniciar|presentar)\b"
+        r"[^.;!?]{0,55}" + case,
+        _NEGATED_ACTION.sub(" ", normalized),
+    ):
+        return False
+    resume = (
+        r"(?:retomar|retoma|retome|retomemos|continuar|continua|continue|"
+        r"continuemos|reanudar|reanuda|proseguir|prosseguir|"
+        r"dar\s+seguimiento|hacer\s+seguimiento|seguir\s+con|"
+        r"acompanhar|acompanhe|dar\s+continuidade)"
+    )
+    followup = (
+        r"(?:" + resume + r"|consultar|verificar|revisar|saber|conocer|"
+        r"acompanhar|checar|conferir)"
+    )
+    if re.search(
+        r"\b(?:no|nao)\s+(?:(?:quiero|quero|necesito|preciso|deseo|desejo)\s+)?"
+        + followup + r"\b[^.;!?]{0,55}" + case,
+        normalized,
+    ):
+        return False
+    # Resuming/following up an explicitly named case already implies a prior
+    # customer interaction. A generic question merely mentioning a case does not.
+    if re.search(r"\b" + resume + r"\b[^.;!?]{0,90}" + case, normalized):
+        return True
+    owned_case = bool(re.search(
+        r"\b(?:mi|mis|nuestro|nuestra|meu|minha|nosso|nossa)\s+"
+        r"(?:(?:primer|primera|ultimo|ultima|anterior|primeiro|primeira)\s+)?"
+        + case,
+        normalized,
+    ))
+    prior = (
+        r"\b(?:abri|abrimos|envie|enviamos|presente|presentamos|mande|mandei|"
+        r"registrei|registramos|iniciei|iniciamos|abiert[oa]|abert[oa]|"
+        r"registrad[oa]|presentad[oa]|enviad[oa]|anterior|previ[oa]|"
+        r"existente|pendiente|pendente)\b|\b(?:ya|ja)\s+(?:tengo|tenho)\b"
+    )
+    existing_case = owned_case or bool(re.search(
+        case + r"[^.;!?]{0,90}" + prior + r"|"
+        + prior + r"[^.;!?]{0,90}" + case,
+        normalized,
+    ))
+    status_request = bool(re.search(
+        r"\b(?:seguimiento|seguimento|andamento|avance|novedades|atualizacoes|"
+        r"atualizacao|actualizaciones|actualizacion|status|estado|situacion|retorno)\b|"
+        r"\bcomo\s+(?:va|sigue|vai|esta|anda)\b|"
+        r"\b(?:consultar|verificar|revisar|saber|conocer|checar|conferir)\b",
+        normalized,
+    ))
+    return existing_case and status_request
+
+
 def is_search_followup(text: str, language: str) -> bool:
     """Recognize one slot-only reply for an unfinished server-owned search.
 
