@@ -1,7 +1,8 @@
 # Experimental local learned routing, October 2
 
-The prototype now has an optional supervised intent router. This is a **training-only
-preview**, not a scored benchmark or proof of improved service. The default remains
+The prototype has an optional supervised intent router. UI startup fits **TRAIN
+only**. A separately frozen [first development comparison](development_results.md)
+is now complete; final evaluation and human output review remain pending. The default remains
 the keyword baseline. Both routes use the same records, search/selection code,
 permissions, response templates, confirmation flow, simulated tools and receipt checks.
 
@@ -71,15 +72,17 @@ must be resolved or disclosed explicitly. A second model review does not replace
 
 The [64-message Spanish checklist](routing_review_es.md) is approved for wording and
 intent labels. This does not prove semantic family independence or model quality.
-Do not use router responses to decide gold labels. Next declare the paired comparison
-protocol and resolve or explicitly disclose the Portuguese human-review limitation.
+Do not use router responses to decide gold labels. The [paired development
+protocol](development_protocol.md) was declared before scoring and explicitly
+discloses the Portuguese human-review limitation.
 
-The new **32-message development draft is unscored**. Its eight families are separate
+The **32-message development workload was scored once** under that protocol. Its eight families are separate
 from TRAIN, but this is a small engineered balanced workload with semantic overlap
 and author/reviewer limitations. Private source bindings supply record context for
-later service checks; they are not evidence of routing accuracy or completed workflows.
-Declare paired scoring, all failure denominators and source/fault provenance before
-running development. Preserve unsuccessful cases and report each language/intent.
+service checks; the binding checkpoint alone was not performance evidence. The
+new [aggregate result](../evidence/routing_development_v1.json) preserves every
+attempt and reports component and mechanical completion separately. No model
+parameter or threshold changed after this run.
 The original sealed final set remains unread and unchanged; any future source-grounded
 final workload needs a separately authorized freeze and protocol.
 
@@ -138,7 +141,9 @@ dispute followed by corrections, and preservation of offers/drafts. A separate
 TRAIN model in both languages; its [evidence](../evidence/neutral_chat_input_check.json)
 is diagnostic, not a held-out performance score. No source row or screenshot fact
 was copied into fixtures. The approved workload texts, labels and model parameters
-are unchanged; development remains unscored and original final cases unread.
+were unchanged at that checkpoint; development was then unscored and original
+final cases unread. The later development run above retains those inputs/model
+parameters and leaves the original final untouched.
 
 Stop and restart existing review servers to load the correction. Use the same
 updated shared code for the keyword and learned modes. Saved owner-local launchers

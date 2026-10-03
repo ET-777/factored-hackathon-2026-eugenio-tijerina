@@ -13,11 +13,14 @@ Supported transaction currencies are **MXN, COP, ARS and USD**. Searches preserv
 native amounts and return no match when the available records lack that currency;
 the default fictional demo records are USD-only. An optional local private-cohort
 mode serves an existing validated source snapshot with a fixed startup test identity.
-The offline character n-gram classifier has a training-only preview. Its authored
+The offline character n-gram classifier has an experimental local preview. Its authored
 96-message training and 32-message development drafts have owner-approved Spanish
-wording/labels; Portuguese human review remains pending;
-development remains unscored. The scenario runner, deployment and final evaluation
-remain pending. No comparative performance result is claimed.
+wording/labels; Portuguese human review remains pending. The first frozen,
+source-backed development comparison is complete: Spanish correct routes improved
+from 6/16 to 15/16 and mechanical workflow completion from 8/16 to 12/16.
+See [development results](docs/development_results.md) for failures and limits.
+Human output review, broader scenario evaluation, deployment and final evaluation
+remain pending. These are authored development results, not final performance.
 
 Organizer guidance reviewed October 1 requires English submission deliverables and
 Spanish/Portuguese customer interactions. In an October 2 owner-provided Slack screenshot,
@@ -26,7 +29,8 @@ and separately labeled simulated safety/tool-failure scenarios: "Yes just make s
 to justify it". Record their purpose, provenance and limits; this does not approve
 redistributing source data or every pre-existing fictional-record workload.
 Draft families and labels are documented. Spanish wording/labels were approved on
-October 3; Portuguese human review and the comparison protocol remain pending.
+October 3; Portuguese human review remains pending. The first development protocol
+was frozen before scoring; a separate final protocol remains pending.
 Keep the existing final cases sealed. See
 [requirements](docs/requirements.md) and the [evaluation eligibility gate](docs/evaluation.md).
 
@@ -55,7 +59,7 @@ Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
   keyword input limits, session/reset behavior and current verification.
 - [Private-cohort UI](docs/private_cohort_ui.md): optional loopback mode, trusted startup
   identity/permissions, source snapshot limits and local integration checks.
-- [Experimental learned routing](docs/learned_routing.md): local training-only preview,
+- [Experimental learned routing](docs/learned_routing.md): local preview,
   fixed algorithm, shared service guards and review status.
 - [Spanish review checklist](docs/routing_review_es.md): 64 authored training/development
   messages with October 3 owner wording/label approval, without classifier predictions.
@@ -106,7 +110,7 @@ That reads credentials only in memory and reports counts, never their values.
 bank_service/                  guarded workflow, keyword/learned routing, local UI, synthetic demo
 docs/                          source-backed requirements, audit, scope and evaluation
 evaluation/development.json    public, team-authored development cases
-evaluation/routing_*.json      authored TRAIN/DEVELOPMENT routing drafts; review pending
+evaluation/routing_*.json      authored routing workload; Spanish approved, Portuguese pending
 evaluation/final_manifest.json public final-set commitment; no final case content
 evaluation/final_private/      ignored, sealed local cases and labels
 evidence/                      aggregate audit evidence only
@@ -119,8 +123,10 @@ The existing development/final scenario contracts use team-authored fictional ba
 fixtures, not extracts or Portuguese translations of organizer customer records.
 The October 2 permission addresses authored customer messages using supplied transaction
 records and separately labeled simulated scenarios; do not retroactively declare every
-old fictional-record case eligible. A source-grounded comparison protocol with reviewed
-labels and independent families is still pending. Source dataset text is
+old fictional-record case eligible. The [first development protocol](docs/development_protocol.md)
+uses supplied records and separately authored families, with disclosed semantic
+overlap and Portuguese review limits. A submission-grade final comparison remains
+pending. Source dataset text is
 documented as Spanish-only; Portuguese evaluation provenance and fluent review remain open.
 
 ## Privacy and source handling
@@ -150,5 +156,6 @@ and handoff only;
 there is no real chargeback, reimbursement, fraud determination, or lending decision.
 The user delegated the workflow decision; transaction inquiry with confirmed simulated
 intake and human handoff is selected in `docs/scope.md`. Experimental local training
-and learned inference exist. Comparative/end-to-end evaluation, human language
-review, deployment and submission remain future work.
+and learned inference exist. The first component and mechanical workflow development
+comparison is complete; human language/output review, final evaluation, deployment
+and submission remain future work.

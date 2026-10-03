@@ -1,0 +1,1637 @@
+{
+  "candidate_consideration": {
+    "default_router_changed": false,
+    "development_criteria_met": true,
+    "final_evaluation_complete": false,
+    "human_output_review_complete": false,
+    "observed_confirmation_receipt_invariant_failures": 0,
+    "portuguese_fluent_human_review_complete": false
+  },
+  "finished_at_utc": "2026-10-03T20:45:03.569755+00:00",
+  "limitations": [
+    "development_only_not_final",
+    "authored_correlated_balanced_requests",
+    "spanish_owner_labels_not_independent_review",
+    "portuguese_human_review_pending",
+    "preselected_record_context_not_discovery_or_authentication",
+    "mechanical_checks_not_semantic_or_comprehensive_safety_review",
+    "in_process_latency_not_deployed_latency",
+    "original_source_files_not_rehashed"
+  ],
+  "manifest": {
+    "api_calls": 0,
+    "api_charges": 0,
+    "authored_artifacts": {
+      "development": {
+        "artifact": "evaluation/routing_development.json",
+        "bytes": 8734,
+        "sha256": "ca86b398928b8fbdb62ba02007f9e4f1b64d08c3489d7353bedda027b03f25fe"
+      },
+      "train": {
+        "artifact": "evaluation/routing_train.json",
+        "bytes": 25549,
+        "sha256": "41c3b99d7e38b33661625be83c062ad26e22c94900026fd53105680aa16891ab"
+      }
+    },
+    "bindings_sha256": "e8738975de2d828df23f23f70c761f512754fab4eaac9c6dfaf55d5c62c12ddd",
+    "code_sha256": {
+      "bank_service/__init__.py": "2f7b26b6f4ad1460b45d5f2223c7bd998be3ec8ef6af4fb3e0fba4802dd1f25f",
+      "bank_service/__main__.py": "29b9c006cdd025b103df2a85cdf3b95cab166f5ea000f3dc023e7cf2556131ff",
+      "bank_service/access.py": "86176638305ffaaab80753b2e21bcfbc88b8955f8a3553fb260dbf56078fa0d9",
+      "bank_service/actions.py": "22ce32973916bc6181a5cf5ba50dfd54017d69f424e66c117dcf5e9520e320cb",
+      "bank_service/case_store.py": "a8f218f5755f5993d191b9e4fd148c200b149fa8d64fc4744e0d199fa45625c0",
+      "bank_service/cohort_repository.py": "fd7c864d35071bdc1f1a380959935f181894f865f116829678e7528da2324950",
+      "bank_service/conversation.py": "257c957bb18617344c5629fb175d0f19601eb63890e8e463b8b6e1cf785ca098",
+      "bank_service/demo.py": "05354be23fb0b0a3abafa5bacdd36dd4dae7a6e045ba4f12d95489359a2284e4",
+      "bank_service/demo_fixtures.py": "d4dbbff6651a9ba9d32bdbf4143b7b4e3bd8a5f59dcec051fff559795f0d5895",
+      "bank_service/development_driver.py": "a80fef710c2924b2190402171d3eadded953776769c337e22bc45eeefb601346",
+      "bank_service/development_inputs.py": "be0cfc6268a9e440d5b19b24b784af168cd84abf3def5243c1790b0dadd86a7c",
+      "bank_service/evaluation_metrics.py": "b83794f17f537c8eca7b4cc5ff081e3b7b1de8c1cc054dbbce225198836e3e07",
+      "bank_service/learned_routing.py": "4a0bd7ef1764847567ddc869a3f0d230072e746ef7a26e633b561642af810955",
+      "bank_service/records.py": "d1293095db14f63c3b5520aa4a6cad3afc8ee36917c7f44ddd83c27e88d429c6",
+      "bank_service/responses.py": "c49038f91c66b3209b2e879f929f61c7abb0790445d1062aa340137179b25330",
+      "bank_service/route_loader.py": "095dd9d81a21a7127a47d9234f01a06990b514eb10195846955a3f01d3bbc043",
+      "bank_service/routing.py": "b397dc249cc16c71929aa82303095a35d5d9cf7e83c471ba40f2e136962db604",
+      "bank_service/selection.py": "fac3ff0a1c32a80fd45070a4d91a9927e22cce357f761c2baa2dd393cb7d22a1",
+      "bank_service/transactions.py": "abe2c7f95de9d34b06229423800937b8310fe091b06e48fe872ec9000834a35b",
+      "bank_service/web_app.py": "d10f1ac2ebcff775f4dd9f568748544368a21d4d80b5d1b434851262bc8b43c2",
+      "scripts/bind_routing_workload.py": "9d6af8a25c4cf49042f2734336891237ac86ab9a374fb260acb7f9eff9734b5c",
+      "scripts/run_routing_development.py": "6a614633ada7175632382980bde22086a5f1fc01676078c72ab9a587b35d7c81"
+    },
+    "cohort_sha256": {
+      "cohort.json": {
+        "bytes": 71330,
+        "sha256": "0145e09adce78b1c13aea278597add213d338dc70e5373bf81da7132e423dbe1"
+      },
+      "manifest.json": {
+        "bytes": 1835,
+        "sha256": "87fc7252dbee5302b89b0fbbe0e864e050b26140c05ff4ae4eb76b8f8e59872a"
+      }
+    },
+    "component_attempts_per_system": 32,
+    "development_examples_per_system": 32,
+    "fixed_scenario_clock": "2026-10-03T12:00:00+00:00",
+    "local_hardware_electricity_cost_measured": false,
+    "protocol_saved_before_fit_and_prediction": true,
+    "protocol_sha256": "986efb84185db3dfc871276122b0428b2831183afe907d9a8f521da295a2d401",
+    "protocol_version": "development-v1",
+    "retry_policy": "none",
+    "review_status": {
+      "es": "owner_wording_and_labels_approved_output_review_pending",
+      "pt": "provisional_fluent_human_review_pending"
+    },
+    "runtime": {
+      "logical_cpu_count": 20,
+      "machine": "AMD64",
+      "os": "Windows",
+      "os_release": "10",
+      "processor": "Intel64 Family 6 Model 151 Stepping 2, GenuineIntel",
+      "python": "3.11.0"
+    },
+    "schema_version": 1,
+    "source_csv_pdf_or_final_read": false,
+    "spanish_review_sha256": "1bb8bba22581c4602f612eaa230c4dac116ec214016a104e34a4bc42628ef078",
+    "started_at_utc": "2026-10-03T20:45:02.084104+00:00",
+    "workflow_attempts_per_system": 32
+  },
+  "manifest_sha256": "0068ac370296ddeed14ff172a21eb05ae903ddebf9d93f3b175d883389411147",
+  "model": {
+    "canonical_training_sha256": "378c21e885e3219e96898c6d0978ec1c600258108cdbca7fd2e1f02927e88f9c",
+    "training_rows": 96,
+    "vocabulary_size": 6304
+  },
+  "model_manifest_sha256": "8c1722bd7f6840e1cff47b808f48f0122a96d5f257a3264cc5b94c4e2579c2ed",
+  "outcomes_sha256": "edf540fc159c269516cdcbe53574f0e1bc495dedc5f95f9e0b1025a1aa2ec25b",
+  "paired_by_language": {
+    "es": {
+      "baseline_only_correct": 0,
+      "component_correct_delta": 9,
+      "learned_only_correct": 9,
+      "macro_f1_delta": 0.588023088023088,
+      "workflow_completed_delta": 4
+    },
+    "pt": {
+      "baseline_only_correct": 0,
+      "component_correct_delta": 11,
+      "learned_only_correct": 11,
+      "macro_f1_delta": 0.6428571428571429,
+      "workflow_completed_delta": 6
+    }
+  },
+  "schema_version": 1,
+  "status": "development_comparison_completed",
+  "systems": {
+    "keyword_baseline": {
+      "component": {
+        "by_language": {
+          "es": {
+            "abstention_rate": 0.4375,
+            "abstentions": 7,
+            "accuracy": 0.375,
+            "attempts": 16,
+            "confusion": {
+              "dispute_intake": {
+                "ABSTAIN": 0,
+                "dispute_intake": 2,
+                "human_request": 0,
+                "inquiry": 2,
+                "unsupported": 0
+              },
+              "human_request": {
+                "ABSTAIN": 3,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 1,
+                "unsupported": 0
+              },
+              "inquiry": {
+                "ABSTAIN": 0,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 4,
+                "unsupported": 0
+              },
+              "unsupported": {
+                "ABSTAIN": 4,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 0
+              }
+            },
+            "correct": 6,
+            "coverage": 0.5625,
+            "covered": 9,
+            "error_rate": 0.0,
+            "errors": 0,
+            "family_exact_all_correct": {
+              "correct": 2,
+              "families": 8,
+              "incorrect": 6,
+              "rate": 0.25
+            },
+            "incorrect": 10,
+            "macro_f1": 0.3484848484848485,
+            "per_intent": {
+              "dispute_intake": {
+                "f1": 0.6666666666666666,
+                "false_negative": 2,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 2,
+                "recall": 0.5,
+                "support": 4,
+                "true_positive": 2
+              },
+              "human_request": {
+                "f1": 0.0,
+                "false_negative": 4,
+                "false_positive": 0,
+                "precision": 0.0,
+                "predicted": 0,
+                "recall": 0.0,
+                "support": 4,
+                "true_positive": 0
+              },
+              "inquiry": {
+                "f1": 0.7272727272727273,
+                "false_negative": 0,
+                "false_positive": 3,
+                "precision": 0.5714285714285714,
+                "predicted": 7,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              },
+              "unsupported": {
+                "f1": 0.0,
+                "false_negative": 4,
+                "false_positive": 0,
+                "precision": 0.0,
+                "predicted": 0,
+                "recall": 0.0,
+                "support": 4,
+                "true_positive": 0
+              }
+            }
+          },
+          "pt": {
+            "abstention_rate": 0.625,
+            "abstentions": 10,
+            "accuracy": 0.3125,
+            "attempts": 16,
+            "confusion": {
+              "dispute_intake": {
+                "ABSTAIN": 0,
+                "dispute_intake": 3,
+                "human_request": 0,
+                "inquiry": 1,
+                "unsupported": 0
+              },
+              "human_request": {
+                "ABSTAIN": 4,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "inquiry": {
+                "ABSTAIN": 2,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 2,
+                "unsupported": 0
+              },
+              "unsupported": {
+                "ABSTAIN": 4,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 0
+              }
+            },
+            "correct": 5,
+            "coverage": 0.375,
+            "covered": 6,
+            "error_rate": 0.0,
+            "errors": 0,
+            "family_exact_all_correct": {
+              "correct": 1,
+              "families": 8,
+              "incorrect": 7,
+              "rate": 0.125
+            },
+            "incorrect": 11,
+            "macro_f1": 0.3571428571428571,
+            "per_intent": {
+              "dispute_intake": {
+                "f1": 0.8571428571428571,
+                "false_negative": 1,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 3,
+                "recall": 0.75,
+                "support": 4,
+                "true_positive": 3
+              },
+              "human_request": {
+                "f1": 0.0,
+                "false_negative": 4,
+                "false_positive": 0,
+                "precision": 0.0,
+                "predicted": 0,
+                "recall": 0.0,
+                "support": 4,
+                "true_positive": 0
+              },
+              "inquiry": {
+                "f1": 0.5714285714285714,
+                "false_negative": 2,
+                "false_positive": 1,
+                "precision": 0.6666666666666666,
+                "predicted": 3,
+                "recall": 0.5,
+                "support": 4,
+                "true_positive": 2
+              },
+              "unsupported": {
+                "f1": 0.0,
+                "false_negative": 4,
+                "false_positive": 0,
+                "precision": 0.0,
+                "predicted": 0,
+                "recall": 0.0,
+                "support": 4,
+                "true_positive": 0
+              }
+            }
+          }
+        },
+        "labels": [
+          "inquiry",
+          "dispute_intake",
+          "human_request",
+          "unsupported"
+        ],
+        "overall": {
+          "abstention_rate": 0.53125,
+          "abstentions": 17,
+          "accuracy": 0.34375,
+          "attempts": 32,
+          "confusion": {
+            "dispute_intake": {
+              "ABSTAIN": 0,
+              "dispute_intake": 5,
+              "human_request": 0,
+              "inquiry": 3,
+              "unsupported": 0
+            },
+            "human_request": {
+              "ABSTAIN": 7,
+              "dispute_intake": 0,
+              "human_request": 0,
+              "inquiry": 1,
+              "unsupported": 0
+            },
+            "inquiry": {
+              "ABSTAIN": 2,
+              "dispute_intake": 0,
+              "human_request": 0,
+              "inquiry": 6,
+              "unsupported": 0
+            },
+            "unsupported": {
+              "ABSTAIN": 8,
+              "dispute_intake": 0,
+              "human_request": 0,
+              "inquiry": 0,
+              "unsupported": 0
+            }
+          },
+          "correct": 11,
+          "coverage": 0.46875,
+          "covered": 15,
+          "error_rate": 0.0,
+          "errors": 0,
+          "family_exact_all_correct": {
+            "correct": 0,
+            "families": 8,
+            "incorrect": 8,
+            "rate": 0.0
+          },
+          "incorrect": 21,
+          "macro_f1": 0.358974358974359,
+          "per_intent": {
+            "dispute_intake": {
+              "f1": 0.7692307692307693,
+              "false_negative": 3,
+              "false_positive": 0,
+              "precision": 1.0,
+              "predicted": 5,
+              "recall": 0.625,
+              "support": 8,
+              "true_positive": 5
+            },
+            "human_request": {
+              "f1": 0.0,
+              "false_negative": 8,
+              "false_positive": 0,
+              "precision": 0.0,
+              "predicted": 0,
+              "recall": 0.0,
+              "support": 8,
+              "true_positive": 0
+            },
+            "inquiry": {
+              "f1": 0.6666666666666666,
+              "false_negative": 2,
+              "false_positive": 4,
+              "precision": 0.6,
+              "predicted": 10,
+              "recall": 0.75,
+              "support": 8,
+              "true_positive": 6
+            },
+            "unsupported": {
+              "f1": 0.0,
+              "false_negative": 8,
+              "false_positive": 0,
+              "precision": 0.0,
+              "predicted": 0,
+              "recall": 0.0,
+              "support": 8,
+              "true_positive": 0
+            }
+          }
+        },
+        "prediction_columns": [
+          "inquiry",
+          "dispute_intake",
+          "human_request",
+          "unsupported",
+          "ABSTAIN"
+        ]
+      },
+      "component_latency": {
+        "by_language": {
+          "es": {
+            "attempts": 16,
+            "coverage": 1.0,
+            "median": 0.00011364999954821542,
+            "missing": 0,
+            "observed": 16,
+            "p95": 0.002317300000868272,
+            "p95_method": "nearest_rank_on_observed",
+            "unit": "seconds"
+          },
+          "pt": {
+            "attempts": 16,
+            "coverage": 1.0,
+            "median": 0.00011099999937869143,
+            "missing": 0,
+            "observed": 16,
+            "p95": 0.00017290000141656492,
+            "p95_method": "nearest_rank_on_observed",
+            "unit": "seconds"
+          }
+        },
+        "overall": {
+          "attempts": 32,
+          "coverage": 1.0,
+          "median": 0.00011284999891358893,
+          "missing": 0,
+          "observed": 32,
+          "p95": 0.0014857999995001592,
+          "p95_method": "nearest_rank_on_observed",
+          "unit": "seconds"
+        }
+      },
+      "workflow": {
+        "by_language": {
+          "es": {
+            "attempts": 16,
+            "by_intent": {
+              "dispute_intake": {
+                "attempts": 4,
+                "completed": 1
+              },
+              "human_request": {
+                "attempts": 4,
+                "completed": 0
+              },
+              "inquiry": {
+                "attempts": 4,
+                "completed": 3
+              },
+              "unsupported": {
+                "attempts": 4,
+                "completed": 4
+              }
+            },
+            "checks": {
+              "answer_grounded": {
+                "applicable": 9,
+                "failed": 0,
+                "not_applicable": 7,
+                "passed": 9,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "channel_limit_explicit": {
+                "applicable": 1,
+                "failed": 1,
+                "not_applicable": 15,
+                "passed": 0,
+                "rate": 0.0,
+                "unassessed": 0
+              },
+              "consent_verified": {
+                "applicable": 8,
+                "failed": 0,
+                "not_applicable": 8,
+                "passed": 8,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "expected_branch": {
+                "applicable": 16,
+                "failed": 7,
+                "not_applicable": 0,
+                "passed": 9,
+                "rate": 0.5625,
+                "unassessed": 0
+              },
+              "idempotent_confirmation": {
+                "applicable": 8,
+                "failed": 0,
+                "not_applicable": 8,
+                "passed": 8,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "language_preserved": {
+                "applicable": 16,
+                "failed": 0,
+                "not_applicable": 0,
+                "passed": 16,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "no_fabricated_prior_cases": {
+                "applicable": 8,
+                "failed": 0,
+                "not_applicable": 8,
+                "passed": 8,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "no_write_before_confirmation": {
+                "applicable": 16,
+                "failed": 0,
+                "not_applicable": 0,
+                "passed": 16,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "original_request_preserved": {
+                "applicable": 8,
+                "failed": 0,
+                "not_applicable": 8,
+                "passed": 8,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "packet_grounded": {
+                "applicable": 8,
+                "failed": 0,
+                "not_applicable": 8,
+                "passed": 8,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "readback_verified": {
+                "applicable": 8,
+                "failed": 0,
+                "not_applicable": 8,
+                "passed": 8,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "safe_eligibility_block": {
+                "applicable": 2,
+                "failed": 1,
+                "not_applicable": 14,
+                "passed": 1,
+                "rate": 0.5,
+                "unassessed": 0
+              },
+              "single_case": {
+                "applicable": 12,
+                "failed": 4,
+                "not_applicable": 4,
+                "passed": 8,
+                "rate": 0.6666666666666666,
+                "unassessed": 0
+              }
+            },
+            "completed": 8,
+            "completion_rate": 0.5,
+            "execution_errors": 0,
+            "incomplete": 8,
+            "latency": {
+              "attempts": 16,
+              "coverage": 1.0,
+              "median": 0.00546070000018517,
+              "missing": 0,
+              "observed": 16,
+              "p95": 0.0075034000001323875,
+              "p95_method": "nearest_rank_on_observed",
+              "unit": "seconds"
+            },
+            "unavailable_bindings": 0
+          },
+          "pt": {
+            "attempts": 16,
+            "by_intent": {
+              "dispute_intake": {
+                "attempts": 4,
+                "completed": 1
+              },
+              "human_request": {
+                "attempts": 4,
+                "completed": 0
+              },
+              "inquiry": {
+                "attempts": 4,
+                "completed": 2
+              },
+              "unsupported": {
+                "attempts": 4,
+                "completed": 4
+              }
+            },
+            "checks": {
+              "answer_grounded": {
+                "applicable": 8,
+                "failed": 2,
+                "not_applicable": 8,
+                "passed": 6,
+                "rate": 0.75,
+                "unassessed": 0
+              },
+              "channel_limit_explicit": {
+                "applicable": 1,
+                "failed": 1,
+                "not_applicable": 15,
+                "passed": 0,
+                "rate": 0.0,
+                "unassessed": 0
+              },
+              "consent_verified": {
+                "applicable": 11,
+                "failed": 0,
+                "not_applicable": 5,
+                "passed": 11,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "expected_branch": {
+                "applicable": 16,
+                "failed": 9,
+                "not_applicable": 0,
+                "passed": 7,
+                "rate": 0.4375,
+                "unassessed": 0
+              },
+              "idempotent_confirmation": {
+                "applicable": 11,
+                "failed": 0,
+                "not_applicable": 5,
+                "passed": 11,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "language_preserved": {
+                "applicable": 16,
+                "failed": 0,
+                "not_applicable": 0,
+                "passed": 16,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "no_fabricated_prior_cases": {
+                "applicable": 11,
+                "failed": 0,
+                "not_applicable": 5,
+                "passed": 11,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "no_write_before_confirmation": {
+                "applicable": 16,
+                "failed": 0,
+                "not_applicable": 0,
+                "passed": 16,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "original_request_preserved": {
+                "applicable": 11,
+                "failed": 0,
+                "not_applicable": 5,
+                "passed": 11,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "packet_grounded": {
+                "applicable": 11,
+                "failed": 0,
+                "not_applicable": 5,
+                "passed": 11,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "readback_verified": {
+                "applicable": 11,
+                "failed": 0,
+                "not_applicable": 5,
+                "passed": 11,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "safe_eligibility_block": {
+                "applicable": 2,
+                "failed": 0,
+                "not_applicable": 14,
+                "passed": 2,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "single_case": {
+                "applicable": 14,
+                "failed": 3,
+                "not_applicable": 2,
+                "passed": 11,
+                "rate": 0.7857142857142857,
+                "unassessed": 0
+              }
+            },
+            "completed": 7,
+            "completion_rate": 0.4375,
+            "execution_errors": 0,
+            "incomplete": 9,
+            "latency": {
+              "attempts": 16,
+              "coverage": 1.0,
+              "median": 0.00649749999956839,
+              "missing": 0,
+              "observed": 16,
+              "p95": 0.007485199999791803,
+              "p95_method": "nearest_rank_on_observed",
+              "unit": "seconds"
+            },
+            "unavailable_bindings": 0
+          }
+        },
+        "overall": {
+          "attempts": 32,
+          "by_intent": {
+            "dispute_intake": {
+              "attempts": 8,
+              "completed": 2
+            },
+            "human_request": {
+              "attempts": 8,
+              "completed": 0
+            },
+            "inquiry": {
+              "attempts": 8,
+              "completed": 5
+            },
+            "unsupported": {
+              "attempts": 8,
+              "completed": 8
+            }
+          },
+          "checks": {
+            "answer_grounded": {
+              "applicable": 17,
+              "failed": 2,
+              "not_applicable": 15,
+              "passed": 15,
+              "rate": 0.8823529411764706,
+              "unassessed": 0
+            },
+            "channel_limit_explicit": {
+              "applicable": 2,
+              "failed": 2,
+              "not_applicable": 30,
+              "passed": 0,
+              "rate": 0.0,
+              "unassessed": 0
+            },
+            "consent_verified": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "expected_branch": {
+              "applicable": 32,
+              "failed": 16,
+              "not_applicable": 0,
+              "passed": 16,
+              "rate": 0.5,
+              "unassessed": 0
+            },
+            "idempotent_confirmation": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "language_preserved": {
+              "applicable": 32,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 32,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "no_fabricated_prior_cases": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "no_write_before_confirmation": {
+              "applicable": 32,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 32,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "original_request_preserved": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "packet_grounded": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "readback_verified": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "safe_eligibility_block": {
+              "applicable": 4,
+              "failed": 1,
+              "not_applicable": 28,
+              "passed": 3,
+              "rate": 0.75,
+              "unassessed": 0
+            },
+            "single_case": {
+              "applicable": 26,
+              "failed": 7,
+              "not_applicable": 6,
+              "passed": 19,
+              "rate": 0.7307692307692307,
+              "unassessed": 0
+            }
+          },
+          "completed": 15,
+          "completion_rate": 0.46875,
+          "execution_errors": 0,
+          "incomplete": 17,
+          "latency": {
+            "attempts": 32,
+            "coverage": 1.0,
+            "median": 0.0063369500003318535,
+            "missing": 0,
+            "observed": 32,
+            "p95": 0.007485199999791803,
+            "p95_method": "nearest_rank_on_observed",
+            "unit": "seconds"
+          },
+          "unavailable_bindings": 0
+        }
+      }
+    },
+    "learned_candidate": {
+      "component": {
+        "by_language": {
+          "es": {
+            "abstention_rate": 0.0,
+            "abstentions": 0,
+            "accuracy": 0.9375,
+            "attempts": 16,
+            "confusion": {
+              "dispute_intake": {
+                "ABSTAIN": 0,
+                "dispute_intake": 4,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "human_request": {
+                "ABSTAIN": 0,
+                "dispute_intake": 1,
+                "human_request": 3,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "inquiry": {
+                "ABSTAIN": 0,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 4,
+                "unsupported": 0
+              },
+              "unsupported": {
+                "ABSTAIN": 0,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 4
+              }
+            },
+            "correct": 15,
+            "coverage": 1.0,
+            "covered": 16,
+            "error_rate": 0.0,
+            "errors": 0,
+            "family_exact_all_correct": {
+              "correct": 7,
+              "families": 8,
+              "incorrect": 1,
+              "rate": 0.875
+            },
+            "incorrect": 1,
+            "macro_f1": 0.9365079365079365,
+            "per_intent": {
+              "dispute_intake": {
+                "f1": 0.8888888888888888,
+                "false_negative": 0,
+                "false_positive": 1,
+                "precision": 0.8,
+                "predicted": 5,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              },
+              "human_request": {
+                "f1": 0.8571428571428571,
+                "false_negative": 1,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 3,
+                "recall": 0.75,
+                "support": 4,
+                "true_positive": 3
+              },
+              "inquiry": {
+                "f1": 1.0,
+                "false_negative": 0,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 4,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              },
+              "unsupported": {
+                "f1": 1.0,
+                "false_negative": 0,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 4,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              }
+            }
+          },
+          "pt": {
+            "abstention_rate": 0.0,
+            "abstentions": 0,
+            "accuracy": 1.0,
+            "attempts": 16,
+            "confusion": {
+              "dispute_intake": {
+                "ABSTAIN": 0,
+                "dispute_intake": 4,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "human_request": {
+                "ABSTAIN": 0,
+                "dispute_intake": 0,
+                "human_request": 4,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "inquiry": {
+                "ABSTAIN": 0,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 4,
+                "unsupported": 0
+              },
+              "unsupported": {
+                "ABSTAIN": 0,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 4
+              }
+            },
+            "correct": 16,
+            "coverage": 1.0,
+            "covered": 16,
+            "error_rate": 0.0,
+            "errors": 0,
+            "family_exact_all_correct": {
+              "correct": 8,
+              "families": 8,
+              "incorrect": 0,
+              "rate": 1.0
+            },
+            "incorrect": 0,
+            "macro_f1": 1.0,
+            "per_intent": {
+              "dispute_intake": {
+                "f1": 1.0,
+                "false_negative": 0,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 4,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              },
+              "human_request": {
+                "f1": 1.0,
+                "false_negative": 0,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 4,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              },
+              "inquiry": {
+                "f1": 1.0,
+                "false_negative": 0,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 4,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              },
+              "unsupported": {
+                "f1": 1.0,
+                "false_negative": 0,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 4,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              }
+            }
+          }
+        },
+        "labels": [
+          "inquiry",
+          "dispute_intake",
+          "human_request",
+          "unsupported"
+        ],
+        "overall": {
+          "abstention_rate": 0.0,
+          "abstentions": 0,
+          "accuracy": 0.96875,
+          "attempts": 32,
+          "confusion": {
+            "dispute_intake": {
+              "ABSTAIN": 0,
+              "dispute_intake": 8,
+              "human_request": 0,
+              "inquiry": 0,
+              "unsupported": 0
+            },
+            "human_request": {
+              "ABSTAIN": 0,
+              "dispute_intake": 1,
+              "human_request": 7,
+              "inquiry": 0,
+              "unsupported": 0
+            },
+            "inquiry": {
+              "ABSTAIN": 0,
+              "dispute_intake": 0,
+              "human_request": 0,
+              "inquiry": 8,
+              "unsupported": 0
+            },
+            "unsupported": {
+              "ABSTAIN": 0,
+              "dispute_intake": 0,
+              "human_request": 0,
+              "inquiry": 0,
+              "unsupported": 8
+            }
+          },
+          "correct": 31,
+          "coverage": 1.0,
+          "covered": 32,
+          "error_rate": 0.0,
+          "errors": 0,
+          "family_exact_all_correct": {
+            "correct": 7,
+            "families": 8,
+            "incorrect": 1,
+            "rate": 0.875
+          },
+          "incorrect": 1,
+          "macro_f1": 0.9686274509803922,
+          "per_intent": {
+            "dispute_intake": {
+              "f1": 0.9411764705882353,
+              "false_negative": 0,
+              "false_positive": 1,
+              "precision": 0.8888888888888888,
+              "predicted": 9,
+              "recall": 1.0,
+              "support": 8,
+              "true_positive": 8
+            },
+            "human_request": {
+              "f1": 0.9333333333333333,
+              "false_negative": 1,
+              "false_positive": 0,
+              "precision": 1.0,
+              "predicted": 7,
+              "recall": 0.875,
+              "support": 8,
+              "true_positive": 7
+            },
+            "inquiry": {
+              "f1": 1.0,
+              "false_negative": 0,
+              "false_positive": 0,
+              "precision": 1.0,
+              "predicted": 8,
+              "recall": 1.0,
+              "support": 8,
+              "true_positive": 8
+            },
+            "unsupported": {
+              "f1": 1.0,
+              "false_negative": 0,
+              "false_positive": 0,
+              "precision": 1.0,
+              "predicted": 8,
+              "recall": 1.0,
+              "support": 8,
+              "true_positive": 8
+            }
+          }
+        },
+        "prediction_columns": [
+          "inquiry",
+          "dispute_intake",
+          "human_request",
+          "unsupported",
+          "ABSTAIN"
+        ]
+      },
+      "component_latency": {
+        "by_language": {
+          "es": {
+            "attempts": 16,
+            "coverage": 1.0,
+            "median": 0.0004626500003723777,
+            "missing": 0,
+            "observed": 16,
+            "p95": 0.0008080999996309401,
+            "p95_method": "nearest_rank_on_observed",
+            "unit": "seconds"
+          },
+          "pt": {
+            "attempts": 16,
+            "coverage": 1.0,
+            "median": 0.0004086500002813409,
+            "missing": 0,
+            "observed": 16,
+            "p95": 0.0009846000011748401,
+            "p95_method": "nearest_rank_on_observed",
+            "unit": "seconds"
+          }
+        },
+        "overall": {
+          "attempts": 32,
+          "coverage": 1.0,
+          "median": 0.00045045000024401816,
+          "missing": 0,
+          "observed": 32,
+          "p95": 0.0008309000004373956,
+          "p95_method": "nearest_rank_on_observed",
+          "unit": "seconds"
+        }
+      },
+      "workflow": {
+        "by_language": {
+          "es": {
+            "attempts": 16,
+            "by_intent": {
+              "dispute_intake": {
+                "attempts": 4,
+                "completed": 2
+              },
+              "human_request": {
+                "attempts": 4,
+                "completed": 3
+              },
+              "inquiry": {
+                "attempts": 4,
+                "completed": 3
+              },
+              "unsupported": {
+                "attempts": 4,
+                "completed": 4
+              }
+            },
+            "checks": {
+              "answer_grounded": {
+                "applicable": 9,
+                "failed": 0,
+                "not_applicable": 7,
+                "passed": 9,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "channel_limit_explicit": {
+                "applicable": 1,
+                "failed": 1,
+                "not_applicable": 15,
+                "passed": 0,
+                "rate": 0.0,
+                "unassessed": 0
+              },
+              "consent_verified": {
+                "applicable": 9,
+                "failed": 0,
+                "not_applicable": 7,
+                "passed": 9,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "expected_branch": {
+                "applicable": 16,
+                "failed": 3,
+                "not_applicable": 0,
+                "passed": 13,
+                "rate": 0.8125,
+                "unassessed": 0
+              },
+              "idempotent_confirmation": {
+                "applicable": 9,
+                "failed": 0,
+                "not_applicable": 7,
+                "passed": 9,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "language_preserved": {
+                "applicable": 16,
+                "failed": 0,
+                "not_applicable": 0,
+                "passed": 16,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "no_fabricated_prior_cases": {
+                "applicable": 9,
+                "failed": 0,
+                "not_applicable": 7,
+                "passed": 9,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "no_write_before_confirmation": {
+                "applicable": 16,
+                "failed": 0,
+                "not_applicable": 0,
+                "passed": 16,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "original_request_preserved": {
+                "applicable": 9,
+                "failed": 0,
+                "not_applicable": 7,
+                "passed": 9,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "packet_grounded": {
+                "applicable": 9,
+                "failed": 0,
+                "not_applicable": 7,
+                "passed": 9,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "readback_verified": {
+                "applicable": 9,
+                "failed": 0,
+                "not_applicable": 7,
+                "passed": 9,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "safe_eligibility_block": {
+                "applicable": 2,
+                "failed": 0,
+                "not_applicable": 14,
+                "passed": 2,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "single_case": {
+                "applicable": 12,
+                "failed": 3,
+                "not_applicable": 4,
+                "passed": 9,
+                "rate": 0.75,
+                "unassessed": 0
+              }
+            },
+            "completed": 12,
+            "completion_rate": 0.75,
+            "execution_errors": 0,
+            "incomplete": 4,
+            "latency": {
+              "attempts": 16,
+              "coverage": 1.0,
+              "median": 0.006079550000322342,
+              "missing": 0,
+              "observed": 16,
+              "p95": 0.008711700000276323,
+              "p95_method": "nearest_rank_on_observed",
+              "unit": "seconds"
+            },
+            "unavailable_bindings": 0
+          },
+          "pt": {
+            "attempts": 16,
+            "by_intent": {
+              "dispute_intake": {
+                "attempts": 4,
+                "completed": 2
+              },
+              "human_request": {
+                "attempts": 4,
+                "completed": 4
+              },
+              "inquiry": {
+                "attempts": 4,
+                "completed": 3
+              },
+              "unsupported": {
+                "attempts": 4,
+                "completed": 4
+              }
+            },
+            "checks": {
+              "answer_grounded": {
+                "applicable": 8,
+                "failed": 0,
+                "not_applicable": 8,
+                "passed": 8,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "channel_limit_explicit": {
+                "applicable": 1,
+                "failed": 1,
+                "not_applicable": 15,
+                "passed": 0,
+                "rate": 0.0,
+                "unassessed": 0
+              },
+              "consent_verified": {
+                "applicable": 10,
+                "failed": 0,
+                "not_applicable": 6,
+                "passed": 10,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "expected_branch": {
+                "applicable": 16,
+                "failed": 2,
+                "not_applicable": 0,
+                "passed": 14,
+                "rate": 0.875,
+                "unassessed": 0
+              },
+              "idempotent_confirmation": {
+                "applicable": 10,
+                "failed": 0,
+                "not_applicable": 6,
+                "passed": 10,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "language_preserved": {
+                "applicable": 16,
+                "failed": 0,
+                "not_applicable": 0,
+                "passed": 16,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "no_fabricated_prior_cases": {
+                "applicable": 10,
+                "failed": 0,
+                "not_applicable": 6,
+                "passed": 10,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "no_write_before_confirmation": {
+                "applicable": 16,
+                "failed": 0,
+                "not_applicable": 0,
+                "passed": 16,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "original_request_preserved": {
+                "applicable": 10,
+                "failed": 0,
+                "not_applicable": 6,
+                "passed": 10,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "packet_grounded": {
+                "applicable": 10,
+                "failed": 0,
+                "not_applicable": 6,
+                "passed": 10,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "readback_verified": {
+                "applicable": 10,
+                "failed": 0,
+                "not_applicable": 6,
+                "passed": 10,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "safe_eligibility_block": {
+                "applicable": 2,
+                "failed": 0,
+                "not_applicable": 14,
+                "passed": 2,
+                "rate": 1.0,
+                "unassessed": 0
+              },
+              "single_case": {
+                "applicable": 12,
+                "failed": 2,
+                "not_applicable": 4,
+                "passed": 10,
+                "rate": 0.8333333333333334,
+                "unassessed": 0
+              }
+            },
+            "completed": 13,
+            "completion_rate": 0.8125,
+            "execution_errors": 0,
+            "incomplete": 3,
+            "latency": {
+              "attempts": 16,
+              "coverage": 1.0,
+              "median": 0.006494400000519818,
+              "missing": 0,
+              "observed": 16,
+              "p95": 0.008744599999772618,
+              "p95_method": "nearest_rank_on_observed",
+              "unit": "seconds"
+            },
+            "unavailable_bindings": 0
+          }
+        },
+        "overall": {
+          "attempts": 32,
+          "by_intent": {
+            "dispute_intake": {
+              "attempts": 8,
+              "completed": 4
+            },
+            "human_request": {
+              "attempts": 8,
+              "completed": 7
+            },
+            "inquiry": {
+              "attempts": 8,
+              "completed": 6
+            },
+            "unsupported": {
+              "attempts": 8,
+              "completed": 8
+            }
+          },
+          "checks": {
+            "answer_grounded": {
+              "applicable": 17,
+              "failed": 0,
+              "not_applicable": 15,
+              "passed": 17,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "channel_limit_explicit": {
+              "applicable": 2,
+              "failed": 2,
+              "not_applicable": 30,
+              "passed": 0,
+              "rate": 0.0,
+              "unassessed": 0
+            },
+            "consent_verified": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "expected_branch": {
+              "applicable": 32,
+              "failed": 5,
+              "not_applicable": 0,
+              "passed": 27,
+              "rate": 0.84375,
+              "unassessed": 0
+            },
+            "idempotent_confirmation": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "language_preserved": {
+              "applicable": 32,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 32,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "no_fabricated_prior_cases": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "no_write_before_confirmation": {
+              "applicable": 32,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 32,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "original_request_preserved": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "packet_grounded": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "readback_verified": {
+              "applicable": 19,
+              "failed": 0,
+              "not_applicable": 13,
+              "passed": 19,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "safe_eligibility_block": {
+              "applicable": 4,
+              "failed": 0,
+              "not_applicable": 28,
+              "passed": 4,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "single_case": {
+              "applicable": 24,
+              "failed": 5,
+              "not_applicable": 8,
+              "passed": 19,
+              "rate": 0.7916666666666666,
+              "unassessed": 0
+            }
+          },
+          "completed": 25,
+          "completion_rate": 0.78125,
+          "execution_errors": 0,
+          "incomplete": 7,
+          "latency": {
+            "attempts": 32,
+            "coverage": 1.0,
+            "median": 0.0061734499995509395,
+            "missing": 0,
+            "observed": 32,
+            "p95": 0.008711700000276323,
+            "p95_method": "nearest_rank_on_observed",
+            "unit": "seconds"
+          },
+          "unavailable_bindings": 0
+        }
+      }
+    }
+  }
+}

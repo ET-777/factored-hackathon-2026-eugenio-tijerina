@@ -11,6 +11,11 @@ not observed customer demand, representative production language, or a
 fully human-validated bilingual benchmark. No fitting, threshold selection, performance scoring,
 new final-case authoring, or final freeze was performed while creating them.
 
+October 3 checkpoint: the unchanged workload has now received its [first frozen
+development comparison](development_results.md). Spanish results are primary;
+Portuguese results are provisional. No training/artifact labels, parameters or
+thresholds changed, and original final cases remain sealed.
+
 ## Why authored messages are justified
 
 The selected workflow answers questions about supplied transaction records,
@@ -224,10 +229,10 @@ and retain the prior record. This command prepares contexts without evaluating t
    Portuguese fluent human review remains pending. Future corrections require a
    deliberate artifact revision and new review hashes. Do not resolve ambiguity by
    observing which router predicts a desired answer.
-3. The current increment permits a fixed training-only fitting preview after the
-   independent semantic draft review, under the root agent's shared protocol.
-   Keep this draft provenance visible. Development remains unscored; no threshold
-   selection or final scoring is part of that preview. It cannot be represented
+3. The initial preview fitted TRAIN only after the independent semantic draft
+   review. The subsequent development run used the [frozen protocol](development_protocol.md)
+   and disclosed language limitations. Keep authored provenance visible; no
+   threshold selection or final scoring occurred. It cannot be represented
    as final performance or native-language validation. Do not rewrite development
    messages, labels, or the baseline after seeing results to manufacture a gain.
 4. Before a submission-grade comparison, finalize reviews, group assignments,
