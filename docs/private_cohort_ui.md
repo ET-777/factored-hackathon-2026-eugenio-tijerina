@@ -13,26 +13,26 @@ from that private cohort locally; never paste it into project documentation or G
 Identity and permissions are fixed before the server binds and cannot be supplied
 through chat, cookies or browser fields.
 
-The following placeholder must be replaced locally. This command grants read only:
+The following placeholder must be replaced locally. Paste each command as one physical
+line, then press Enter. If PowerShell shows a persistent `>>` prompt, cancel with
+Ctrl+C before retrying. These commands deliberately avoid backtick continuations.
+This command grants read only:
 
 ```powershell
-python -B -m bank_service web --port 8766 `
-  --cohort-run '.\data\private_cohort\june17-v1' `
-  --customer-id 'CUSTOMER_ID_FROM_YOUR_PRIVATE_COHORT'
+python -B -m bank_service web --port 8766 --cohort-run '.\data\private_cohort\june17-v1' --customer-id 'CUSTOMER_ID_FROM_YOUR_PRIVATE_COHORT'
 ```
 
 For the complete simulated journey, grant each scope explicitly at startup:
 
 ```powershell
-python -B -m bank_service web --port 8766 `
-  --cohort-run '.\data\private_cohort\june17-v1' `
-  --customer-id 'CUSTOMER_ID_FROM_YOUR_PRIVATE_COHORT' `
-  --permission transaction:read `
-  --permission intake:create_simulated `
-  --permission handoff:create_simulated
+python -B -m bank_service web --port 8766 --cohort-run '.\data\private_cohort\june17-v1' --customer-id 'CUSTOMER_ID_FROM_YOUR_PRIVATE_COHORT' --permission transaction:read --permission intake:create_simulated --permission handoff:create_simulated
 ```
 
 Open **http://127.0.0.1:8766**. The host stays loopback; there is no remote-host option.
+Successful startup prints `Local private-cohort review UI: http://127.0.0.1:8766`.
+The terminal then stays occupied while the server runs; the browser does not open
+automatically. Stop a foreground server with Ctrl+C. If this page already responds,
+use that running session rather than starting a second server on the same port.
 No model/provider, evaluation split or full source dataset is loaded. Invalid cohort,
 unknown customer or missing read permission refuses startup without a demo fallback.
 The fixed error does not echo the path, customer, rows or loader exception.
