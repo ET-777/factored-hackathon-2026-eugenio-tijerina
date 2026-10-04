@@ -24,13 +24,38 @@ class IntentRoutingTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertFalse(is_greeting(text, language))
 
-    def test_malformed_date_fragments_remain_slots_and_require_strict_iso(self):
+    def test_malformed_date_fragments_remain_slots_and_require_valid_calendar_dates(self):
         for language in ("es", "pt"):
-            for text in ("20226-17-05", "2026-17-05", "2026-6-16", "16-06-2026", "2026-02-30"):
+            for text in ("20226-17-05", "2026-17-05", "2026-6-16", "2026-02-30"):
                 with self.subTest(text=text, language=language):
                     self.assertTrue(is_search_followup(text, language))
                     with self.assertRaisesRegex(RoutingError, "^invalid_date$"):
                         extract_slots(text, language)
+
+    def test_card_date_and_natural_date_replies_are_valid_inquiry_slots(self):
+        for text, language in (("16/06/2026", "es"), ("16-06-2026", "pt"),
+                               ("16 de junio del 2026", "es"), ("junho 16, 2026", "pt")):
+            with self.subTest(text=text):
+                self.assertTrue(is_search_followup(text, language))
+                self.assertEqual(route_intent(text, language), IntentProposal("inquiry", 1.0, True))
+                slots = extract_slots(text + " USD", language)
+                self.assertEqual(slots.filters, TransactionFilters(date(2026, 6, 16), currency="USD"))
+                self.assertIsNone(slots.amount_without_currency)
+                self.assertFalse(slots.assumed_date_year)
+
+    def test_combined_date_and_money_remain_details_without_overriding_business_requests(self):
+        for text, language in (("16 de junio 2026 USD", "es"), ("16/06/2026, USD", "es"),
+                               ("25.50 USD el 16 de junio 2026", "es"),
+                               ("16 de junho de 2026 por 25,50 USD", "pt"),
+                               ("USD em 16-06-2026", "pt"), ("fecha: 16/06/2026 USD", "es")):
+            with self.subTest(text=text):
+                self.assertTrue(is_search_followup(text, language))
+        for text, language in (("No reconozco el cargo del 16 de junio 2026 USD", "es"),
+                               ("Quero falar com uma pessoa em 16/06/2026", "pt"),
+                               ("quiero comer el 16 de junio 2026", "es"),
+                               ("Buscar otra compra de 25 USD el 16/06/2026", "es")):
+            with self.subTest(text=text):
+                self.assertFalse(is_search_followup(text, language))
 
     def test_bilingual_inquiry_and_normalization(self):
         cases = (

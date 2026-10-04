@@ -5,11 +5,11 @@
 // sends explicit confirmation. Text from users and records is always textContent.
 const COPY = {
   es: {
-    brandCaption: "Tu actividad, en claro.", demoAccount: "CUENTA DE DEMOSTRACIÓN",
-    yourTransactions: "Tus movimientos", transactionsHint: "Datos ficticios para probar el recorrido.",
-    language: "Idioma", demoNote: "Entorno de demostración. Las solicitudes se guardan localmente; no se envían a un banco.",
+    brandCaption: "Tu actividad, en claro.", demoAccount: "CUENTA",
+    yourTransactions: "Tus movimientos", transactionsHint: "Movimientos disponibles para esta cuenta.",
+    language: "Idioma", demoDisclosure: "DEMO: este entorno no mueve dinero ni envía solicitudes a un banco.",
     workspaceLabel: "ASISTENTE DE TRANSACCIONES", workspaceTitle: "Hablemos de tu movimiento.",
-    demoBadge: "Demo · simulación", reset: "Nueva sesión", conversationTitle: "Tu asistente",
+    demoBadge: "DEMO", reset: "Nueva sesión", conversationTitle: "Tu asistente",
     conversationSubtitle: "Consulta, revisa y decide con información.", local: "Local",
     loading: "Preparando tu sesión…", chooseTransaction: "Elige el movimiento que quieres revisar",
     intakeChoice: "Decidir si preparar una solicitud de revisión", prepareIntake: "Sí, preparar solicitud", declineIntake: "No, seguir consultando",
@@ -19,20 +19,20 @@ const COPY = {
     emptyTitle: "Comienza con un movimiento", emptyDetails: "Haz una consulta o elige uno de tus movimientos para ver sus detalles aquí.",
     reviewBeforeConfirm: "REVISA ANTES DE CONFIRMAR", confirm: "Confirmar y guardar", cancel: "Cancelar",
     draftFooter: "Todavía no se ha creado ningún caso con esta propuesta.", receiptsTitle: "Solicitudes guardadas",
-    handoffTitle: "Para la revisión humana", handoffCaption: "Resumen preparado para una cola de demostración.",
-    offerHandoff: "Preparar revisión humana", footer: "Factored AI & Data Hackathon 2026 · Prototipo local",
+    handoffTitle: "Para la revisión humana", handoffCaption: "Resumen preparado para revisión humana.",
+    offerHandoff: "Preparar revisión humana", footer: "Factored AI & Data Hackathon 2026",
     footerProof: "Hechos trazables. Acciones confirmadas.", viewTransaction: "Ver movimiento ↗",
-    customerFallback: "Cliente de demostración A", assistant: "CLARO", user: "TÚ",
+    customerFallback: "Cliente A", assistant: "CLARO", user: "TÚ",
     activeSession: "Sesión activa", expiredSession: "Sesión vencida", remaining: "min restantes",
     sessionExpired: "Tu sesión venció. Inicia una nueva sesión para continuar.",
     selected: "Movimiento seleccionado", amount: "Importe", merchant: "Comercio", unknownMerchant: "Comercio no informado",
     transactionDate: "Fecha del movimiento", processDate: "Fecha de proceso", transactionType: "Tipo",
     reference: "Referencia", status: "Estado registrado", timezoneUnknown: "Zona horaria no informada",
-    snapshotNote: "Datos históricos de demostración. El estado corresponde al registro disponible.",
+    snapshotNote: "Datos de una instantánea histórica. El estado corresponde al registro disponible.",
     sourceDetails: "Ver evidencia del registro", sourceRow: "Registro", sourceProof: "Huella de la evidencia",
     intakeTitle: "Abrir un caso de revisión", handoffDraftTitle: "Preparar revisión humana",
     intakeDescription: "Guardar una solicitud sobre este movimiento. No implica aprobar un reembolso.",
-    handoffDescription: "Guardar un resumen para revisión humana en la cola de demostración.",
+    handoffDescription: "Guardar un resumen para revisión humana.",
     expiresAt: "Propuesta válida hasta", draftExpired: "Esta propuesta venció. Cancélala y prepara una nueva.",
     outcomeUnverifiedTitle: "Resultado pendiente de verificar",
     outcomeUnverifiedDescription: "No pudimos comprobar si esta solicitud quedó guardada. Revisa la misma solicitud y vuelve a verificarla.",
@@ -45,7 +45,7 @@ const COPY = {
     unresolvedQuestions: "Lo que falta resolver", transactionFacts: "Movimiento relacionado", verifiedActions: "Casos ya registrados",
     noPendingQuestions: "No se especificaron preguntas pendientes.", noSelectedTransaction: "Sin movimiento seleccionado.",
     intakeReceipt: "Caso de revisión · guardado y verificado", handoffReceipt: "Revisión humana · guardada y verificada",
-    receiptNote: "Registro local de demostración. Ningún banco ha recibido esta solicitud.",
+    actionVerified: "Solicitud guardada y verificada", receiptNote: "Usa esta referencia al consultar la solicitud.",
     transportError: "No pudimos conectar con la aplicación. Revisa que el servidor local esté activo y vuelve a intentar.",
     requestError: "No pudimos completar la solicitud. Vuelve a intentar o inicia una nueva sesión.",
     unexpectedResponse: "La aplicación devolvió una respuesta incompleta. Vuelve a intentar.",
@@ -60,11 +60,11 @@ const COPY = {
     steps: {search_attempted: "Se buscaron movimientos", search_needs_filters: "Se solicitaron detalles para buscar", search_no_match: "La búsqueda no encontró coincidencias", search_ambiguous: "Se encontraron varias coincidencias", transaction_answered: "Se explicaron los datos del movimiento", choice_rejected: "Se rechazó una selección que no estaba disponible", intake_prepared: "Se preparó una solicitud de revisión", handoff_prepared: "Se preparó un resumen para revisión humana", action_verified: "Se guardó y verificó una solicitud", action_cancelled: "Se canceló una propuesta", confirmation_failed: "No se pudo verificar la confirmación"}
   },
   pt: {
-    brandCaption: "Sua atividade, com clareza.", demoAccount: "CONTA DE DEMONSTRAÇÃO",
-    yourTransactions: "Suas transações", transactionsHint: "Dados fictícios para testar o fluxo.",
-    language: "Idioma", demoNote: "Ambiente de demonstração. As solicitações são salvas localmente; não são enviadas a um banco.",
+    brandCaption: "Sua atividade, com clareza.", demoAccount: "CONTA",
+    yourTransactions: "Suas transações", transactionsHint: "Transações disponíveis para esta conta.",
+    language: "Idioma", demoDisclosure: "DEMO: este ambiente não movimenta dinheiro nem envia solicitações a um banco.",
     workspaceLabel: "ASSISTENTE DE TRANSAÇÕES", workspaceTitle: "Vamos falar da sua transação.",
-    demoBadge: "Demo · simulação", reset: "Nova sessão", conversationTitle: "Seu assistente",
+    demoBadge: "DEMO", reset: "Nova sessão", conversationTitle: "Seu assistente",
     conversationSubtitle: "Consulte, revise e decida com informação.", local: "Local",
     loading: "Preparando sua sessão…", chooseTransaction: "Escolha a transação que deseja revisar",
     intakeChoice: "Decidir se deseja preparar uma solicitação de revisão", prepareIntake: "Sim, preparar solicitação", declineIntake: "Não, continuar consultando",
@@ -74,20 +74,20 @@ const COPY = {
     emptyTitle: "Comece com uma transação", emptyDetails: "Faça uma consulta ou escolha uma de suas transações para ver os detalhes aqui.",
     reviewBeforeConfirm: "REVISE ANTES DE CONFIRMAR", confirm: "Confirmar e salvar", cancel: "Cancelar",
     draftFooter: "Nenhum caso foi criado com esta proposta ainda.", receiptsTitle: "Solicitações salvas",
-    handoffTitle: "Para a revisão humana", handoffCaption: "Resumo preparado para uma fila de demonstração.",
-    offerHandoff: "Preparar revisão humana", footer: "Factored AI & Data Hackathon 2026 · Protótipo local",
+    handoffTitle: "Para a revisão humana", handoffCaption: "Resumo preparado para revisão humana.",
+    offerHandoff: "Preparar revisão humana", footer: "Factored AI & Data Hackathon 2026",
     footerProof: "Fatos rastreáveis. Ações confirmadas.", viewTransaction: "Ver transação ↗",
-    customerFallback: "Cliente de demonstração A", assistant: "CLARO", user: "VOCÊ",
+    customerFallback: "Cliente A", assistant: "CLARO", user: "VOCÊ",
     activeSession: "Sessão ativa", expiredSession: "Sessão expirada", remaining: "min restantes",
     sessionExpired: "Sua sessão expirou. Inicie uma nova sessão para continuar.",
     selected: "Transação selecionada", amount: "Valor", merchant: "Estabelecimento", unknownMerchant: "Estabelecimento não informado",
     transactionDate: "Data da transação", processDate: "Data de processamento", transactionType: "Tipo",
     reference: "Referência", status: "Estado registrado", timezoneUnknown: "Fuso horário não informado",
-    snapshotNote: "Dados históricos de demonstração. O estado corresponde ao registro disponível.",
+    snapshotNote: "Dados de um registro histórico. O estado corresponde ao registro disponível.",
     sourceDetails: "Ver evidência do registro", sourceRow: "Registro", sourceProof: "Identificador da evidência",
     intakeTitle: "Abrir um caso de revisão", handoffDraftTitle: "Preparar revisão humana",
     intakeDescription: "Salvar uma solicitação sobre esta transação. Isso não significa aprovar um reembolso.",
-    handoffDescription: "Salvar um resumo para revisão humana na fila de demonstração.",
+    handoffDescription: "Salvar um resumo para revisão humana.",
     expiresAt: "Proposta válida até", draftExpired: "Esta proposta expirou. Cancele e prepare uma nova.",
     outcomeUnverifiedTitle: "Resultado aguardando verificação",
     outcomeUnverifiedDescription: "Não conseguimos verificar se esta solicitação foi salva. Revise a mesma solicitação e tente verificar novamente.",
@@ -100,7 +100,7 @@ const COPY = {
     unresolvedQuestions: "O que falta resolver", transactionFacts: "Transação relacionada", verifiedActions: "Casos já registrados",
     noPendingQuestions: "Nenhuma pergunta pendente foi informada.", noSelectedTransaction: "Nenhuma transação selecionada.",
     intakeReceipt: "Caso de revisão · salvo e verificado", handoffReceipt: "Revisão humana · salva e verificada",
-    receiptNote: "Registro local de demonstração. Nenhum banco recebeu esta solicitação.",
+    actionVerified: "Solicitação salva e verificada", receiptNote: "Use esta referência ao consultar a solicitação.",
     transportError: "Não conseguimos conectar ao aplicativo. Verifique se o servidor local está ativo e tente novamente.",
     requestError: "Não conseguimos concluir a solicitação. Tente novamente ou inicie uma nova sessão.",
     unexpectedResponse: "O aplicativo retornou uma resposta incompleta. Tente novamente.",
@@ -118,20 +118,10 @@ const COPY = {
 
 const PRIVATE_COPY = {
   es: {
-    demoAccount: "CUENTA LOCAL DE PRUEBA",
-    transactionsHint: "Registros del conjunto proporcionado para el hackathon.",
-    demoNote: "Datos del hackathon en un entorno local. Las solicitudes son simuladas y no se envían a un banco.",
-    demoBadge: "Datos del hackathon · local",
-    customerFallback: "Cliente de prueba",
-    snapshotNote: "Registro histórico del conjunto proporcionado. El estado corresponde a esa versión del registro."
+    snapshotNote: "Registro histórico. El estado corresponde a la versión disponible del registro."
   },
   pt: {
-    demoAccount: "CONTA LOCAL DE TESTE",
-    transactionsHint: "Registros do conjunto fornecido para o hackathon.",
-    demoNote: "Dados do hackathon em um ambiente local. As solicitações são simuladas e não são enviadas a um banco.",
-    demoBadge: "Dados do hackathon · local",
-    customerFallback: "Cliente de teste",
-    snapshotNote: "Registro histórico do conjunto fornecido. O estado corresponde a essa versão do registro."
+    snapshotNote: "Registro histórico. O estado corresponde à versão disponível do registro."
   }
 };
 
@@ -144,7 +134,7 @@ const strings = () => {
   const copy = serverState?.data_mode === "private_cohort"
     ? {...COPY[language], ...PRIVATE_COPY[language]} : COPY[language];
   return {...copy, local: serverState?.route_mode === "learned_preview"
-    ? "IA local · experimental" : language === "pt" ? "Regras locais" : "Reglas locales"};
+    ? "IA local" : language === "pt" ? "Regras locais" : "Reglas locales"};
 };
 const tr = (key) => strings()[key];
 const asText = (value) => typeof value === "string" ? value : "";
@@ -224,6 +214,8 @@ function applyLanguage() {
   $("language").setAttribute("aria-label", tr("language"));
   $("quick-prompts").setAttribute("aria-label", language === "pt" ? "Sugestões" : "Sugerencias");
   $("intake-offer").setAttribute("aria-label", tr("intakeChoice"));
+  $("demo-badge").setAttribute("title", tr("demoDisclosure"));
+  $("demo-badge").setAttribute("aria-label", tr("demoDisclosure"));
   document.querySelector(".sidebar").setAttribute("aria-label", tr("demoAccount"));
   document.querySelector(".review-panel").setAttribute("aria-label", tr("detailsTitle"));
 }
@@ -270,7 +262,7 @@ function renderMessages(scrollState) {
     const content = node("div", "message-content");
     content.append(node("p", "message-label", tr(role)), node("p", "message-text", asText(message.text)));
     if (role === "assistant" && message.status === "action_verified") {
-      content.append(node("p", "message-metadata", `✓ ${tr("local")} · ${tr("demoBadge")}`));
+      content.append(node("p", "message-metadata", `✓ ${tr("actionVerified")}`));
     }
     row.append(content);
     container.append(row);

@@ -136,7 +136,7 @@ class PrivateCohortConfigurationTests(unittest.TestCase):
         self.assertEqual(browser.session.expires_at, now + timedelta(minutes=20))
         self.assertEqual([record["transaction_id"] for record in state["transactions"]],
                          ["DEMO-TX-001", "DEMO-TX-002"])
-        self.assertIn("ficticia", state["messages"][0]["text"])
+        self.assertTrue(state["simulation"])
 
 
 class PrivateCohortHttpTests(unittest.TestCase):
@@ -202,7 +202,6 @@ class PrivateCohortHttpTests(unittest.TestCase):
             "file": "transactions/year=2026/month=06/day=17/transactions_20260617.csv",
             "row_number": 7, "row_sha256": "a" * 64,
         }])
-        self.assertIn("privada", self.state["messages"][0]["text"])
         self.assertNotIn("ficticia", self.state["messages"][0]["text"])
 
     def test_missing_and_other_owner_requests_are_denied_without_leaking_foreign_facts(self):
@@ -240,7 +239,6 @@ class PrivateCohortHttpTests(unittest.TestCase):
                 self.assertNotIn("fictici", text)
                 self.assertNotIn("en USD", text)
                 self.assertNotIn("em USD", text)
-                self.assertIn("privad", self.browser().text("greeting"))
                 self.assert_private_projection(state)
 
     def test_reset_mints_new_authority_but_preserves_startup_mode_customer_and_grants(self):

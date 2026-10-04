@@ -23,9 +23,10 @@ import time
 from types import MappingProxyType
 import unicodedata
 from urllib.parse import urlsplit
+from zoneinfo import ZoneInfo
 
 from bank_service.access import AccessDenied, Permission, TrustedSession, require_access
-from bank_service.actions import ActionDraft, ActionError, ActionService
+from bank_service.actions import ActionDraft, ActionError, ActionService, VerifiedReceipt
 from bank_service.case_store import CaseStore, StoreError
 from bank_service.conversation import Conversation, ConversationError, ConversationReply
 from bank_service.demo_fixtures import demo_records, demo_session
@@ -60,67 +61,75 @@ ACTION_KEYS = {
 }
 TEXT = {
     "es": {
-        "greeting": "Hola. Puedo ayudarte a encontrar una transacción ficticia, revisar sus datos o abrir una solicitud de revisión. ¿Qué necesitas?",
-        "denied": "No puedo acceder a esa información con esta sesión. Puedes iniciar una nueva sesión de demostración.",
+        "greeting": "Hola. Puedo ayudarte a consultar tus transacciones o preparar una solicitud de revisión. ¿Qué necesitas?",
+        "denied": "No puedo acceder a esa información con esta sesión. Puedes iniciar una nueva sesión.",
         "invalid": "No pude interpretar esos datos. Revisa la fecha, el importe y la moneda, o selecciona una transacción de la lista.",
-        "unsupported": "Esta demostración permite consultar transacciones y abrir solicitudes de revisión. Para esta petición, puedo preparar una derivación a revisión humana si lo deseas.",
+        "unsupported": "Puedo ayudarte a consultar transacciones y abrir solicitudes de revisión. Para esta petición, puedo preparar una derivación a revisión humana si lo deseas.",
         "request_scope": "Puedo ayudarte a consultar una transacción o solicitar su revisión. ¿Qué necesitas hacer?",
         "confirm_button": "Para aprobar una solicitud, revisa el borrador y usa su botón de confirmación.",
-        "draft": "Preparé la solicitud en el panel lateral. Revisa allí sus detalles y usa «Confirmar y guardar» para enviarla a la cola simulada. Aún no se ha guardado.",
-        "intake_offer": "¿Quieres que prepare una solicitud de revisión de esta transacción? Es un ticket de demostración, no un reembolso. Puedes responder sí o no, o usar los botones.",
+        "draft": "Preparé la solicitud en el panel lateral. Revisa allí sus detalles y usa «Confirmar y guardar» para enviarla a revisión. Aún no se ha guardado.",
+        "intake_offer": "¿Quieres que prepare una solicitud de revisión de esta transacción? Esto no implica aprobar un reembolso. Puedes responder sí o no, o usar los botones.",
         "intake_declined": "De acuerdo. No preparé ni guardé una solicitud. Puedes seguir consultando tus movimientos.",
         "stale_offer": "Esta opción ya no está vigente. Consulta de nuevo la transacción para solicitar una revisión.",
         "selected_dispute": "No reconozco esta compra",
         "selection_changed": "El movimiento seleccionado cambió o ya no está disponible. Revisa el movimiento actual antes de solicitar una revisión.",
-        "intake": "Abrir un ticket de revisión de esta transacción (demostración).",
-        "handoff": "Guardar una solicitud para revisión humana (cola simulada).",
+        "intake": "Abrir una solicitud de revisión de esta transacción.",
+        "handoff": "Guardar una solicitud para revisión humana.",
+        "receipt_verified": "Solicitud guardada y verificada. Referencia: ",
         "unknown": "No pude verificar el resultado de la solicitud. Conservé la misma referencia: vuelve a comprobarla para evitar crear un duplicado.",
         "stale": "Los datos cambiaron o el borrador venció. Revisa de nuevo la transacción y prepara otra solicitud.",
         "request": "Selecciona primero la transacción que quieres revisar.",
         "busy": "Hay demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
         "security": "La sesión de la página no coincide. Recarga la página antes de continuar.",
         "already_saved": "Esta solicitud ya está guardada. Comprueba la misma referencia para recuperar su recibo.",
-        "currency": "Indica el código de moneda: MXN, COP, ARS o USD. «Pesos» y «$» pueden referirse a varias monedas. Los movimientos ficticios de esta demo están en USD.",
-        "unsupported_currency": "Puedo buscar movimientos en MXN, COP, ARS y USD. Esa moneda no está admitida en el prototipo. No convierto importes; indica una de esas monedas o una fecha en formato AAAA-MM-DD.",
-        "dollars": "En esta demo interpreto «dólares» como USD; no hago una conversión de moneda.",
-        "amount": "Indica el importe de la transacción o una fecha en formato AAAA-MM-DD para continuar la búsqueda.",
-        "followup": "Para continuar, indica una fecha en formato AAAA-MM-DD, el importe y su moneda, o elige una coincidencia de la lista.",
-        "ineligible_intake": "Este movimiento no admite el ticket de revisión de compras de esta demostración. Puedo preparar un resumen para revisión humana con tu solicitud y los datos del movimiento.",
+        "currency": "Indica el código de moneda: MXN, COP, ARS o USD. «Pesos» y «$» pueden referirse a varias monedas. No convierto importes.",
+        "unsupported_currency": "Puedo buscar movimientos en MXN, COP, ARS y USD. Esa moneda no está admitida. No convierto importes; indica una de esas monedas o una fecha en formato DD/MM/AAAA.",
+        "dollars": "Interpreto «dólares» como USD; no hago una conversión de moneda.",
+        "amount": "Indica el importe de la transacción o una fecha en formato DD/MM/AAAA, como 03/05/2026, para continuar la búsqueda. También puedes escribir el mes con palabras.",
+        "followup": "Para continuar, indica una fecha en formato DD/MM/AAAA o con el mes escrito, el importe y su moneda, o elige una coincidencia de la lista.",
+        "date_interpreted": "Como no indicaste año, uso el año actual: {year}. Buscaré la fecha {day}.",
+        "invalid_date": "Revisa la fecha: usa DD/MM/AAAA, como 03/05/2026, o escribe el mes, como «3 de mayo de 2026». También acepto AAAA-MM-DD. Sin año, uso el año actual.",
+        "ambiguous_date": "Indica una sola fecha para buscar. Las fechas numéricas se leen como día/mes/año (DD/MM/AAAA).",
+        "ineligible_intake": "Este movimiento no admite la solicitud de revisión de compras. Puedo preparar un resumen para revisión humana con tu solicitud y los datos del movimiento.",
         "case_continuation": "No puedo verificar a qué caso anterior te refieres con la información disponible. Puedo preparar un resumen para revisión humana indicando que ese caso anterior no está verificado.",
-        "session_cases": "Puedes consultar los recibos simulados de esta sesión en «Solicitudes guardadas».",
+        "session_cases": "Puedes consultar los recibos de esta sesión en «Solicitudes guardadas».",
         "handoff_offer": "¿Quieres que prepare ese resumen para revisión humana? Puedes responder sí o no, o usar los botones. Aún no se ha guardado ninguna solicitud.",
         "handoff_unavailable": "Esta sesión no permite guardar una solicitud para revisión humana. No se ha preparado ni guardado una solicitud.",
         "handoff_declined": "De acuerdo. No preparé ni guardé un resumen para revisión humana. Puedes seguir consultando.",
     },
     "pt": {
-        "greeting": "Olá. Posso ajudar a encontrar uma transação fictícia, consultar seus dados ou abrir uma solicitação de revisão. Do que você precisa?",
-        "denied": "Não posso acessar essas informações com esta sessão. Você pode iniciar uma nova sessão de demonstração.",
+        "greeting": "Olá. Posso ajudar a consultar suas transações ou preparar uma solicitação de revisão. Do que você precisa?",
+        "denied": "Não posso acessar essas informações com esta sessão. Você pode iniciar uma nova sessão.",
         "invalid": "Não consegui interpretar esses dados. Confira a data, o valor e a moeda, ou selecione uma transação da lista.",
-        "unsupported": "Esta demonstração permite consultar transações e abrir solicitações de revisão. Para este pedido, posso preparar um encaminhamento para revisão humana se você desejar.",
+        "unsupported": "Posso ajudar a consultar transações e abrir solicitações de revisão. Para este pedido, posso preparar um encaminhamento para revisão humana se você desejar.",
         "request_scope": "Posso ajudar a consultar uma transação ou solicitar sua revisão. O que você precisa fazer?",
         "confirm_button": "Para aprovar uma solicitação, revise o rascunho e use o botão de confirmação.",
-        "draft": "Preparei a solicitação no painel lateral. Revise seus detalhes ali e use «Confirmar e salvar» para enviá-la à fila simulada. Ela ainda não foi salva.",
-        "intake_offer": "Você quer que eu prepare uma solicitação de revisão desta transação? É um ticket de demonstração, não um reembolso. Pode responder sim ou não, ou usar os botões.",
+        "draft": "Preparei a solicitação no painel lateral. Revise seus detalhes ali e use «Confirmar e salvar» para enviá-la para revisão. Ela ainda não foi salva.",
+        "intake_offer": "Você quer que eu prepare uma solicitação de revisão desta transação? Isso não significa aprovar um reembolso. Pode responder sim ou não, ou usar os botões.",
         "intake_declined": "Tudo bem. Não preparei nem salvei uma solicitação. Você pode continuar consultando suas transações.",
         "stale_offer": "Esta opção não está mais vigente. Consulte novamente a transação para solicitar uma revisão.",
         "selected_dispute": "Não reconheço esta compra",
         "selection_changed": "A transação selecionada mudou ou não está mais disponível. Confira a transação atual antes de solicitar uma revisão.",
-        "intake": "Abrir um ticket de revisão desta transação (demonstração).",
-        "handoff": "Salvar uma solicitação para revisão humana (fila simulada).",
+        "intake": "Abrir uma solicitação de revisão desta transação.",
+        "handoff": "Salvar uma solicitação para revisão humana.",
+        "receipt_verified": "Solicitação salva e verificada. Referência: ",
         "unknown": "Não consegui verificar o resultado da solicitação. Mantive a mesma referência: verifique-a novamente para evitar criar uma duplicata.",
         "stale": "Os dados mudaram ou o rascunho expirou. Consulte novamente a transação e prepare outra solicitação.",
         "request": "Selecione primeiro a transação que deseja revisar.",
         "busy": "Há muitas solicitações. Aguarde um momento e tente novamente.",
         "security": "A sessão da página não corresponde. Recarregue a página antes de continuar.",
         "already_saved": "Esta solicitação já está salva. Verifique a mesma referência para recuperar o recibo.",
-        "currency": "Informe o código da moeda: MXN, COP, ARS ou USD. «Pesos» e «$» podem se referir a várias moedas. As transações fictícias desta demonstração estão em USD.",
-        "unsupported_currency": "Posso pesquisar transações em MXN, COP, ARS e USD. Essa moeda não é aceita no protótipo. Não converto valores; informe uma dessas moedas ou uma data no formato AAAA-MM-DD.",
-        "dollars": "Nesta demonstração interpreto «dólares» como USD; não faço conversão de moeda.",
-        "amount": "Informe o valor da transação ou uma data no formato AAAA-MM-DD para continuar a pesquisa.",
-        "followup": "Para continuar, informe uma data no formato AAAA-MM-DD, o valor e a moeda, ou escolha uma correspondência na lista.",
-        "ineligible_intake": "Esta transação não permite o ticket de revisão de compras desta demonstração. Posso preparar um resumo para revisão humana com seu pedido e os dados da transação.",
+        "currency": "Informe o código da moeda: MXN, COP, ARS ou USD. «Pesos» e «$» podem se referir a várias moedas. Não converto valores.",
+        "unsupported_currency": "Posso pesquisar transações em MXN, COP, ARS e USD. Essa moeda não é aceita. Não converto valores; informe uma dessas moedas ou uma data no formato DD/MM/AAAA.",
+        "dollars": "Interpreto «dólares» como USD; não faço conversão de moeda.",
+        "amount": "Informe o valor da transação ou uma data no formato DD/MM/AAAA, como 03/05/2026, para continuar a pesquisa. Você também pode escrever o mês por extenso.",
+        "followup": "Para continuar, informe uma data no formato DD/MM/AAAA ou com o mês por extenso, o valor e a moeda, ou escolha uma correspondência na lista.",
+        "date_interpreted": "Como você não informou o ano, uso o ano atual: {year}. Vou pesquisar a data {day}.",
+        "invalid_date": "Confira a data: use DD/MM/AAAA, como 03/05/2026, ou escreva o mês, como «3 de maio de 2026». Também aceito AAAA-MM-DD. Sem ano, uso o ano atual.",
+        "ambiguous_date": "Informe uma única data para pesquisar. Datas numéricas são lidas como dia/mês/ano (DD/MM/AAAA).",
+        "ineligible_intake": "Esta transação não permite a solicitação de revisão de compras. Posso preparar um resumo para revisão humana com seu pedido e os dados da transação.",
         "case_continuation": "Não consigo verificar a qual caso anterior você se refere com as informações disponíveis. Posso preparar um resumo para revisão humana indicando que esse caso anterior não foi verificado.",
-        "session_cases": "Você pode consultar os recibos simulados desta sessão em «Solicitações salvas».",
+        "session_cases": "Você pode consultar os recibos desta sessão em «Solicitações salvas».",
         "handoff_offer": "Você quer que eu prepare esse resumo para revisão humana? Pode responder sim ou não, ou usar os botões. Nenhuma solicitação foi salva ainda.",
         "handoff_unavailable": "Esta sessão não permite salvar uma solicitação para revisão humana. Nenhuma solicitação foi preparada ou salva.",
         "handoff_declined": "Tudo bem. Não preparei nem salvei um resumo para revisão humana. Você pode continuar consultando.",
@@ -129,18 +138,18 @@ TEXT = {
 
 PRIVATE_TEXT = {
     "es": {
-        "greeting": "Hola. Puedo ayudarte a consultar las transacciones de tu instantánea privada o preparar una solicitud de revisión simulada. ¿Qué necesitas?",
-        "denied": "No puedo acceder a esa información con esta sesión. Puedes iniciar una nueva sesión del mismo conjunto privado.",
+        "greeting": TEXT["es"]["greeting"],
+        "denied": TEXT["es"]["denied"],
         "currency": "Indica el código de moneda: MXN, COP, ARS o USD. «Pesos» y «$» pueden referirse a varias monedas. La búsqueda conserva la moneda de los registros de esta instantánea privada.",
         "dollars": "Interpreto «dólares» como USD; no hago una conversión de moneda.",
-        "customer_label": "Cliente del conjunto privado",
+        "customer_label": "Cliente",
     },
     "pt": {
-        "greeting": "Olá. Posso ajudar a consultar as transações da sua amostra privada ou preparar uma solicitação de revisão simulada. Do que você precisa?",
-        "denied": "Não posso acessar essas informações com esta sessão. Você pode iniciar uma nova sessão da mesma amostra privada.",
+        "greeting": TEXT["pt"]["greeting"],
+        "denied": TEXT["pt"]["denied"],
         "currency": "Informe o código da moeda: MXN, COP, ARS ou USD. «Pesos» e «$» podem se referir a várias moedas. A pesquisa preserva a moeda dos registros desta amostra privada.",
         "dollars": "Interpreto «dólares» como USD; não faço conversão de moeda.",
-        "customer_label": "Cliente da amostra privada",
+        "customer_label": "Cliente",
     },
 }
 
@@ -201,6 +210,20 @@ class UiError(ValueError):
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _request_reference_date(now: datetime) -> date:
+    """Use the server clock in the customer's declared calendar zone."""
+    return now.astimezone(ZoneInfo("America/Monterrey")).date()
+
+
+def _browser_receipt_text(receipt: VerifiedReceipt) -> str:
+    """Present only a receipt already validated by ActionService readback.
+
+    The global DEMO badge carries the environment disclosure. Stored packets and
+    CLI receipts retain their explicit simulation markers without editing facts.
+    """
+    return TEXT[receipt.language]["receipt_verified"] + json.dumps(receipt.case_id, ensure_ascii=False)
 
 
 def _text(value: object, *, required: bool = True) -> str:
@@ -361,7 +384,7 @@ class BrowserSession:
             active = False
         state = {
             "language": self.language, "csrf_token": self.csrf_token, "data_mode": self.data_mode,
-            "session": {"customer_label": self.text("customer_label") if self.data_mode == "private_cohort" else "Cliente demo A",
+            "session": {"customer_label": self.text("customer_label") if self.data_mode == "private_cohort" else "Cliente A",
                         "expires_at": self.session.expires_at.isoformat(), "active": active},
             "simulation": True, "route_mode": "keyword_baseline" if self.router is None else "learned_preview", "messages": [],
             "transactions": [], "selected_transaction": None, "candidate_ids": [],
@@ -411,7 +434,7 @@ class BrowserSession:
             }
         for identifier in self.case_ids:
             receipt = self.actions.read_case(self.session, identifier, now=now)
-            state["receipts"].append({"case_id": receipt.case_id, "kind": receipt.kind, "text": receipt.text})
+            state["receipts"].append({"case_id": receipt.case_id, "kind": receipt.kind, "text": _browser_receipt_text(receipt)})
             if identifier == self.handoff_id:
                 payload = json.loads(receipt.payload_json)
                 state["handoff"] = {key: payload[key] for key in (
@@ -428,6 +451,8 @@ class BrowserSession:
         if reply.status in ("answered", "needs_filters", "no_match", "ambiguous"):
             self.selected_id = reply.selected_id
         text = reply.text
+        if reply.status == "needs_filters":
+            text = TEXT[self.language]["followup"]
         if reply.status == "answered" and self.pending_search is not None:
             text = with_requested_record_limits(
                 TransactionAnswer(reply.language, reply.text, reply.sources), self.pending_search.request).text
@@ -439,6 +464,7 @@ class BrowserSession:
             self.pending_draft, self.pending_request = None, None
             self.outcome_unverified = False
         if reply.receipt is not None:
+            text = _browser_receipt_text(reply.receipt)
             self.pending_draft, self.pending_request = None, None
             self.outcome_unverified = False
             if reply.receipt.case_id not in self.case_ids:
@@ -612,7 +638,7 @@ class BrowserSession:
             self.clear_handoff_offer()
             self.clear_search()
             try:
-                slots = extract_slots(text, self.language)
+                slots = extract_slots(text, self.language, reference_date=_request_reference_date(now))
             except RoutingError:
                 self.clear_record_selection(now)
                 raise
@@ -694,7 +720,7 @@ class BrowserSession:
         selected = self.selected_id
         self.clear_record_selection(now)
         try:
-            slots = extract_slots(text, self.language)
+            slots = extract_slots(text, self.language, reference_date=_request_reference_date(now))
         except RoutingError as error:
             code = str(error)
             if code in ("invalid_amount", "ambiguous_amount", "unsupported_currency", "ambiguous_currency"):
@@ -709,6 +735,10 @@ class BrowserSession:
             raise
         if slots.used_dollar_alias:
             self.append("assistant", self.text("dollars"), "currency_interpretation")
+        if slots.assumed_date_year:
+            day = slots.filters.transaction_date
+            self.append("assistant", TEXT[self.language]["date_interpreted"].format(
+                year=day.year, day=day.strftime("%d/%m/%Y")), "date_interpreted")
         if slots.transaction_id is not None:
             self.reply(self.conversation.inquire(self.session, slots.transaction_id, now=now))
         elif reuse_selection and slots.filters == TransactionFilters() and not slots.needs_currency:
@@ -807,7 +837,7 @@ class BrowserSession:
             self.reply(reply)
         elif action == "view_case":
             receipt = self.actions.read_case(self.session, _text(payload.get("case_id")), now=now)
-            self.append("assistant", receipt.text, "action_verified")
+            self.append("assistant", _browser_receipt_text(receipt), "action_verified")
 
 
 def _filters(payload: dict) -> TransactionFilters:
@@ -949,6 +979,8 @@ class DemoHandler(BaseHTTPRequestHandler):
             status, label = 409, "selection_changed"
         elif code == "transaction_required":
             label = "request"
+        elif code in ("invalid_date", "ambiguous_date"):
+            label = code
         elif code in ("csrf_rejected", "invalid_origin", "invalid_host", "session_required"):
             label = "security"
         elif code in ("rate_limited", "session_capacity"):

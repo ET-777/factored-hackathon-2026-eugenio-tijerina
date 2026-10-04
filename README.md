@@ -75,7 +75,9 @@ Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
 
 ## Local checks
 
-Python 3.11+; the local workflow and tests require only the standard library. Run from this directory:
+Python 3.11+. The workflow uses the standard library; Windows also needs `tzdata`
+for the browser's America/Monterrey calendar (included by `python -m pip install -e .`).
+Run from this directory:
 
 ```powershell
 python -B -m bank_service
@@ -87,6 +89,15 @@ python -B scripts/check_private_artifacts.py
 ```
 
 Open **http://127.0.0.1:8765** after the `web` command starts. Stop it with Ctrl+C.
+Chat dates accept `DD/MM/YYYY`, `DD-MM-YYYY`, strict `YYYY-MM-DD`, and Spanish or
+Portuguese month names in either order, such as `3 de mayo del 2026` or
+`maio 3, 2026`. Numeric dates are day-first. Without a year, the server uses the
+current year in America/Monterrey and shows the interpretation before searching.
+Invalid dates and multiple different dates require clarification. This parsing
+uses fixed calendar rules, not the learned intent classifier.
+The global **DEMO** badge identifies the local simulation; drafts, consent,
+permissions and verified readback still apply. The stored action packets keep
+their simulation markers.
 By default the browser uses fictional records and a server-owned demo session. Cases are
 isolated per browser session and temporary; resetting starts a fresh demonstration.
 The UI stays on the loopback interface. The optional private-cohort mode loads only

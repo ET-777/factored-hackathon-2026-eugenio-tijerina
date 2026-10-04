@@ -3,9 +3,10 @@
 This module proposes an intent; it never authorizes access, confirms a draft, or
 writes a case. ``confidence`` is a binary rule-match indicator, not a calibrated
 probability. No learned model is implemented here. Unknown wording requires the
-UI to clarify or offer a human path. Dates require an explicit ISO calendar date.
-The demo explicitly interprets the word dollar/dólar/dólares as USD and marks that
-interpretation for display. The symbol $ and the word pesos remain ambiguous.
+UI to clarify or offer a human path. Dates accept ISO, day-first numeric dates,
+and bounded Spanish/Portuguese month names. An omitted year uses a trusted
+reference date and is marked for display. The word dollar/dólar/dólares means USD,
+with that interpretation marked for display. The symbol $ and the word pesos remain ambiguous.
 Bare amounts are held separately until a currency is supplied. No conversion or
 inference from the customer's location is performed. The prototype record
 contract allows USD, COP, ARS and MXN only. "Pesos" requires an explicit code
@@ -20,6 +21,7 @@ from typing import Literal
 import unicodedata
 
 from bank_service.records import SUPPORTED_CURRENCIES
+from bank_service.request_dates import DateParsingError, extract_request_date, is_date_reply, mask_request_dates
 from bank_service.selection import TransactionFilters
 
 
@@ -46,6 +48,7 @@ class RequestSlots:
     needs_currency: bool = False
     used_dollar_alias: bool = False
     currency_ambiguous: bool = False
+    assumed_date_year: bool = False
 
 
 def _checked_text(text: str, language: str) -> str:
@@ -165,8 +168,6 @@ _NAMED_AMOUNT = re.compile(
 _SLOT_REPLY_PREFIX = re.compile(
     r"^(?:de|del|en|em|son|sao|es|e|fue|foi|por)\s+", re.IGNORECASE,
 )
-# Detect a date attempt before validating exact ISO width/calendar values.
-_DATE_ATTEMPT = re.compile(r"(?<![\w-])\d{1,6}-\d{1,4}-\d{1,4}(?![\w-])")
 _AMOUNT_AFTER = re.compile(
     r"\b(?P<currency>" + _CURRENCY + r")\b\s+(?P<value>" + _VALUE + r")(?![\w-]|[.,](?=\d))",
     re.IGNORECASE,
@@ -205,7 +206,7 @@ def _parse_amount(value: str) -> Decimal:
     return amount
 
 
-def extract_slots(text: str, language: str) -> RequestSlots:
+def extract_slots(text: str, language: str, *, reference_date: date | None = None) -> RequestSlots:
     """Extract exact optional slots, raising rather than guessing ambiguity."""
     checked = _checked_text(text, language)
     ascii_text = _without_accents(checked)
@@ -228,19 +229,17 @@ def extract_slots(text: str, language: str) -> RequestSlots:
         identifiers.add(token.upper() if token.upper().startswith("DEMO-TX-") else token)
     transaction_id = _one_value(identifiers, "ambiguous_transaction_id")
 
-    dates = set()
-    for match in _DATE_ATTEMPT.finditer(checked):
-        raw = match.group(0)
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
-            raise RoutingError("invalid_date")
-        try:
-            dates.add(date.fromisoformat(raw))
-        except ValueError:
-            raise RoutingError("invalid_date") from None
-    transaction_date = _one_value(dates, "ambiguous_date")
+    try:
+        interpreted = extract_request_date(
+            checked, language, reference_date=date.today() if reference_date is None else reference_date)
+    except DateParsingError as error:
+        raise RoutingError(str(error)) from None
+    transaction_date = interpreted.value
 
     used_dollar_alias = bool(_DOLLAR_ALIAS.search(ascii_text))
-    money_text = _DOLLAR_ALIAS.sub("USD", ascii_text)
+    # A date's day/year cannot become a monetary amount merely because the
+    # customer adds a currency code after it. Mask only recognized date spans.
+    money_text = _DOLLAR_ALIAS.sub("USD", mask_request_dates(ascii_text, language))
     has_peso_alias = bool(_PESO_ALIAS.search(ascii_text))
     currencies = {match.group(0).upper() for match in _CURRENCY_PATTERN.finditer(money_text)}
     if currencies - SUPPORTED_CURRENCIES:
@@ -280,6 +279,7 @@ def extract_slots(text: str, language: str) -> RequestSlots:
         transaction_id, TransactionFilters(transaction_date, amount, currency),
         amount_without_currency, needs_currency, used_dollar_alias,
         currency is None and (has_peso_alias or "$" in money_text),
+        interpreted.assumed_year,
     )
 
 
@@ -525,8 +525,20 @@ def is_search_followup(text: str, language: str) -> bool:
         normalized = normalized[:-1].rstrip()
     if _DIRECT_ID.fullmatch(normalized):
         return True
-    if _DATE_ATTEMPT.fullmatch(normalized):
+    if is_date_reply(text, language):
         return True
+    masked = mask_request_dates(normalized, language)
+    if masked != normalized:
+        # Combined details remain details: a date plus currency/amount cannot
+        # start a dispute or discard an active request because of a model label.
+        # Only closed connector/label words are removed; any business prose
+        # remains and fails the whole money-fragment grammar below.
+        normalized = re.sub(
+            r"\b(?:el|la|o|a|del|de|en|em|fue|foi|por|y|e|fecha|data)\b", " ", masked)
+        normalized = re.sub(r"(?<!\d)[,;:](?!\d)", " ", normalized).strip(" \t\r\n.!?¿¡")
+        if not normalized:
+            return True
+        normalized = re.sub(r"\s+", " ", normalized)
     unit = "(?:" + _CURRENCY + r"|dolar(?:es)?|dollars?|pesos?)"
     if re.fullmatch(unit + r"|\$", normalized, re.IGNORECASE):
         return True
