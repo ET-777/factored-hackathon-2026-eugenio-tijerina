@@ -5,7 +5,7 @@
 // sends explicit confirmation. Text from users and records is always textContent.
 const COPY = {
   es: {
-    brandCaption: "Tu actividad, en claro.", demoAccount: "CUENTA",
+    productName: "Asistente de transacciones", brandCaption: "Consulta tus movimientos y solicita ayuda.", demoAccount: "CUENTA",
     yourTransactions: "Tus movimientos", transactionsHint: "Movimientos disponibles para esta cuenta.",
     language: "Idioma", demoDisclosure: "DEMO: este entorno no mueve dinero ni envía solicitudes a un banco.",
     workspaceLabel: "ASISTENTE DE TRANSACCIONES", workspaceTitle: "Hablemos de tu movimiento.",
@@ -21,7 +21,7 @@ const COPY = {
     draftFooter: "Todavía no se ha creado ningún caso con esta propuesta.", receiptsTitle: "Solicitudes guardadas",
     handoffTitle: "Para la revisión humana", handoffCaption: "Resumen preparado para revisión humana.",
     offerHandoff: "Preparar revisión humana", viewTransaction: "Ver movimiento ↗",
-    customerFallback: "Cliente A", assistant: "CLARO", user: "TÚ",
+    customerFallback: "Cliente A", assistant: "ASISTENTE", user: "TÚ",
     activeSession: "Sesión activa", expiredSession: "Sesión vencida", remaining: "min restantes",
     sessionExpired: "Tu sesión venció. Inicia una nueva sesión para continuar.",
     selected: "Movimiento seleccionado", amount: "Importe", merchant: "Comercio", unknownMerchant: "Comercio no informado",
@@ -59,7 +59,7 @@ const COPY = {
     steps: {search_attempted: "Se buscaron movimientos", search_needs_filters: "Se solicitaron detalles para buscar", search_no_match: "La búsqueda no encontró coincidencias", search_ambiguous: "Se encontraron varias coincidencias", transaction_answered: "Se explicaron los datos del movimiento", choice_rejected: "Se rechazó una selección que no estaba disponible", intake_prepared: "Se preparó una solicitud de revisión", handoff_prepared: "Se preparó un resumen para revisión humana", action_verified: "Se guardó y verificó una solicitud", action_cancelled: "Se canceló una propuesta", confirmation_failed: "No se pudo verificar la confirmación"}
   },
   pt: {
-    brandCaption: "Sua atividade, com clareza.", demoAccount: "CONTA",
+    productName: "Assistente de transações", brandCaption: "Consulte suas transações e solicite ajuda.", demoAccount: "CONTA",
     yourTransactions: "Suas transações", transactionsHint: "Transações disponíveis para esta conta.",
     language: "Idioma", demoDisclosure: "DEMO: este ambiente não movimenta dinheiro nem envia solicitações a um banco.",
     workspaceLabel: "ASSISTENTE DE TRANSAÇÕES", workspaceTitle: "Vamos falar da sua transação.",
@@ -75,7 +75,7 @@ const COPY = {
     draftFooter: "Nenhum caso foi criado com esta proposta ainda.", receiptsTitle: "Solicitações salvas",
     handoffTitle: "Para a revisão humana", handoffCaption: "Resumo preparado para revisão humana.",
     offerHandoff: "Preparar revisão humana", viewTransaction: "Ver transação ↗",
-    customerFallback: "Cliente A", assistant: "CLARO", user: "VOCÊ",
+    customerFallback: "Cliente A", assistant: "ASSISTENTE", user: "VOCÊ",
     activeSession: "Sessão ativa", expiredSession: "Sessão expirada", remaining: "min restantes",
     sessionExpired: "Sua sessão expirou. Inicie uma nova sessão para continuar.",
     selected: "Transação selecionada", amount: "Valor", merchant: "Estabelecimento", unknownMerchant: "Estabelecimento não informado",
@@ -201,7 +201,7 @@ function localizedType(value) {
 function applyLanguage() {
   const language = serverState?.language === "pt" ? "pt" : "es";
   document.documentElement.lang = language;
-  document.title = language === "pt" ? "Claro · Assistente de transações" : "Claro · Asistente de transacciones";
+  document.title = tr("productName");
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     const translation = tr(element.dataset.i18n);
     if (typeof translation === "string") element.textContent = translation;
@@ -215,6 +215,7 @@ function applyLanguage() {
   $("demo-badge").setAttribute("title", tr("demoDisclosure"));
   $("demo-badge").setAttribute("aria-label", tr("demoDisclosure"));
   document.querySelector(".sidebar").setAttribute("aria-label", tr("demoAccount"));
+  document.querySelector(".brand").setAttribute("aria-label", tr("productName"));
   document.querySelector(".review-panel").setAttribute("aria-label", tr("detailsTitle"));
 }
 

@@ -1,4 +1,4 @@
-# Factored banking service prototype
+# Transaction Support Assistant
 
 Local foundation for a solo Factored AI & Data Hackathon 2026 submission.
 Private development repository: [ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro).
