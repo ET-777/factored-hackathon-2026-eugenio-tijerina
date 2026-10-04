@@ -93,6 +93,8 @@ Chat dates accept `DD/MM/YYYY`, `DD-MM-YYYY`, strict `YYYY-MM-DD`, and Spanish o
 Portuguese month names in either order, such as `3 de mayo del 2026` or
 `maio 3, 2026`. Numeric dates are day-first. Without a year, the server uses the
 current year in America/Monterrey and shows the interpretation before searching.
+Explicit phrases such as `17 de junio de este año` and `17 de junho deste ano`
+use that same current year.
 Invalid dates and multiple different dates require clarification. This parsing
 uses fixed calendar rules, not the learned intent classifier.
 The global **DEMO** badge identifies the local simulation; drafts, consent,

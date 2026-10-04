@@ -68,6 +68,34 @@ class RequestDateTests(unittest.TestCase):
         self.assertEqual(self.parse("05/03/2026").value, date(2026, 3, 5))
         self.assertEqual(self.parse("17/06/2026").value, date(2026, 6, 17))
 
+    def test_explicit_this_year_phrases_use_injected_reference_and_mask_the_entire_suffix(self):
+        for text, language in (
+            ("17 de Junio de este año", "es"), ("junio 17 del este año", "es"),
+            ("17 de junio este año", "es"), ("17 de junho deste ano", "pt"),
+            ("junho 17 de este ano", "pt"), ("17 de junho do este ano", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(self.parse(text, language), DateInterpretation(date(2032, 6, 17), True))
+                self.assertTrue(is_date_reply(text, language))
+                self.assertEqual(mask_request_dates(text, language).strip(), "")
+                self.assertEqual(self.parse(text + " por 25.50 USD", language).value, date(2032, 6, 17))
+                self.assertEqual(mask_request_dates(text + " por 25.50 USD", language).strip(), "por 25.50 usd")
+        self.assertEqual(self.parse("29 de febrero de este año").value, date(2032, 2, 29))
+        with self.assertRaisesRegex(DateParsingError, "^invalid_date$"):
+            self.parse("29 de fevereiro deste ano", "pt", reference=date(2031, 1, 1))
+
+    def test_current_year_phrase_does_not_override_malformed_or_conflicting_explicit_years(self):
+        for text, language in (
+            ("17 de junio de este año 2025", "es"), ("17 de junio de este añofoo", "es"),
+            ("17 de junho deste ano 2025", "pt"), ("17 de junho de este anofoo", "pt"),
+        ):
+            with self.subTest(text=text):
+                with self.assertRaisesRegex(DateParsingError, "^invalid_date$"):
+                    self.parse(text, language)
+                self.assertTrue(is_date_reply(text, language))
+        self.assertEqual(self.parse("3 de mayo de este año, 25 USD"), DateInterpretation(date(2032, 5, 3), True))
+        self.assertEqual(mask_request_dates("3 de mayo de este año, 25 USD", "es").strip(), "25 usd")
+
     def test_invalid_numeric_widths_calendar_and_separators_are_not_guessed(self):
         for text in (
             "20226-17-05", "2026-17-05", "2026-6-16", "2026-02-30",

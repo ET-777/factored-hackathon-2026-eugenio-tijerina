@@ -192,6 +192,76 @@ class WebRequestDateTests(unittest.TestCase):
                 self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
                 self.assert_read_only(state)
 
+    def test_current_year_phrase_corrects_no_match_without_changing_the_request(self):
+        for language, month, suffix, dispute in (
+            ("es", "Junio", "de este a\u00f1o", "No reconozco un cargo"),
+            ("pt", "Junho", "deste ano", "N\u00e3o reconhe\u00e7o uma compra"),
+        ):
+            for context in ("standalone", "inquiry", "intake"):
+                for learned in (False, True):
+                    with self.subTest(language=language, context=context, learned=learned):
+                        router = ConfidentDisputeRouter() if learned else None
+                        self.server._router = router
+                        self.post("reset")
+                        self.post("language", language=language)
+                        if context == "inquiry":
+                            self.post("message", text="ver un pago" if language == "es"
+                                      else "ver um pagamento")
+                        elif context == "intake":
+                            self.post("message", text=dispute)
+                        calls_before_date = router.calls if router is not None else 0
+                        state = self.post("message", text=f"17 de {month} {suffix}")
+                        self.assertEqual(state["messages"][-1]["status"], "no_match")
+                        self.assertEqual(state["candidate_ids"], [])
+                        self.assert_read_only(state)
+                        state = self.post("message", text=f"16 de {month} {suffix}")
+                        if router is not None:
+                            self.assertEqual(router.calls, calls_before_date)
+                        pending = self.browser().pending_search
+                        self.assertEqual(pending.kind, "intake" if context == "intake"
+                                         else "inquiry")
+                        self.assertEqual(pending.transaction_date.isoformat(), "2026-06-16")
+                        if context == "intake":
+                            self.assertEqual(pending.request, dispute)
+                        notices = [item for item in state["messages"]
+                                   if item["status"] == "date_interpreted"]
+                        self.assertEqual(len(notices), 2)
+                        self.assertIn("16/06/2026", notices[-1]["text"])
+                        self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
+                        self.assert_read_only(state)
+
+    def test_invalid_current_year_phrase_preserves_filters_until_corrected(self):
+        for language, invalid_dates, correction in (
+            ("es", ("16 de junio de este a\u00f1o 2025",
+                    "16 de junio de este a\u00f1ofoo", "29 de febrero de este a\u00f1o"),
+             "16 de junio de este a\u00f1o"),
+            ("pt", ("16 de junho de este ano 2025",
+                    "16 de junho de este anofoo", "29 de fevereiro de este ano"),
+             "16 de junho de este ano"),
+        ):
+            for text in invalid_dates:
+                with self.subTest(language=language, text=text):
+                    router = ConfidentDisputeRouter()
+                    self.server._router = router
+                    self.inquiry(language)
+                    self.post("message", text="25.50 USD")
+                    status, state = self.action("message", text=text)
+                    self.assertEqual(status, 400)
+                    self.assertEqual(state["error"]["code"], "invalid_date")
+                    pending = self.browser().pending_search
+                    self.assertEqual(pending.kind, "inquiry")
+                    self.assertEqual(pending.amount, Decimal("25.50"))
+                    self.assertEqual(pending.currency, "USD")
+                    self.assertIsNone(pending.transaction_date)
+                    self.assertNotIn("date_interpreted", [item["status"]
+                                                         for item in state["messages"]])
+                    self.assert_read_only(state)
+                    state = self.post("message", text=correction)
+                    self.assertEqual(router.calls, 0)
+                    self.assertEqual(state["candidate_ids"], ["DEMO-TX-001", "DEMO-TX-002"])
+                    self.assertEqual(pending.transaction_date.isoformat(), "2026-06-16")
+                    self.assert_read_only(state)
+
     def test_natural_date_year_is_not_an_amount_even_with_currency(self):
         for language, text in (("es", "16 de junio 2026 USD"),
                                ("pt", "16 de junho de 2026 USD")):

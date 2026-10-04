@@ -3,8 +3,9 @@
 Numeric local dates are day first (DD/MM/YYYY or DD-MM-YYYY); ISO dates
 retain their exact YYYY-MM-DD width. Month-name dates and DD/MM replies
 may omit the year, in which case the caller supplies the trusted reference
-date. Relative dates, year-only requests and month-only requests are outside
-this small grammar. This module does not use the clock or a language model.
+date. Explicit "this year" phrases use the same reference year. Relative days,
+year-only requests and month-only requests are outside this small grammar.
+This module does not use the clock or a language model.
 """
 
 from dataclasses import dataclass
@@ -63,6 +64,11 @@ _YEAR_CONNECTOR = re.compile(r"\s*,?\s*(?:de|del|do)(?=\b|[0-9+-])\s*")
 _SUFFIX_TOKEN = re.compile(r"\s*,?\s*(?P<token>[^\s]+)")
 _VALID_YEAR_TOKEN = re.compile(r"[0-9]{4}[.!?,;:)\]]*")
 _YEAR_LIKE_TOKEN = re.compile(r"[+-]?[0-9]{4}")
+_CURRENT_YEAR_SUFFIX = {
+    "es": re.compile(r"\s*,?\s*(?:(?:de|del)\s+)?este\s+(?P<word>ano[^\s]*)"),
+    "pt": re.compile(r"\s*,?\s*(?:deste|(?:(?:de|do)\s+)?este)\s+(?P<word>ano[^\s]*)"),
+}
+_CURRENT_YEAR_WORD = re.compile(r"ano[.!?,;:)\]]*")
 _CURRENCY_AFTER = re.compile(
     r"\s*(?:USD|COP|ARS|MXN|BRL|EUR|GBP|PEN|CLP|UYU|BOB|PYG|VES|CRC|"
     r"GTQ|HNL|NIO|DOP|CAD|JPY|CHF|dolares?|dollars?|pesos?)\b",
@@ -101,6 +107,27 @@ def _find_dates(text: str, language: str) -> list[_DateMatch]:
         for match in pattern.finditer(text):
             end = match.end()
             year = None
+            current_year = _CURRENT_YEAR_SUFFIX[language].match(text, end)
+            if current_year is not None:
+                end = current_year.end()
+                following = _SUFFIX_TOKEN.match(text, end)
+                # "This year 2025" conflicts with the trusted current year.
+                # A following amount with an explicit currency remains money.
+                conflicting_year = (
+                    following is not None
+                    and re.match(r"[+-]?[0-9]", following.group("token")) is not None
+                    and _CURRENCY_AFTER.match(text, following.end()) is None
+                )
+                if (_CURRENT_YEAR_WORD.fullmatch(current_year.group("word")) is None
+                        or conflicting_year):
+                    year = "invalid"
+                    if conflicting_year:
+                        end = following.end()
+                found.append(_DateMatch(
+                    match.start(), end, text[match.start():end],
+                    match.group("day"), _MONTHS[language][match.group("month")], year,
+                ))
+                continue
             suffix = _YEAR_SUFFIX.match(text, end)
             connector = _YEAR_CONNECTOR.match(text, end)
             token = _SUFFIX_TOKEN.match(text, connector.end() if connector else end)
