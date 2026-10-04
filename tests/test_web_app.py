@@ -118,7 +118,9 @@ class WebAppTests(unittest.TestCase):
                 draft = state["pending_draft"]
                 self.assertEqual(draft["kind"], "handoff")
                 self.assertEqual(draft["packet"]["verified_actions"][0]["case_id"], case_id)
-                self.assertTrue(draft["packet"]["unresolved_questions"])
+                self.assertEqual(draft["packet"]["request"],
+                                 "No reconozco esta compra" if language == "es" else "Não reconheço esta compra")
+                self.assertEqual(draft["packet"]["unresolved_questions"], [])
                 self.assertEqual(self.browser().store.count(), 1)
                 code, state, _ = self.post("confirm", draft_id=draft["draft_id"], confirmed=True)
                 self.assertEqual(self.browser().store.count(), 2)
@@ -397,15 +399,21 @@ class WebAppTests(unittest.TestCase):
         case_id = self.state["receipts"][0]["case_id"]
         self.post("message", text=human)
         packet = self.state["pending_draft"]["packet"]
-        self.assertEqual(packet["request"], human)
-        self.assertEqual(packet["unresolved_questions"], [request])
+        self.assertEqual(packet["request"], request)
+        self.assertEqual(packet["unresolved_questions"], [])
         self.assertEqual(len(packet["attempted_steps"]), len(set(packet["attempted_steps"])))
         self.assertEqual(packet["verified_actions"][0]["case_id"], case_id)
         self.assertEqual(self.browser().store.count(), 1)
         self.post("confirm", draft_id=self.state["pending_draft"]["draft_id"], confirmed=True)
-        self.assertEqual(self.state["handoff"]["unresolved_questions"], [request])
+        self.assertEqual(self.state["handoff"]["request"], request)
+        self.assertEqual(self.state["handoff"]["unresolved_questions"], [])
         self.post("reset")
         self.post("message", text=human)
+        self.assertIsNone(self.state["pending_draft"])
+        self.assertEqual(self.state["messages"][-1]["status"], "needs_handoff_context")
+        self.post("message", text="Necesito ayuda para recuperar el acceso a mi cuenta")
+        self.assertEqual(self.state["pending_draft"]["packet"]["request"],
+                         "Necesito ayuda para recuperar el acceso a mi cuenta")
         self.assertEqual(self.state["pending_draft"]["packet"]["unresolved_questions"], [])
         self.assertIsNone(self.state["pending_draft"]["packet"]["facts"])
 
@@ -417,7 +425,8 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(self.browser().store.count(), 0)
         self.post("message", text="Quiero hablar con una persona")
         self.assertEqual(self.state["pending_draft"]["kind"], "handoff")
-        self.assertEqual(self.state["pending_draft"]["packet"]["unresolved_questions"], ["No reconozco un cargo"])
+        self.assertEqual(self.state["pending_draft"]["packet"]["request"], "No reconozco un cargo")
+        self.assertEqual(self.state["pending_draft"]["packet"]["unresolved_questions"], [])
         self.assertIsNone(self.state["pending_draft"]["packet"]["facts"])
         self.post("message", text="confirmo")
         self.assertEqual(self.browser().store.count(), 0)
@@ -447,6 +456,8 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(code, 400)
         self.assertIsNone(state["selected_transaction"])
         self.post("message", text="Quiero hablar con una persona")
+        self.assertIsNone(self.state["pending_draft"])
+        self.post("message", text="Necesito ayuda para recuperar el acceso a mi cuenta")
         self.assertIsNone(self.state["pending_draft"]["packet"]["facts"])
         self.assertEqual(self.state["pending_draft"]["packet"]["unresolved_questions"], [])
 

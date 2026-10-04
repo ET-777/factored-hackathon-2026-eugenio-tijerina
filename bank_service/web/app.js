@@ -407,7 +407,9 @@ function renderPacket(target, packet, includeHandoff = true) {
       target.append(handoffSection(tr("verifiedActions"), prior.map((entry) => `${tr(entry.kind === "handoff" ? "handoffReceipt" : "intakeReceipt")}: ${asText(entry.case_id)}`), true));
     }
     const questions = Array.isArray(packet.unresolved_questions) ? packet.unresolved_questions.filter((entry) => typeof entry === "string") : [];
-    target.append(handoffSection(tr("unresolvedQuestions"), questions.length ? questions : tr("noPendingQuestions"), questions.length > 0));
+    if (questions.length || packet.escalation_reason !== "human_requested") {
+      target.append(handoffSection(tr("unresolvedQuestions"), questions.length ? questions : tr("noPendingQuestions"), questions.length > 0));
+    }
   }
   if (Array.isArray(packet.sources) && packet.sources.length) {
     const details = node("details", "proof-details");

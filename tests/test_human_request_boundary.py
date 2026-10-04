@@ -14,7 +14,7 @@ import unittest
 
 from bank_service.route_loader import load_preview_router
 from bank_service.routing import (
-    IntentProposal, RoutingError, is_explicit_human_request, is_greeting,
+    IntentProposal, RoutingError, human_request_purpose, is_explicit_human_request, is_greeting,
 )
 from bank_service.web_app import BrowserSession, DemoServer, _now
 
@@ -112,17 +112,23 @@ class HumanRequestBoundaryTests(unittest.TestCase):
                 self.assert_no_preparation(browser)
 
     def test_positive_human_request_does_not_depend_on_model_label(self):
-        for language, request in (
-            ("es", "No reconozco un cargo, quiero hablar con una persona"),
-            ("pt", "Preciso de um atendente"),
+        for language, request, purpose in (
+            ("es", "No reconozco un cargo, quiero hablar con una persona", None),
+            ("pt", "Preciso de um atendente", "Meu cart\u00e3o est\u00e1 bloqueado"),
         ):
             for prediction in ("unsupported", "inquiry", "dispute_intake"):
                 with self.subTest(language=language, prediction=prediction):
                     browser, now = self.browser(language=language, router=HumanRouter(prediction))
                     self.assertTrue(is_explicit_human_request(request, language))
                     browser.message(request, now)
+                    if purpose is not None:
+                        self.assertEqual(browser.messages[-1]["status"], "needs_handoff_context")
+                        self.assert_no_preparation(browser)
+                        calls = browser.router.calls
+                        browser.message(purpose, now)
+                        self.assertEqual(browser.router.calls, calls)
                     self.assertEqual(browser.pending_draft.kind, "handoff")
-                    self.assertEqual(browser.pending_request, request)
+                    self.assertEqual(browser.pending_request, purpose or request)
                     self.assertEqual(browser.store.count(), 0)
 
     def test_request_for_person_does_not_override_explicit_refusal_to_prepare(self):
@@ -172,17 +178,27 @@ class HumanRequestBoundaryTests(unittest.TestCase):
                     self.assertIsNone(browser.intake_offer)
                     self.assert_no_preparation(browser)
 
-    def test_direct_human_wording_can_prepare_but_cannot_write_without_confirmation(self):
-        for language, request in (("es", "Quiero hablar con una persona"),
-                                  ("pt", "Quero falar com uma pessoa")):
+    def test_direct_human_wording_collects_purpose_but_cannot_write_without_confirmation(self):
+        for language, request, purpose in (
+            ("es", "Quiero hablar con una persona", "Necesito ayuda para desbloquear mi tarjeta"),
+            ("pt", "Quero falar com uma pessoa", "Preciso de ajuda para desbloquear meu cart\u00e3o"),
+        ):
             for learned in (False, True):
                 with self.subTest(language=language, learned=learned):
                     browser, now = self.browser(language=language, router=HumanRouter() if learned else None)
                     browser.message(request, now)
+                    self.assertEqual(browser.messages[-1]["status"], "needs_handoff_context")
+                    self.assert_no_preparation(browser)
+                    calls = None if browser.router is None else browser.router.calls
+                    browser.message(purpose, now)
+                    if browser.router is not None:
+                        self.assertEqual(browser.router.calls, calls)
                     draft = browser.state(now)["pending_draft"]
                     self.assertIsNotNone(draft)
                     self.assertEqual(draft["kind"], "handoff")
-                    self.assertEqual(draft["packet"]["request"], request)
+                    self.assertEqual(draft["packet"]["request"], purpose)
+                    self.assertEqual(draft["packet"]["escalation_reason"], "human_requested")
+                    self.assertEqual(draft["packet"]["unresolved_questions"], [])
                     self.assertEqual(browser.store.count(), 0)
                     browser.message("confirmo", now)
                     self.assertEqual(browser.store.count(), 0)
@@ -204,8 +220,8 @@ class HumanRequestBoundaryTests(unittest.TestCase):
         request = "Quiero hablar con una persona"
         browser.message(request, now)
         draft = browser.state(now)["pending_draft"]
-        self.assertEqual(draft["packet"]["request"], request)
-        self.assertIn(issue, draft["packet"]["unresolved_questions"])
+        self.assertEqual(draft["packet"]["request"], issue)
+        self.assertEqual(draft["packet"]["unresolved_questions"], [])
         self.assertEqual(browser.store.count(), 0)
 
     def test_model_only_label_keeps_selected_record_issue_and_existing_intake_offer(self):
@@ -224,7 +240,8 @@ class HumanRequestBoundaryTests(unittest.TestCase):
         browser.message("Quiero hablar con una persona", now)
         draft = browser.state(now)["pending_draft"]
         self.assertEqual(draft["packet"]["facts"]["transaction_id"], "DEMO-TX-001")
-        self.assertIn(issue, draft["packet"]["unresolved_questions"])
+        self.assertEqual(draft["packet"]["request"], issue)
+        self.assertEqual(draft["packet"]["unresolved_questions"], [])
         self.assertEqual(browser.store.count(), 0)
 
     def test_hello_and_hi_are_greetings_in_both_languages_and_modes(self):
@@ -246,8 +263,65 @@ class HumanRequestBoundaryTests(unittest.TestCase):
                                ("pt", "hello, quero falar com uma pessoa")):
             browser, now = self.browser(language=language, router=HumanRouter())
             browser.message(text, now)
-            self.assertEqual(browser.pending_draft.kind, "handoff")
-            self.assertEqual(browser.store.count(), 0)
+            self.assertEqual(browser.messages[-1]["status"], "needs_handoff_context")
+            self.assert_no_preparation(browser)
+
+    def test_negative_contact_aliases_cancel_purpose_collection_without_a_draft(self):
+        for language, request, refusals in (
+            ("es", "Quiero hablar con una persona", (
+                "No necesito un asesor", "Ya no necesito atenci\u00f3n humana",
+                "No quiero que prepares nada", "No prepares una solicitud",
+            )),
+            ("pt", "Quero falar com uma pessoa", (
+                "N\u00e3o preciso de um atendente", "N\u00e3o preciso de uma pessoa",
+                "N\u00e3o prepare uma solicita\u00e7\u00e3o",
+            )),
+        ):
+            for refusal in refusals:
+                with self.subTest(language=language, refusal=refusal):
+                    router = HumanRouter()
+                    browser, now = self.browser(language=language, router=router)
+                    browser.message(request, now)
+                    self.assertEqual(browser.messages[-1]["status"], "needs_handoff_context")
+                    calls = router.calls
+                    browser.message(refusal, now)
+                    self.assertEqual(browser.messages[-1]["status"], "handoff_context_cancelled")
+                    self.assertFalse(browser.state(now)["awaiting_handoff_context"])
+                    self.assertEqual(router.calls, calls)
+                    self.assert_no_preparation(browser)
+
+    def test_politeness_only_inline_clauses_still_need_customer_purpose(self):
+        for language, requests in (
+            ("es", ("Quiero hablar con una persona, gracias",
+                    "Quiero hablar con una persona, muchas gracias")),
+            ("pt", ("Quero falar com uma pessoa, obrigado",
+                    "Quero falar com uma pessoa, obrigada")),
+        ):
+            for request in requests:
+                with self.subTest(language=language, request=request):
+                    self.assertTrue(is_explicit_human_request(request, language))
+                    self.assertIsNone(human_request_purpose(request, language))
+                    browser, now = self.browser(language=language, router=HumanRouter())
+                    browser.message(request, now)
+                    self.assertEqual(browser.messages[-1]["status"], "needs_handoff_context")
+                    self.assert_no_preparation(browser)
+
+    def test_negative_customer_issue_is_literal_purpose_rather_than_cancellation(self):
+        for language, request, issue in (
+            ("es", "Quiero hablar con una persona", "No puedo entrar"),
+            ("pt", "Quero falar com uma pessoa", "N\u00e3o consigo entrar"),
+        ):
+            with self.subTest(language=language):
+                router = HumanRouter()
+                browser, now = self.browser(language=language, router=router)
+                browser.message(request, now)
+                calls = router.calls
+                browser.message(issue, now)
+                packet = browser.state(now)["pending_draft"]["packet"]
+                self.assertEqual(packet["request"], issue)
+                self.assertEqual(packet["unresolved_questions"], [])
+                self.assertEqual(router.calls, calls)
+                self.assertEqual(browser.store.count(), 0)
 
 
 class WebHumanRequestBoundaryTests(unittest.TestCase):
@@ -324,15 +398,22 @@ class WebHumanRequestBoundaryTests(unittest.TestCase):
         self.assert_no_draft_or_case(state)
 
     def test_train_router_direct_human_request_only_saves_after_separate_confirm(self):
-        for language, request in (("es", "Quiero hablar con una persona"),
-                                  ("pt", "Quero falar com uma pessoa")):
+        for language, request, purpose in (
+            ("es", "Quiero hablar con una persona", "Necesito corregir los datos de mi cuenta"),
+            ("pt", "Quero falar com uma pessoa", "Preciso corrigir os dados da minha conta"),
+        ):
             with self.subTest(language=language):
                 self.post("reset")
                 self.post("language", language=language)
                 state = self.post("message", text=request)
+                self.assertEqual(state["messages"][-1]["status"], "needs_handoff_context")
+                self.assert_no_draft_or_case(state)
+                state = self.post("message", text=purpose)
                 draft = state["pending_draft"]
                 self.assertEqual(draft["kind"], "handoff")
-                self.assertEqual(draft["packet"]["request"], request)
+                self.assertEqual(draft["packet"]["request"], purpose)
+                self.assertEqual(draft["packet"]["escalation_reason"], "human_requested")
+                self.assertEqual(draft["packet"]["unresolved_questions"], [])
                 self.assertEqual(self.browser().store.count(), 0)
                 state = self.post("message", text="confirmo")
                 self.assertEqual(state["messages"][-1]["status"], "confirmation_required")

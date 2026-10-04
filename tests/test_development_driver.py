@@ -194,12 +194,17 @@ class DevelopmentDriverTests(unittest.TestCase):
         with patch.object(ActionService, "read_case", observe):
             result, _ = self.run_case("human_request", "Quiero hablar con una persona sobre un caso que mencioné.",
                                       family="synthetic-existing-case")
-        self.assertTrue(result["completion_pass"])
+        # The frozen driver still requires the whole initial utterance. Chat
+        # now carries the literal inline issue, so do not silently loosen that
+        # historical oracle to mark this revised contract as a benchmark pass.
+        self.assertFalse(result["completion_pass"])
+        self.assertFalse(result["checks"]["original_request_preserved"])
         self.assertTrue(result["checks"]["packet_grounded"])
         self.assertTrue(result["checks"]["no_fabricated_prior_cases"])
         self.assertIsNone(result["checks"]["answer_grounded"])
         self.assertTrue(packets)
         self.assertTrue(all(packet["verified_actions"] == [] for packet in packets))
+        self.assertTrue(all(packet["request"] == "un caso que mencioné." for packet in packets))
 
     def test_model_only_human_label_cannot_prepare_ineligible_dispute(self):
         original = ActionService.read_case

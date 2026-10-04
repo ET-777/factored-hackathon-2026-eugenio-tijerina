@@ -325,15 +325,8 @@ def is_greeting(text: str, language: str) -> bool:
     return re.fullmatch(r"(?:" + pattern + r"|hello|hi|hey)", normalized) is not None
 
 
-def is_explicit_human_request(text: str, language: str) -> bool:
-    """Require positive human-request wording, never just a model label.
-
-    This bounded check establishes only the request to prepare a human summary;
-    it never grants access, confirms storage or verifies bank case history.
-    Complete positive request clauses are required; narrative mentions and
-    unclear negation need clarification. Existing unsupported-action priority
-    still applies across the whole message.
-    """
+def declines_handoff_preparation(text: str, language: str) -> bool:
+    """Recognize an explicit refusal to prepare/save a support request."""
     normalized = _without_accents(_checked_text(text, language)).casefold()
     # A request for a person is not permission to prepare a ticket when another
     # clause explicitly refuses preparation. A failed past attempt ("no pude
@@ -346,7 +339,20 @@ def is_explicit_human_request(text: str, language: str) -> bool:
         r"guardar|guarda|guarde|guardes|salvar|salve|enviar|envia|envie|envies|"
         r"ticket|caso|solicitud|solicitacao|pedido|resumen|resumo|borrador|rascunho)\b"
     )
-    if re.search(declined_preparation, normalized):
+    return re.search(declined_preparation, normalized) is not None
+
+
+def is_explicit_human_request(text: str, language: str) -> bool:
+    """Require positive human-request wording, never just a model label.
+
+    This bounded check establishes only the request to prepare a human summary;
+    it never grants access, confirms storage or verifies bank case history.
+    Complete positive request clauses are required; narrative mentions and
+    unclear negation need clarification. Existing unsupported-action priority
+    still applies across the whole message.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold()
+    if declines_handoff_preparation(text, language):
         return False
     proposal = route_intent(normalized, language)
     if proposal.intent == "unsupported" and proposal.matched:
@@ -374,11 +380,46 @@ def is_explicit_human_request(text: str, language: str) -> bool:
     )
     for clause in re.split(r"[,;.!?\n]+", normalized):
         clause = clause.strip(" \t\r\n¡¿")
-        if re.search(r"\b(?:no|nao|nunca|jamas|jamais|ni|nem|sin|sem)\b", clause):
+        # A negative customer problem after "because" is distinct from a
+        # negated request for a person. The whole-message refusal and action
+        # checks above still apply before this positive request clause.
+        human_clause = re.split(
+            r"\s+(?:porque|sobre|acerca de|a respeito de|para)\s+", clause, maxsplit=1)[0]
+        if re.search(r"\b(?:no|nao|nunca|jamas|jamais|ni|nem|sin|sem)\b", human_clause):
             continue
-        if re.fullmatch(request, clause):
+        if re.fullmatch(request, human_clause):
             return True
     return False
+
+
+def human_request_purpose(text: str, language: str) -> str | None:
+    """Return an inline, literal customer purpose; never a model summary.
+
+    This helper is used only after positive human-request wording is verified.
+    A reason introduced after that request is retained without interpreting it
+    as an instruction to execute a banking action. Mixed complaint clauses may
+    retain the full informative request rather than invent a rewritten issue.
+    """
+    checked = _checked_text(text, language).strip()
+    if not is_explicit_human_request(checked, language):
+        return None
+    for connector in re.finditer(
+        r"\s+(?:porque|sobre|acerca de|a respeito de|por|para)\s+", checked, re.IGNORECASE):
+        prefix = checked[:connector.start()].strip()
+        if is_explicit_human_request(prefix, language):
+            purpose = checked[connector.end():].strip()
+            normalized = _without_accents(purpose).casefold().strip(" .!?¡¿")
+            if normalized not in ("", "favor", "si", "sim", "ayuda", "ajuda", "algo",
+                                  "gracias", "muchas gracias", "obrigado", "obrigada", "thanks"):
+                return purpose
+    clauses = [part.strip() for part in re.split(r"[,;\n]+", checked) if part.strip()]
+    if any(not is_explicit_human_request(part, language)
+           and not is_greeting(part, language)
+           and _without_accents(part).casefold().strip(" .!?¡¿") not in (
+               "por favor", "si", "sim", "gracias", "muchas gracias", "obrigado", "obrigada", "thanks")
+           for part in clauses):
+        return checked
+    return None
 
 
 def is_explicit_inquiry(text: str, language: str) -> bool:

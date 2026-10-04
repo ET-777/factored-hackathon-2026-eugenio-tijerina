@@ -299,6 +299,10 @@ class PrivateCohortHttpTests(unittest.TestCase):
                 phrase = "Quiero hablar con una persona" if language == "es" else "Quero falar com uma pessoa"
                 status, state = self.post("message", text=phrase)
                 handoff = state["pending_draft"]
+                self.assertIsNotNone(handoff)
+                self.assertEqual(handoff["packet"]["request"], draft["packet"]["request"])
+                self.assertEqual(handoff["packet"]["unresolved_questions"], [])
+                self.assertEqual(handoff["packet"]["escalation_reason"], "human_requested")
                 self.assertEqual(handoff["packet"]["verified_actions"][0]["case_id"], receipt_id)
                 self.assertEqual(self.browser().store.count(), 1)
                 self.assert_private_projection(state)

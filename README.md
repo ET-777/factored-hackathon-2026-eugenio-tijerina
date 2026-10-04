@@ -25,6 +25,11 @@ explicit previous-case continuation handling. Complete plain read/search request
 also bypass business classification and request missing details.
 Chat prepares a human handoff only from explicit positive human-request wording,
 while model-only human predictions clarify without creating a draft or new offer.
+For a general request to speak to a person, chat asks what the customer needs help
+with before preparing the form. The literal reply becomes the request in the
+handoff; an inline purpose or an already known dispute skips that question. The
+customer can cancel or switch to an inquiry, and saving still requires a separate
+confirmation and verified receipt.
 These fixes have regression checks; the first comparison scores still describe the earlier frozen code.
 Human output review, broader scenario evaluation, deployment and final evaluation
 remain pending. These are authored development results, not final performance.

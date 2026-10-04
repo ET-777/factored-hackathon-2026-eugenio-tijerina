@@ -16,6 +16,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import math
 from pathlib import Path
+import re
 import secrets
 from tempfile import TemporaryDirectory
 from threading import RLock
@@ -33,7 +34,8 @@ from bank_service.demo_fixtures import demo_records, demo_session
 from bank_service.records import TransactionRecord
 from bank_service.responses import ResponseFormatError, TransactionAnswer, with_requested_record_limits
 from bank_service.routing import (
-    IntentProposal, RoutingError, extract_slots, is_case_continuation, is_explicit_human_request,
+    IntentProposal, RoutingError, declines_handoff_preparation, extract_slots, human_request_purpose,
+    is_case_continuation, is_explicit_human_request,
     is_explicit_inquiry, is_greeting,
     is_search_followup, refers_to_selected_transaction, route_intent,
 )
@@ -96,6 +98,9 @@ TEXT = {
         "handoff_offer": "¿Quieres que prepare ese resumen para revisión humana? Puedes responder sí o no, o usar los botones. Aún no se ha guardado ninguna solicitud.",
         "handoff_unavailable": "Esta sesión no permite guardar una solicitud para revisión humana. No se ha preparado ni guardado una solicitud.",
         "handoff_declined": "De acuerdo. No preparé ni guardé un resumen para revisión humana. Puedes seguir consultando.",
+        "handoff_context": "Claro. ¿Sobre qué necesitas ayuda? Cuéntame brevemente el motivo para incluirlo en la solicitud de atención humana. Puedes escribir «cancelar» si prefieres seguir consultando.",
+        "handoff_context_cancelled": "De acuerdo. No preparé ni guardé una solicitud de atención humana. Puedes seguir consultando.",
+        "stale_handoff_context": "La solicitud de atención humana venció o el movimiento cambió. Pide hablar con una persona de nuevo para continuar.",
     },
     "pt": {
         "greeting": "Olá. Posso ajudar a consultar suas transações ou preparar uma solicitação de revisão. Do que você precisa?",
@@ -133,6 +138,9 @@ TEXT = {
         "handoff_offer": "Você quer que eu prepare esse resumo para revisão humana? Pode responder sim ou não, ou usar os botões. Nenhuma solicitação foi salva ainda.",
         "handoff_unavailable": "Esta sessão não permite salvar uma solicitação para revisão humana. Nenhuma solicitação foi preparada ou salva.",
         "handoff_declined": "Tudo bem. Não preparei nem salvei um resumo para revisão humana. Você pode continuar consultando.",
+        "handoff_context": "Claro. Sobre o que você precisa de ajuda? Conte brevemente o motivo para incluí-lo na solicitação de atendimento humano. Você pode escrever «cancelar» se preferir continuar consultando.",
+        "handoff_context_cancelled": "Tudo bem. Não preparei nem salvei uma solicitação de atendimento humano. Você pode continuar consultando.",
+        "stale_handoff_context": "A solicitação de atendimento humano expirou ou a transação mudou. Peça para falar com uma pessoa novamente para continuar.",
     },
 }
 
@@ -279,6 +287,16 @@ class HandoffOffer:
     expires_at: datetime
 
 
+@dataclass(frozen=True)
+class PendingHandoffContext:
+    """One customer-requested purpose question, bound to observed session state."""
+
+    transaction_id: str | None
+    snapshot: SourcedTransaction | None
+    language: str
+    expires_at: datetime
+
+
 def _intake_preference(text: str, language: str) -> bool | None:
     # Whole replies only. An action or refund request containing 'yes' is never
     # consent, and this parser is never used to confirm a stored action.
@@ -329,6 +347,7 @@ class BrowserSession:
         self.pending_search: PendingSearch | None = None
         self.intake_offer: IntakeOffer | None = None
         self.handoff_offer: HandoffOffer | None = None
+        self.pending_handoff_context: PendingHandoffContext | None = None
         self.business_issue: str | None = None
         self.case_ids: list[str] = []
         self.handoff_id: str | None = None
@@ -392,6 +411,7 @@ class BrowserSession:
             "handoff_request": None,
             "intake_offer": None,
             "handoff_offer": None,
+            "awaiting_handoff_context": self.pending_handoff_context is not None,
         }
         if not active:
             state["messages"] = [{"role": "assistant", "status": "access_denied", "text": self.text("denied")}]
@@ -570,6 +590,7 @@ class BrowserSession:
                 escalation_reason=reason,
                 unresolved_questions=self.unresolved_questions() if questions is None else questions, now=now)
         self.pending_request = request
+        self.pending_handoff_context = None
         self.clear_search()
         self.clear_handoff_offer()
         self.reply(reply)
@@ -608,10 +629,75 @@ class BrowserSession:
             self.intake_offer = None
             self.append("assistant", TEXT[self.language]["intake_declined"], "intake_declined")
 
+    def request_human_handoff(self, text: str, now: datetime) -> None:
+        """Reuse a known issue or ask for one before preparing a human draft."""
+        require_access(self.session, self.session.customer_id, Permission.CREATE_SIMULATED_HANDOFF, now=now)
+        purpose = human_request_purpose(text, self.language) or self.business_issue
+        self.clear_handoff_offer()
+        self.intake_offer = None
+        if purpose is not None:
+            self.business_issue = purpose
+            # The issue is already carried in REQUEST. Do not duplicate it as
+            # an invented unresolved question in another section of the form.
+            self.prepare("handoff", purpose, now, questions=())
+            return
+        self.clear_search()
+        entry = None if self.selected_id is None else get_transaction(
+            self.session, self.selected_id, records=self.records, now=now)
+        self.pending_handoff_context = PendingHandoffContext(
+            self.selected_id, entry, self.language,
+            min(self.session.expires_at, now + timedelta(minutes=5)))
+        self.append("assistant", TEXT[self.language]["handoff_context"], "needs_handoff_context")
+
+    def collect_handoff_context(self, text: str, now: datetime) -> bool:
+        """Consume a purpose reply literally; never route it through a model."""
+        context = self.pending_handoff_context
+        self.authorize(now)
+        require_access(self.session, self.session.customer_id, Permission.CREATE_SIMULATED_HANDOFF, now=now)
+        entry = None if self.selected_id is None else get_transaction(
+            self.session, self.selected_id, records=self.records, now=now)
+        if (now >= context.expires_at or self.language != context.language
+                or self.selected_id != context.transaction_id or entry != context.snapshot):
+            self.pending_handoff_context = None
+            raise UiError("stale_handoff_context", 409)
+        normalized = " ".join("".join(
+            character for character in unicodedata.normalize("NFKD", text.casefold())
+            if not unicodedata.combining(character)).strip(" .!?¡¿").split())
+        cancel = (declines_handoff_preparation(text, self.language)
+                  or _intake_preference(text, self.language) is False
+                  or normalized in {"cancelar", "cancela", "cancelalo", "cancele", "cancelar solicitud",
+                                    "cancelar solicitacao", "olvidalo", "dejalo", "esqueca"}
+                  or re.match(
+                      r"^(?:ya\s+|ja\s+)?(?:no|nao)\s+(?:quiero|quero|necesito|preciso|deseo|desejo)\s+"
+                      r"(?:de\s+)?(?:(?:un|una|um|uma|el|la|o|a)\s+)?"
+                      r"(?:hablar|falar|conversar|persona|pessoa|agente|atendente|humano|humana|asesor|assessor|"
+                      r"atencion humana|atendimento human[oa]|preparar|abrir|crear|criar)\b", normalized))
+        if cancel:
+            self.pending_handoff_context = None
+            self.append("assistant", TEXT[self.language]["handoff_context_cancelled"], "handoff_context_cancelled")
+            return True
+        if is_explicit_inquiry(text, self.language):
+            self.pending_handoff_context = None
+            return False
+        inline = human_request_purpose(text, self.language)
+        if (is_greeting(text, self.language) or _intake_preference(text, self.language) is True
+                or is_search_followup(text, self.language)
+                or (is_explicit_human_request(text, self.language) and inline is None)
+                or normalized in {"ayuda", "ajuda", "necesito ayuda", "preciso de ajuda", "algo", "ok", "confirmo",
+                                  "gracias", "muchas gracias", "obrigado", "obrigada", "por favor", "thanks"}):
+            self.append("assistant", TEXT[self.language]["handoff_context"], "needs_handoff_context")
+            return True
+        purpose = inline or text
+        self.business_issue = purpose
+        self.prepare("handoff", purpose, now, questions=())
+        return True
+
     def message(self, text: str, now: datetime) -> None:
         self.append("user", text, "request")
         if self.pending_draft is not None:
             self.append("assistant", TEXT[self.language]["confirm_button"], "confirmation_required")
+            return
+        if self.pending_handoff_context is not None and self.collect_handoff_context(text, now):
             return
         if self.handoff_offer is not None:
             preference = _intake_preference(text, self.language)
@@ -694,7 +780,7 @@ class BrowserSession:
                 return
             self.intake_offer = None
         if proposal.intent == "human_request":
-            self.prepare("handoff", text, now)
+            self.request_human_handoff(text, now)
             return
         if proposal.intent == "unsupported":
             if not proposal.matched and self.pending_search is not None:
@@ -771,6 +857,8 @@ class BrowserSession:
         self.authorize(now)
         self.rate_limit()
         action = payload["action"]
+        if action not in ("message", "view_case"):
+            self.pending_handoff_context = None
         if action == "dispute_selected":
             # A rendered shortcut identifies the record it referred to. An old
             # click must not silently apply to a newer selection or alter it.
@@ -980,6 +1068,8 @@ class DemoHandler(BaseHTTPRequestHandler):
         elif code == "transaction_required":
             label = "request"
         elif code in ("invalid_date", "ambiguous_date"):
+            label = code
+        elif code == "stale_handoff_context":
             label = code
         elif code in ("csrf_rejected", "invalid_origin", "invalid_host", "session_required"):
             label = "security"
