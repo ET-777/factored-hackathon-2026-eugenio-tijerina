@@ -20,8 +20,7 @@ const COPY = {
     reviewBeforeConfirm: "REVISA ANTES DE CONFIRMAR", confirm: "Confirmar y guardar", cancel: "Cancelar",
     draftFooter: "Todavía no se ha creado ningún caso con esta propuesta.", receiptsTitle: "Solicitudes guardadas",
     handoffTitle: "Para la revisión humana", handoffCaption: "Resumen preparado para revisión humana.",
-    offerHandoff: "Preparar revisión humana", footer: "Factored AI & Data Hackathon 2026",
-    footerProof: "Hechos trazables. Acciones confirmadas.", viewTransaction: "Ver movimiento ↗",
+    offerHandoff: "Preparar revisión humana", viewTransaction: "Ver movimiento ↗",
     customerFallback: "Cliente A", assistant: "CLARO", user: "TÚ",
     activeSession: "Sesión activa", expiredSession: "Sesión vencida", remaining: "min restantes",
     sessionExpired: "Tu sesión venció. Inicia una nueva sesión para continuar.",
@@ -51,7 +50,7 @@ const COPY = {
     unexpectedResponse: "La aplicación devolvió una respuesta incompleta. Vuelve a intentar.",
     prompts: [
       ["Buscar una compra", "Quiero consultar una compra"],
-      ["No reconozco un cargo", "No reconozco esta compra"],
+      ["No reconozco este cargo", "No reconozco esta compra"],
       ["Hablar con una persona", "Quiero hablar con una persona"]
     ],
     statuses: {Approved: "Aprobado", Declined: "Rechazado", Pending: "Pendiente", Reversed: "Revertido"},
@@ -75,8 +74,7 @@ const COPY = {
     reviewBeforeConfirm: "REVISE ANTES DE CONFIRMAR", confirm: "Confirmar e salvar", cancel: "Cancelar",
     draftFooter: "Nenhum caso foi criado com esta proposta ainda.", receiptsTitle: "Solicitações salvas",
     handoffTitle: "Para a revisão humana", handoffCaption: "Resumo preparado para revisão humana.",
-    offerHandoff: "Preparar revisão humana", footer: "Factored AI & Data Hackathon 2026",
-    footerProof: "Fatos rastreáveis. Ações confirmadas.", viewTransaction: "Ver transação ↗",
+    offerHandoff: "Preparar revisão humana", viewTransaction: "Ver transação ↗",
     customerFallback: "Cliente A", assistant: "CLARO", user: "VOCÊ",
     activeSession: "Sessão ativa", expiredSession: "Sessão expirada", remaining: "min restantes",
     sessionExpired: "Sua sessão expirou. Inicie uma nova sessão para continuar.",
@@ -106,7 +104,7 @@ const COPY = {
     unexpectedResponse: "O aplicativo retornou uma resposta incompleta. Tente novamente.",
     prompts: [
       ["Buscar uma compra", "Quero consultar uma compra"],
-      ["Não reconheço uma cobrança", "Não reconheço esta compra"],
+      ["Não reconheço esta cobrança", "Não reconheço esta compra"],
       ["Falar com uma pessoa", "Quero falar com uma pessoa"]
     ],
     statuses: {Approved: "Aprovado", Declined: "Recusado", Pending: "Pendente", Reversed: "Estornado"},
