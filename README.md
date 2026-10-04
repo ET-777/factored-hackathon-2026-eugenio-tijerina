@@ -19,6 +19,11 @@ wording/labels; Portuguese human review remains pending. The first frozen,
 source-backed development comparison is complete: Spanish correct routes improved
 from 6/16 to 15/16 and mechanical workflow completion from 8/16 to 12/16.
 See [development results](docs/development_results.md) for failures and limits.
+An October 4 [short-message development check](docs/short_message_results.md)
+adds a separately versioned 144-message candidate, retaining the original 96
+and adding 48 concise requests. The owner approved the new Spanish wording/labels
+after these diagnostics; fluent Portuguese review remains pending;
+the historical comparison and sealed final set are preserved.
 Subsequent [shared workflow fixes](docs/post_development_fixes.md) add consented
 human review for ineligible disputes, requested channel-limit explanations and
 explicit previous-case continuation handling. Complete plain read/search requests
@@ -75,6 +80,8 @@ Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
   fixed algorithm, shared service guards and review status.
 - [Spanish review checklist](docs/routing_review_es.md): 64 authored training/development
   messages with October 3 owner wording/label approval, without classifier predictions.
+- [New Spanish short-message checklist](docs/routing_short_review_es.md): new TRAIN
+  additions and development checks, approved by the owner on October 4.
 - [Deferred diagnostic scenario adapter](docs/evaluation_adapter.md): preserve the
   independent constructed schema without weakening source validation.
 
@@ -112,13 +119,16 @@ an existing bounded cohort at startup; it never scans the full download. See its
 [startup instructions](docs/private_cohort_ui.md). Neither mode loads service evaluation cases.
 Adding `--router learned-preview` explicitly fits only `evaluation/routing_train.json`;
 it never loads development or final cases. The default remains keyword routing.
+Adding `--router learned-preview-v2` selects the separate short-message candidate
+from fixed TRAIN paths and checks preservation of the original training rows.
+It also never loads development or final cases at UI startup.
 
 The bare module reports status; `demo` exercises the real local workflow using newly
 authored fictional records and explicitly scripted confirmation. It creates a temporary
 SQLite database by default. An optional `--db .local/demo/cases.sqlite3` keeps simulated
 cases between runs; each run is a new conversation. The demo never loads the source
 cohort or either evaluation split. Only the explicit `web` command starts a web
-server. Only the explicit learned-preview flag invokes the local classifier; no
+server. Only an explicit learned-preview flag invokes the local classifier; no
 command calls a cloud provider or real bank tool. Trusted
 demo sessions are not production authentication.
 

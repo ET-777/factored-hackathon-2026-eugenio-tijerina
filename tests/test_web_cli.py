@@ -107,9 +107,11 @@ class LearnedWebCliTests(unittest.TestCase):
             patch("sys.argv", ["bank_service", "web"]),
             patch("bank_service.web_app.serve") as serve,
             patch("bank_service.route_loader.load_preview_router") as fit,
+            patch("bank_service.route_loader.load_short_preview_router") as short_fit,
         ):
             main()
         fit.assert_not_called()
+        short_fit.assert_not_called()
         serve.assert_called_once_with(8765)
 
     def test_explicit_preview_passes_router_and_discloses_pending_review(self):
@@ -118,12 +120,47 @@ class LearnedWebCliTests(unittest.TestCase):
             patch("sys.argv", ["bank_service", "web", "--router", "learned-preview", "--port", "8767"]),
             patch("bank_service.web_app.serve") as serve,
             patch("bank_service.route_loader.load_preview_router", return_value=router) as fit,
+            patch("bank_service.route_loader.load_short_preview_router") as short_fit,
             redirect_stdout(output),
         ):
             main()
         fit.assert_called_once_with()
+        short_fit.assert_not_called()
         serve.assert_called_once_with(8767, router=router)
         self.assertIn("authored draft training; language review pending", output.getvalue())
+        self.assertIn("router v1:", output.getvalue())
+
+    def test_explicit_v2_preview_uses_only_candidate_loader_and_discloses_version(self):
+        router, output = object(), StringIO()
+        with (
+            patch("sys.argv", ["bank_service", "web", "--router", "learned-preview-v2",
+                               "--port", "8768"]),
+            patch("bank_service.web_app.serve") as serve,
+            patch("bank_service.route_loader.load_preview_router") as fit,
+            patch("bank_service.route_loader.load_short_preview_router", return_value=router) as short_fit,
+            redirect_stdout(output),
+        ):
+            main()
+        fit.assert_not_called()
+        short_fit.assert_called_once_with()
+        serve.assert_called_once_with(8768, router=router)
+        self.assertIn("v2 short-message candidate", output.getvalue())
+        self.assertIn("authored draft training; language review pending", output.getvalue())
+
+    def test_v2_private_preview_passes_router_and_explicit_private_config(self):
+        router = object()
+        with (
+            patch("sys.argv", ["bank_service", "web", "--router", "learned-preview-v2",
+                               "--cohort-run", "private-example", "--customer-id", DEMO_CUSTOMER]),
+            patch("bank_service.web_app.serve") as serve,
+            patch("bank_service.cohort_repository.load_private_cohort", return_value=demo_records()) as load,
+            patch("bank_service.route_loader.load_short_preview_router", return_value=router),
+            redirect_stdout(StringIO()),
+        ):
+            main()
+        load.assert_called_once_with(Path("private-example"))
+        self.assertIs(serve.call_args.kwargs["router"], router)
+        self.assertEqual(serve.call_args.kwargs["config"].customer_id, DEMO_CUSTOMER)
 
     def test_invalid_training_stops_before_server_or_private_source_load(self):
         errors, output = StringIO(), StringIO()
@@ -140,6 +177,26 @@ class LearnedWebCliTests(unittest.TestCase):
         self.assertEqual(failure.exception.code, 1)
         self.assertEqual(errors.getvalue(), "Learned preview startup refused.\n")
         self.assertEqual(output.getvalue(), "")
+        serve.assert_not_called()
+        load.assert_not_called()
+
+    def test_invalid_v2_stops_before_server_or_private_source_load(self):
+        errors, output = StringIO(), StringIO()
+        with (
+            patch("sys.argv", ["bank_service", "web", "--router", "learned-preview-v2",
+                               "--cohort-run", "unused", "--customer-id", "private-unused"]),
+            patch("bank_service.web_app.serve") as serve,
+            patch("bank_service.cohort_repository.load_private_cohort") as load,
+            patch("bank_service.route_loader.load_preview_router") as fit,
+            patch("bank_service.route_loader.load_short_preview_router", side_effect=ValueError("private-detail")),
+            redirect_stderr(errors), redirect_stdout(output),
+        ):
+            with self.assertRaises(SystemExit) as failure:
+                main()
+        self.assertEqual(failure.exception.code, 1)
+        self.assertEqual(errors.getvalue(), "Learned preview startup refused.\n")
+        self.assertEqual(output.getvalue(), "")
+        fit.assert_not_called()
         serve.assert_not_called()
         load.assert_not_called()
 

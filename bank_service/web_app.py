@@ -314,6 +314,34 @@ def _intake_preference(text: str, language: str) -> bool | None:
     return None
 
 
+def _denies_selected_transaction(text: str, language: str) -> bool:
+    """Recognize a complete past-action denial, never preparation consent.
+
+    The caller must already hold an authorized selected transaction. Whole
+    matching excludes negated intentions, questions, and mixed commands.
+    Common hice/hize and fiz/fis spellings are explicit bounded aliases.
+    """
+    normalized = "".join(
+        character for character in unicodedata.normalize("NFKD", text.casefold())
+        if not unicodedata.combining(character))
+    if "?" in normalized or "¿" in normalized:
+        return False
+    normalized = " ".join(normalized.strip(" .!¡").split())
+    if language == "es":
+        pattern = (
+            r"(?:yo\s+)?no\s+(?:hice|hize|pague|compre|autorice|autorize|realice)\s+"
+            r"(?:esto|eso|(?:esta|esa)\s+(?:compra|transaccion|operacion)|"
+            r"(?:este|ese)\s+(?:pago|cargo|cobro|movimiento))"
+        )
+    else:
+        pattern = (
+            r"(?:eu\s+)?nao\s+(?:fiz|fis|paguei|comprei|autorizei|realizei)\s+"
+            r"(?:isto|isso|(?:esta|essa)\s+(?:compra|cobranca|transacao|operacao)|"
+            r"(?:este|esse)\s+(?:pagamento|debito|movimento))"
+        )
+    return re.fullmatch(pattern, normalized) is not None
+
+
 class BrowserSession:
     """A browser token resolves to this exact server-owned session and controller."""
 
@@ -747,7 +775,10 @@ class BrowserSession:
         # an explicit request to view/search a payment. Fresh requests replace
         # an unfinished dispute; only slot replies continue its prior intent.
         plain_inquiry = is_explicit_inquiry(text, self.language)
-        proposal = (IntentProposal("inquiry", 1.0, True) if slot_only or plain_inquiry else
+        selected_denial = (self.selected_id is not None
+                           and _denies_selected_transaction(text, self.language))
+        proposal = (IntentProposal("dispute_intake", 1.0, True) if selected_denial else
+                    IntentProposal("inquiry", 1.0, True) if slot_only or plain_inquiry else
                     route_intent(text, self.language) if self.router is None else
                     self.router.route_intent(text, self.language))
         if (not isinstance(proposal, IntentProposal)
@@ -802,7 +833,7 @@ class BrowserSession:
         self.pending_route = ("intake", context.request) if context.kind == "intake" else None
         # Only an explicit reference to the selected transaction can reuse it.
         reuse_selection = (not continuing and self.selected_id is not None
-                           and refers_to_selected_transaction(text, self.language))
+                           and (selected_denial or refers_to_selected_transaction(text, self.language)))
         selected = self.selected_id
         self.clear_record_selection(now)
         try:

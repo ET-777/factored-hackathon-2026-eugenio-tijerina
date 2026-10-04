@@ -40,6 +40,16 @@ data with a sanitized startup error. Redirected input paths are refused before r
 No browser-supplied file or router path is accepted.
 The default startup does not load or fit the model.
 
+The October 4 [short-message increment](short_message_results.md) adds a separate
+`--router learned-preview-v2` selector and fixed
+`evaluation/routing_train_short_v2.json`. It preserves the original 96 TRAIN rows
+and adds 48 concise requests, for 144 total. The v1 selector and keyword default
+remain unchanged. The owner separately approved the new Spanish wording/labels
+after scoring on October 4; Portuguese fluent-human review remains pending.
+The new review is bound separately from approval of the original artifacts.
+The original development score remains historical evidence for v1, not a v2
+quality claim. New diagnostic results and limits are recorded separately.
+
 ## Local preview
 
 For the fictional-record UI, use one physical PowerShell line:

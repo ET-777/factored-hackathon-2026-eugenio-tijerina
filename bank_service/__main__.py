@@ -20,8 +20,9 @@ def main() -> None:
     demo.add_argument("--db", type=Path, help="Optional local SQLite path; omitted means temporary storage")
     web = commands.add_parser("web", help="Start the loopback review UI; fictional records by default")
     web.add_argument("--port", type=int, default=8765)
-    web.add_argument("--router", choices=("keyword", "learned-preview"), default="keyword",
-                     help="Experimental learned preview uses only the fixed authored training artifact")
+    web.add_argument("--router", choices=("keyword", "learned-preview", "learned-preview-v2"),
+                     default="keyword",
+                     help="Experimental learned previews use only fixed authored TRAIN artifacts")
     web.add_argument("--cohort-run", type=Path,
                      help="Trusted startup path to an existing bounded private cohort")
     web.add_argument("--customer-id",
@@ -33,14 +34,17 @@ def main() -> None:
     if args.command == "web":
         from bank_service.web_app import PrivateCohortConfig, serve
         router = None
-        if args.router == "learned-preview":
-            from bank_service.route_loader import load_preview_router
+        if args.router in ("learned-preview", "learned-preview-v2"):
+            from bank_service.route_loader import load_preview_router, load_short_preview_router
             try:
-                router = load_preview_router()
+                router = (load_short_preview_router() if args.router == "learned-preview-v2"
+                          else load_preview_router())
             except ValueError:
                 print("Learned preview startup refused.", file=sys.stderr)
                 raise SystemExit(1) from None
-            print("Experimental local router: authored draft training; language review pending.", flush=True)
+            version = "v2 short-message candidate" if args.router == "learned-preview-v2" else "v1"
+            print(f"Experimental local router {version}: authored draft training; "
+                  "language review pending.", flush=True)
         if args.cohort_run is None:
             if args.customer_id is not None or args.permission is not None:
                 parser.error("--customer-id and --permission require --cohort-run")

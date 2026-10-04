@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "created_date": "2026-10-04",
+  "status": "spanish_owner_approved_portuguese_fluent_review_pending",
+  "spanish_intent_items": 64,
+  "spanish_state_items_not_intent_scored": 4,
+  "canonical_exact_review_items_sha256": "0d0ad3372614972d55dd2b578ba7de7900c37204d5d73e5f7ac42362659591f6",
+  "canonicalization": "Listed TRAIN additions, coverage, followup, then states; exact decoded rows; UTF-8; sorted object keys; compact JSON; no normalization or trailing newline.",
+  "file_sha256": {
+    "evaluation/routing_train_short_v2.json": "75618938c2398a7db2c976b8dabeb0a56b0b7cbfdf0eea337b89d7622f3216c5",
+    "evaluation/routing_short_messages_v1.json": "6ad7ac5e90d6f2a02fcdc1b212d918ebe9b79ce2e99bf587fb4e5757dd09ac32",
+    "evaluation/routing_short_followup_v1.json": "259193d496b85838cdcfffa15ac083576e76972cc066ccce2f7e8fe6765f0cc3"
+  },
+  "owner_spanish_wording_labels": "approved",
+  "portuguese_fluent_human_review": "pending",
+  "original_review_record": "evidence/routing_language_review.json",
+  "original_approval_not_extended_to_new_rows": true,
+  "coverage_blinded_codex_technical_review": "48 labels and eight unscored state cases checked before v1 scoring; no changes; not human language review.",
+  "training_author": "separate Codex agent; no diagnostic/followup messages or predictions inspected",
+  "followup_author": "separate Codex agent; no TRAIN/coverage messages, rules or predictions inspected",
+  "followup_read_by_implementer": "only after candidate freeze and first candidate coverage score",
+  "owner_approval": {
+    "date": "2026-10-04",
+    "source": "explicit_owner_response_to_review_question_in_project_conversation",
+    "statement": "I reviewed it and approve the new Spanish wording and labels",
+    "scope": "64 Spanish intent messages plus four Spanish unscored conversation cases in the hash-bound checklist",
+    "timing": "after component scoring; checklist contains no model predictions",
+    "reviewer_role": "project_owner_not_independent_external_reviewer",
+    "limits": "Does not establish model quality, semantic family independence, workflow completion or Portuguese review."
+  }
+}

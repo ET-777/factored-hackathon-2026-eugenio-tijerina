@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "purpose": "development_followup_diagnostic",
+  "provenance": "codex_authored",
+  "review_status": "pending_owner_spanish_and_fluent_portuguese_review",
+  "notes": [
+    "Fresh authored short-message diagnostic with 16 Spanish and 16 Portuguese cases; each language has four cases per intent.",
+    "Translations and close paraphrases share a family and must remain grouped when assessing independence or splitting data.",
+    "Deictic references to an existing payment or charge assume the user has already selected an existing transaction.",
+    "Dispute messages request review or report a problem with an existing charge; they do not authorize a refund or financial action.",
+    "A few messages deliberately include ordinary spelling or typing errors.",
+    "This batch requires owner Spanish review and fluent Portuguese review; it is not native-human-validated, a final benchmark, or evidence of production readiness."
+  ],
+  "cases": [
+    {
+      "case_id": "short_followup_es_001",
+      "language": "es",
+      "family": "existing_payment_details",
+      "intent": "inquiry",
+      "text": "Explícame los detalles de este pago.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_002",
+      "language": "es",
+      "family": "existing_payment_details",
+      "intent": "inquiry",
+      "text": "Quiero saber cuándo se registró este pago.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_001",
+      "language": "pt",
+      "family": "existing_payment_details",
+      "intent": "inquiry",
+      "text": "Me explica os detahles desse pagamento.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_002",
+      "language": "pt",
+      "family": "existing_payment_details",
+      "intent": "inquiry",
+      "text": "Quero saber quando esse pagamento foi registrado.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_003",
+      "language": "es",
+      "family": "existing_payment_record_lookup",
+      "intent": "inquiry",
+      "text": "Busca el registro de este pago.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_004",
+      "language": "es",
+      "family": "existing_payment_record_lookup",
+      "intent": "inquiry",
+      "text": "Nesesito ver el pago que ya seleccioné.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_003",
+      "language": "pt",
+      "family": "existing_payment_record_lookup",
+      "intent": "inquiry",
+      "text": "Procura o registro desse pagamento.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_004",
+      "language": "pt",
+      "family": "existing_payment_record_lookup",
+      "intent": "inquiry",
+      "text": "Preciso ver o pagamento que já selecionei.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_005",
+      "language": "es",
+      "family": "existing_charge_unrecognized",
+      "intent": "dispute_intake",
+      "text": "No reconozco este cargo.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_006",
+      "language": "es",
+      "family": "existing_charge_unrecognized",
+      "intent": "dispute_intake",
+      "text": "Este cargo no es mío, quiero que lo revisen.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_005",
+      "language": "pt",
+      "family": "existing_charge_unrecognized",
+      "intent": "dispute_intake",
+      "text": "Não reconheço essa cobrança.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_006",
+      "language": "pt",
+      "family": "existing_charge_unrecognized",
+      "intent": "dispute_intake",
+      "text": "Essa cobrança não é minha, quero que revisem.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_007",
+      "language": "es",
+      "family": "existing_charge_wrong_amount",
+      "intent": "dispute_intake",
+      "text": "El importe de este cargo está incorrecto.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_008",
+      "language": "es",
+      "family": "existing_charge_wrong_amount",
+      "intent": "dispute_intake",
+      "text": "Revisen este cargo, el monto está mal.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_007",
+      "language": "pt",
+      "family": "existing_charge_wrong_amount",
+      "intent": "dispute_intake",
+      "text": "O valor dessa cobrança está errado.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_008",
+      "language": "pt",
+      "family": "existing_charge_wrong_amount",
+      "intent": "dispute_intake",
+      "text": "Revisem essa cobrança, o valor está incorreto.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_009",
+      "language": "es",
+      "family": "speak_with_person",
+      "intent": "human_request",
+      "text": "Quiero hablar con una persona.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_010",
+      "language": "es",
+      "family": "speak_with_person",
+      "intent": "human_request",
+      "text": "Pásame con alguien humano, por favor.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_009",
+      "language": "pt",
+      "family": "speak_with_person",
+      "intent": "human_request",
+      "text": "Quero falar com uma pessoa.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_010",
+      "language": "pt",
+      "family": "speak_with_person",
+      "intent": "human_request",
+      "text": "Me passa para um humano, por favor.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_011",
+      "language": "es",
+      "family": "speak_with_agent",
+      "intent": "human_request",
+      "text": "Necesito hablar con un agente humano.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_012",
+      "language": "es",
+      "family": "speak_with_agent",
+      "intent": "human_request",
+      "text": "Conéctame con un asesor humano.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_011",
+      "language": "pt",
+      "family": "speak_with_agent",
+      "intent": "human_request",
+      "text": "Preciso falar com um atendente humano.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_012",
+      "language": "pt",
+      "family": "speak_with_agent",
+      "intent": "human_request",
+      "text": "Me conecta com um atendente de verdade.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_013",
+      "language": "es",
+      "family": "current_account_balance",
+      "intent": "unsupported",
+      "text": "¿Cuál es mi saldo actual?",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_014",
+      "language": "es",
+      "family": "current_account_balance",
+      "intent": "unsupported",
+      "text": "Muéstrame cuánto dinero tengo en la cuenta.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_013",
+      "language": "pt",
+      "family": "current_account_balance",
+      "intent": "unsupported",
+      "text": "Qual é meu saldo atual?",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_014",
+      "language": "pt",
+      "family": "current_account_balance",
+      "intent": "unsupported",
+      "text": "Mostra quanto dinheiro tenho na conta.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_015",
+      "language": "es",
+      "family": "block_payment_card",
+      "intent": "unsupported",
+      "text": "Bloquea mi tarjeta, por favor.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_es_016",
+      "language": "es",
+      "family": "block_payment_card",
+      "intent": "unsupported",
+      "text": "Quiero que bloqueen mi tarjeta ahora.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_015",
+      "language": "pt",
+      "family": "block_payment_card",
+      "intent": "unsupported",
+      "text": "Bloqueia meu cartão, por favor.",
+      "origin": "authored"
+    },
+    {
+      "case_id": "short_followup_pt_016",
+      "language": "pt",
+      "family": "block_payment_card",
+      "intent": "unsupported",
+      "text": "Quero que bloqeiem meu cartão agora.",
+      "origin": "authored"
+    }
+  ]
+}
