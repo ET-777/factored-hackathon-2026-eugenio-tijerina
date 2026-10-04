@@ -9,6 +9,9 @@ description = "Local scaffold for an evaluated bilingual banking service prototy
 requires-python = ">=3.11"
 dependencies = ["tzdata; sys_platform == 'win32'"]
 
+[project.optional-dependencies]
+routing-experiment = ["scikit-learn==1.8.0", "numpy==2.2.6", "scipy==1.16.3"]
+
 [tool.setuptools]
 packages = ["bank_service"]
 

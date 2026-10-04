@@ -40,6 +40,13 @@ data with a sanitized startup error. Redirected input paths are refused before r
 No browser-supplied file or router path is accepted.
 The default startup does not load or fit the model.
 
+The [October 4 alternative-model comparison](linear_routing_results.md) retains
+v2 after a fixed TRAIN-only grouped check: no logistic setting improved the
+predeclared overall/per-language criteria. The alternative implementation is
+available for experiment reproduction only, with the optional
+`routing-experiment` dependencies; it has no UI selector. The original preview,
+v2 selector, default router and earlier evidence remain unchanged.
+
 The October 4 [short-message increment](short_message_results.md) adds a separate
 `--router learned-preview-v2` selector and fixed
 `evaluation/routing_train_short_v2.json`. It preserves the original 96 TRAIN rows

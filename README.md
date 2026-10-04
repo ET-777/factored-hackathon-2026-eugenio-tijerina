@@ -24,6 +24,11 @@ adds a separately versioned 144-message candidate, retaining the original 96
 and adding 48 concise requests. The owner approved the new Spanish wording/labels
 after these diagnostics; fluent Portuguese review remains pending;
 the historical comparison and sealed final set are preserved.
+The bounded [October 4 alternative-model comparison](docs/linear_routing_results.md)
+uses TRAIN-only grouped cross-validation. Naive Bayes v2 retained 102/144 correct
+routes versus 99/144 for the best of three logistic regression settings; the
+alternative was not promoted. These selection scores use different partitions
+from the earlier short-message diagnostics and are not final performance.
 Subsequent [shared workflow fixes](docs/post_development_fixes.md) add consented
 human review for ineligible disputes, requested channel-limit explanations and
 explicit previous-case continuation handling. Complete plain read/search requests

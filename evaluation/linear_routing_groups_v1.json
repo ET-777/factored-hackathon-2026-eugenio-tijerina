@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "purpose": "train_only_grouped_cross_validation",
+  "source": "evaluation/routing_train_short_v2.json",
+  "reviewer": "Codex read-only semantic grouping audit before model predictions",
+  "grouping_notes": [
+    "Close paraphrases across authored family IDs are co-held-out, including both languages.",
+    "15 clusters retain all 24 original family IDs and 144 TRAIN rows; no message or label changes.",
+    "Each fold has 48 rows, 24 Spanish and 24 Portuguese, and all four intents; class/subtype counts differ.",
+    "The grouping is a manual planning decision, not proof of semantic independence or fluent Portuguese review."
+  ],
+  "clusters": [
+    {
+      "id": "cv-dispute-unrecognized",
+      "intent": "dispute_intake",
+      "fold": 0,
+      "rows": 12,
+      "families": [
+        "tr-dispute-unrecognized-purchase",
+        "SHORT-TRAIN-FAMILY-DISPUTE-01"
+      ]
+    },
+    {
+      "id": "cv-dispute-duplicate",
+      "intent": "dispute_intake",
+      "fold": 1,
+      "rows": 12,
+      "families": [
+        "tr-dispute-duplicate-charge",
+        "SHORT-TRAIN-FAMILY-DISPUTE-02"
+      ]
+    },
+    {
+      "id": "cv-dispute-cancelled",
+      "intent": "dispute_intake",
+      "fold": 2,
+      "rows": 8,
+      "families": [
+        "tr-dispute-cancelled-subscription"
+      ]
+    },
+    {
+      "id": "cv-dispute-erroneous",
+      "intent": "dispute_intake",
+      "fold": 2,
+      "rows": 4,
+      "families": [
+        "SHORT-TRAIN-FAMILY-DISPUTE-03"
+      ]
+    },
+    {
+      "id": "cv-human-preference",
+      "intent": "human_request",
+      "fold": 0,
+      "rows": 20,
+      "families": [
+        "tr-human-person-preference",
+        "SHORT-TRAIN-FAMILY-HUMAN-01",
+        "SHORT-TRAIN-FAMILY-HUMAN-02",
+        "SHORT-TRAIN-FAMILY-HUMAN-03"
+      ]
+    },
+    {
+      "id": "cv-human-guided",
+      "intent": "human_request",
+      "fold": 1,
+      "rows": 8,
+      "families": [
+        "tr-human-guided-conversation"
+      ]
+    },
+    {
+      "id": "cv-human-repeated",
+      "intent": "human_request",
+      "fold": 2,
+      "rows": 8,
+      "families": [
+        "tr-human-repeated-self-service"
+      ]
+    },
+    {
+      "id": "cv-inquiry-merchant",
+      "intent": "inquiry",
+      "fold": 0,
+      "rows": 8,
+      "families": [
+        "tr-inquiry-merchant-identity"
+      ]
+    },
+    {
+      "id": "cv-inquiry-generic-status",
+      "intent": "inquiry",
+      "fold": 1,
+      "rows": 20,
+      "families": [
+        "tr-inquiry-recorded-status",
+        "SHORT-TRAIN-FAMILY-INQUIRY-01",
+        "SHORT-TRAIN-FAMILY-INQUIRY-02",
+        "SHORT-TRAIN-FAMILY-INQUIRY-03"
+      ]
+    },
+    {
+      "id": "cv-inquiry-amount",
+      "intent": "inquiry",
+      "fold": 2,
+      "rows": 8,
+      "families": [
+        "tr-inquiry-original-amount"
+      ]
+    },
+    {
+      "id": "cv-unsupported-balance",
+      "intent": "unsupported",
+      "fold": 0,
+      "rows": 8,
+      "families": [
+        "tr-unsupported-account-balance"
+      ]
+    },
+    {
+      "id": "cv-unsupported-card",
+      "intent": "unsupported",
+      "fold": 1,
+      "rows": 8,
+      "families": [
+        "tr-unsupported-card-suspension"
+      ]
+    },
+    {
+      "id": "cv-unsupported-new-transfer",
+      "intent": "unsupported",
+      "fold": 2,
+      "rows": 12,
+      "families": [
+        "tr-unsupported-new-transfer",
+        "SHORT-TRAIN-FAMILY-UNSUPPORTED-01"
+      ]
+    },
+    {
+      "id": "cv-unsupported-loan",
+      "intent": "unsupported",
+      "fold": 2,
+      "rows": 4,
+      "families": [
+        "SHORT-TRAIN-FAMILY-UNSUPPORTED-02"
+      ]
+    },
+    {
+      "id": "cv-unsupported-refund",
+      "intent": "unsupported",
+      "fold": 2,
+      "rows": 4,
+      "families": [
+        "SHORT-TRAIN-FAMILY-UNSUPPORTED-03"
+      ]
+    }
+  ]
+}
