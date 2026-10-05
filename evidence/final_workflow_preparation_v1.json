@@ -1,0 +1,62 @@
+{
+  "benchmark_id": "final_workflow_v1",
+  "cases_bytes": 54328,
+  "cases_sha256": "2a1f595c4358cf99e5d8645dcde9bedccc9818edf45237e3ab04fdb79a130036",
+  "counts": {
+    "by_language": {
+      "es": 24,
+      "pt": 24
+    },
+    "cases": 48,
+    "families": 24,
+    "service": 32,
+    "service_intents": {
+      "dispute_intake": 8,
+      "human_request": 8,
+      "inquiry": 8,
+      "unsupported": 8
+    },
+    "simulated_safety": 16
+  },
+  "distinct_anchor_customers": 24,
+  "distinct_anchor_transactions": 24,
+  "exact_normalized_component_overlaps": 0,
+  "final_predictions": 0,
+  "implementation_verification": {
+    "credential_dictionary_read": false,
+    "driver_tests_passed": 12,
+    "eligible_files_checked": 157,
+    "full_regression_tests_passed": 652,
+    "git_history_scanned": false,
+    "input_tests_passed": 10,
+    "latest_runner_failure_tests_pending": false,
+    "private_artifact_check_passed": true,
+    "runner_tests_passed": 13,
+    "scorer_tests_passed": 10
+  },
+  "independent_evaluation": false,
+  "limitations": [
+    "Authored customer requests and user allegations are synthetic, not organizer customer transcripts or proof of bank events.",
+    "The same historical 50-record cohort is reused; unused prior binding anchors do not establish unseen-customer or whole-dataset generalization.",
+    "Broad inquiry/dispute/human/unsupported semantic kernels overlap exposed TRAIN/development. Channel and prior-case uncertainty also overlap exposed development topics; only wording and full journeys are freshly authored.",
+    "Two source-context families use a slot-only identifier discovery step before the designated component utterance; one unrelated-service family begins with a greeting. Raw component scoring has no server context and must remain separate from guarded workflow scoring.",
+    "Safety text uses fixed shared guard vocabulary and is excluded from raw component scoring.",
+    "No genuine multi-match ambiguity, source-backed MXN, pending/reversed purchase, changed-source fault or no-match outcome is assessed by this workload.",
+    "Portuguese pairs are author-reviewed drafts; independent fluent-human review is pending. Spanish owner input/label/script approval and separate output review are pending.",
+    "No model fits, calls, predictions, HTTP/UI runs or workflow outcomes were produced during authoring.",
+    "Original sealed final artifacts, raw source dataset and source PDFs were not read or modified."
+  ],
+  "manifest_sha256": "94af911293e84130a6b64666a192f8a9f94e7e0f54c59a3a094d817ae4d61662",
+  "original_final_opened": false,
+  "portuguese_status": "provisional_fluent_review_pending",
+  "prior_anchor_reuse_counts": {
+    "all_families": 4,
+    "safety_families": 4,
+    "service_families": 0
+  },
+  "schema_version": 1,
+  "source_facts_provided_by_slots_only": true,
+  "spanish_case_review_sha256": "cb3d01263951297045f3a16dfcb0eb6421a2e29c38f00f30746ec30ffc8d075e",
+  "spanish_development_output_review_sha256": "b9ebdc6df5f64e96efd35932018490907d48bfc68d0b6c1d5fd8b29bad853603",
+  "status": "OWNER_SPANISH_REVIEW_APPROVED_FINAL_PREDICTIONS_PENDING"
+}
