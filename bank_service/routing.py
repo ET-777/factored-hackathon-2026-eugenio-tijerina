@@ -291,13 +291,13 @@ def refers_to_selected_transaction(text: str, language: str) -> bool:
     """
     normalized = _without_accents(_checked_text(text, language)).casefold()
     noun = (
-        r"(?:compra|cargo|cobro|transaccion|transacao|pago|pagamento|debito|"
+        r"(?:compra|cargo|cobro|cobranca|transaccion|transacao|pago|pagamento|debito|"
         r"operacion|operacao|movimiento|movimento|movimentacao|lancamento)"
     )
     # A request for another/new record is not a reference to the selection, even
     # when the customer mentions the selected record as a comparison.
     new_noun = (
-        r"(?:compras?|cargos?|cobros?|transaccion(?:es)?|transacao|transacoes|pagos?|"
+        r"(?:compras?|cargos?|cobros?|cobrancas?|transaccion(?:es)?|transacao|transacoes|pagos?|"
         r"pagamentos?|debitos?|operacion(?:es)?|operacao|operacoes|movimientos?|"
         r"movimentos?|movimentacao|movimentacoes|lancamentos?)"
     )

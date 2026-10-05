@@ -18,7 +18,10 @@ import re
 from types import MappingProxyType
 import unicodedata
 
-from bank_service.routing import IntentProposal, RoutingError
+from bank_service.routing import (
+    IntentProposal, RoutingError, is_explicit_human_request, is_explicit_inquiry,
+    is_greeting, is_search_followup, route_intent,
+)
 
 
 MAX_TRAINING_ROWS = 256
@@ -123,6 +126,142 @@ class CharacterNgramRouter:
         if len(winners) != 1:
             return IntentProposal("unsupported", confidence, False)
         return IntentProposal(INTENTS[winners[0]], confidence, True)
+
+
+_TRANSACTION_NOUN = (
+    r"(?:pagos?|pagamentos?|cargos?|cobros?|cobrancas?|compras?|"
+    r"transaccion(?:es)?|transacao|transacoes|movimientos?|movimentos?|"
+    r"movimentacao|movimentacoes|operacion(?:es)?|operacao|operacoes|"
+    r"debitos?|lancamentos?)"
+)
+_BUSINESS_CONTEXT = re.compile(
+    r"\b(?:" + _TRANSACTION_NOUN + r"|comercio|tienda|vendedor|establecimiento|"
+    r"estabelecimento|importe|monto|quantia|divisa|moneda|moeda|"
+    r"reembolso|prestamo|emprestimo|tarjeta|cartao|saldo)\b"
+)
+
+
+def _positive_read_request(normalized: str) -> bool:
+    """A read verb plus record noun may include filters, never a negated read."""
+    verb = (r"(?:ver|consultar|consulta|consulte|buscar|busca|busco|busque|"
+            r"encontrar|localizar|mostrar|muestra|muestrame|mostre|"
+            r"conferir|confira|verificar|revisar|mirar|mira)")
+    if re.search(r"\b(?:no|nao|nunca|ni|nem)\b", normalized):
+        return False
+    return bool(re.search(r"\b" + verb + r"\b[^.;!?]{0,90}\b"
+                          + _TRANSACTION_NOUN + r"\b", normalized))
+
+
+def _positive_dispute_request(normalized: str, language: str) -> bool:
+    """Require a literal complaint or request, rather than the model's label.
+
+    This is a bounded wording check, not a truth check or consent to a write.
+    Unsupported actions retain priority in the wrapper. Ambiguous narrative or
+    negated intentions require clarification instead of opening a dispute route.
+    """
+    if re.search(r"\b(?:no|nao)\s+(?:(?:quiero|quero|necesito|preciso|deseo|desejo)\s+)?"
+                 r"(?:disputar|contestar|reclamar|abrir|crear|criar|reportar|impugnar)\b", normalized):
+        return False
+    # Complete short denials are useful before a transaction has been selected;
+    # the workflow will still collect details, authorize the record and offer
+    # preparation consent separately. The two misspellings are bounded aliases.
+    short_denial = (r"(?:yo\s+)?no\s+(?:fui\s+yo|(?:hice|hize|pague|compre|"
+                    r"autorice|autorize|realice)\s+(?:esto|eso))"
+                    if language == "es" else
+                    r"(?:eu\s+)?nao\s+(?:fui\s+eu|(?:fiz|fis|paguei|comprei|"
+                    r"autorizei|realizei)\s+(?:isso|isto))")
+    if re.fullmatch(r"[\s¡!]*" + short_denial + r"[\s.!¡]*", normalized):
+        return True
+    for clause in re.split(r"[,;.!?\n]+", normalized):
+        clause = clause.strip(" \t\r\n¡¿")
+        if re.fullmatch(r"(?:(?:yo|eu)\s+)?(?:no\s+(?:lo\s+)?reconozco|"
+                        r"nao\s+reconheco|desconozco|desconheco)(?:\s+(?:(?:este|esta|"
+                        r"ese|esa|el|la|mi|un|una|esse|essa|o|a|meu|minha|um|uma)\s+)?"
+                        + _TRANSACTION_NOUN + r"\b[^.;!?]*)?", clause):
+            return True
+        if re.search(r"\b" + _TRANSACTION_NOUN + r"\b", clause):
+            # A past-action denial differs from declining a future request.
+            if re.match(r"^(?:(?:yo|eu)\s+)?(?:no|nao)\s+(?:(?:la|lo|el|a|o)\s+)?"
+                        r"(?:hice|hize|pague|compre|autorice|autorize|realice|fiz|fis|"
+                        r"paguei|comprei|autorizei|realizei)\b", clause):
+                return True
+            if re.search(r"\b(?:no\s+es\s+mi[oa]|nao\s+e\s+(?:meu|minha))\b", clause):
+                return True
+            if re.search(r"\b" + _TRANSACTION_NOUN + r"\s+(?:no\s+reconocid[oa]|"
+                         r"nao\s+reconhecid[oa])\b", clause):
+                return True
+            if not re.search(r"\b(?:no|nao|nunca|ni|nem|sin|sem)\b", clause):
+                if re.search(r"\b(?:duplicad[oa]|repetid[oa]|indebid[oa]|"
+                             r"dos\s+veces|duas\s+vezes)\b", clause):
+                    return True
+        # A requested review must name the financial record or support case;
+        # generic uses of contestar/reclamar are not financial intent evidence.
+        if re.match(r"^(?:(?:quiero|quisiera|necesito|deseo|quero|queria|preciso|"
+                    r"desejo|gostaria\s+de)\s+)?(?:disputar|contestar|reclamar|"
+                    r"impugnar|reportar|abrir|crear|criar)\b", clause):
+            if re.search(r"\b(?:" + _TRANSACTION_NOUN
+                         + r"|reclamo|reclamacion|reclamacao|contestacao|caso)\b", clause):
+                return True
+    return False
+
+
+@dataclass(frozen=True)
+class GuardedPreviewRouter:
+    """Live-preview policy around the unchanged, closed-set learned model.
+
+    Deterministic explicit requests take precedence; generic character overlap
+    cannot establish a complaint or a request for a person. Indirect, in-scope
+    inquiry/unsupported wording still uses the learned classifier. This policy
+    was built from development behavior, not selected by final benchmark scores.
+    Model scores remain uncalibrated, and no score threshold is introduced.
+    """
+    model: CharacterNgramRouter
+
+    @property
+    def training_hash(self):
+        return self.model.training_hash
+
+    @property
+    def training_row_count(self):
+        return self.model.training_row_count
+
+    @property
+    def vocabulary_size(self):
+        return self.model.vocabulary_size
+
+    @property
+    def class_counts(self):
+        return self.model.class_counts
+
+    @property
+    def language_counts(self):
+        return self.model.language_counts
+
+    def route_intent(self, text: str, language: str) -> IntentProposal:
+        normalized = _request(text, language)
+        abstain = IntentProposal("unsupported", 0.0, False)
+        if _AFFIRMATION.search(normalized) or is_greeting(text, language):
+            return abstain
+        baseline = route_intent(text, language)
+        if baseline.intent == "unsupported" and baseline.matched:
+            return baseline
+        if is_explicit_human_request(text, language):
+            return IntentProposal("human_request", 1.0, True)
+        if _positive_dispute_request(normalized, language):
+            return IntentProposal("dispute_intake", 1.0, True)
+        if re.search(r"\b(?:no|nao)\s+(?:(?:quiero|quero|necesito|preciso|deseo|desejo)\s+)?"
+                     r"(?:ver|consultar|buscar|disputar|contestar|reclamar|abrir|crear|criar|"
+                     r"reportar|hablar|falar)\b", normalized):
+            return abstain
+        if (is_explicit_inquiry(text, language) or is_search_followup(text, language)
+                or _positive_read_request(normalized)):
+            return IntentProposal("inquiry", 1.0, True)
+        if not _BUSINESS_CONTEXT.search(normalized):
+            return abstain
+        proposal = self.model.route_intent(text, language)
+        if proposal.intent in ("dispute_intake", "human_request"):
+            return abstain
+        return proposal
 
 
 def train_router(training_rows: Sequence[Mapping]) -> CharacterNgramRouter:

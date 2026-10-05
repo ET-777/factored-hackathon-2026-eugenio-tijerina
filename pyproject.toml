@@ -16,4 +16,4 @@ routing-experiment = ["scikit-learn==1.8.0", "numpy==2.2.6", "scipy==1.16.3"]
 packages = ["bank_service"]
 
 [tool.setuptools.package-data]
-bank_service = ["web/*.html", "web/*.css", "web/*.js"]
+bank_service = ["web/*.html", "web/*.css", "web/*.js", "resources/*.json"]

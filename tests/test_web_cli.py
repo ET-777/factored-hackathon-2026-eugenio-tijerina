@@ -127,7 +127,8 @@ class LearnedWebCliTests(unittest.TestCase):
         fit.assert_called_once_with()
         short_fit.assert_not_called()
         serve.assert_called_once_with(8767, router=router)
-        self.assertIn("authored draft training; language review pending", output.getvalue())
+        self.assertIn("guarded serving policy", output.getvalue())
+        self.assertIn("Spanish owner-reviewed; Portuguese accepted without fluent review", output.getvalue())
         self.assertIn("router v1:", output.getvalue())
 
     def test_explicit_v2_preview_uses_only_candidate_loader_and_discloses_version(self):
@@ -145,7 +146,8 @@ class LearnedWebCliTests(unittest.TestCase):
         short_fit.assert_called_once_with()
         serve.assert_called_once_with(8768, router=router)
         self.assertIn("v2 short-message candidate", output.getvalue())
-        self.assertIn("authored draft training; language review pending", output.getvalue())
+        self.assertIn("guarded serving policy", output.getvalue())
+        self.assertIn("Spanish owner-reviewed; Portuguese accepted without fluent review", output.getvalue())
 
     def test_v2_private_preview_passes_router_and_explicit_private_config(self):
         router = object()

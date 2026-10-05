@@ -1,7 +1,8 @@
 """Exact transaction references for the server-owned, bounded record snapshot.
 
-Recognition is not authorization. The caller must still use get_transaction or
-Conversation.inquire. Native identity spelling, ownership and records are never
+Repository-derived recognition must receive only authorized identifiers. It is
+not authorization: callers must still use get_transaction or Conversation.inquire.
+Native identity spelling, ownership and records are never
 rewritten. This helper supplies no facts or permissions to a learned model.
 """
 from dataclasses import dataclass, replace
@@ -57,9 +58,10 @@ def parse_transaction_reference(text, language, record_ids):
     """Find bounded ASCII references, rejecting ambiguity before navigation.
 
     Balanced outer quotes are a typing convention. They can also be literal
-    source characters: resolve a unique core to its exact stored key, and reject
-    collisions. Unknown references remain unknown and reach the normal generic
-    access denial. Native IDs are case exact; only legacy DEMO-TX compatibility
+    source characters: resolve a unique authorized core to its exact stored key,
+    and reject collisions within the supplied authorized scope. Independently
+    recognized unknown references reach the normal generic access denial.
+    Native IDs are case exact; only legacy DEMO-TX compatibility
     uses the existing uppercase convention.
     """
     _checked_text(text, language)

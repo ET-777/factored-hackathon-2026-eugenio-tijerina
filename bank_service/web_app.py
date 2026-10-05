@@ -46,7 +46,7 @@ from bank_service.transaction_references import extract_record_slots, parse_tran
 
 MAX_BODY_BYTES = 16 * 1024
 MAX_SESSIONS = 20
-MAX_MINTED_SESSIONS = 100
+MAX_SESSION_MINTS_PER_MINUTE = 100
 MAX_MESSAGES = 40
 MAX_REQUESTS_PER_MINUTE = 60
 COOKIE_NAME = "factored_demo"
@@ -235,9 +235,19 @@ def _browser_receipt_text(receipt: VerifiedReceipt) -> str:
     return TEXT[receipt.language]["receipt_verified"] + json.dumps(receipt.case_id, ensure_ascii=False)
 
 
+def _valid_unicode(value: str) -> None:
+    # JSON escape syntax can represent isolated UTF-16 surrogates. They are
+    # not Unicode scalar values and cannot appear in our UTF-8 response body.
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError:
+        raise UiError("invalid_input") from None
+
+
 def _text(value: object, *, required: bool = True) -> str:
     if not isinstance(value, str) or len(value) > 1000 or (required and not value.strip()):
         raise UiError("invalid_input")
+    _valid_unicode(value)
     return value.strip()
 
 
@@ -396,6 +406,7 @@ class BrowserSession:
             self.store.close()
 
     def append(self, role: str, text: str, status: str) -> None:
+        _valid_unicode(text)
         self.messages.append({"role": role, "text": text, "status": status})
         self.messages = self.messages[-MAX_MESSAGES:]
 
@@ -601,6 +612,11 @@ class BrowserSession:
         return (issue if len(issue) <= 300 else issue[:297] + "...",)
 
     def prepare(self, kind: str, request: str, now: datetime, questions: tuple[str, ...] | None = None) -> None:
+        request = _text(request)
+        if questions is not None:
+            if not isinstance(questions, tuple) or len(questions) > 10:
+                raise UiError("invalid_input")
+            questions = tuple(_text(question) for question in questions)
         reason = "unsupported_request" if request == self.handoff_request else "human_requested"
         if kind == "handoff" and self.handoff_offer is not None:
             # Also preserve the older explicit preparation port: it must match
@@ -721,19 +737,32 @@ class BrowserSession:
         self.prepare("handoff", purpose, now, questions=())
         return True
 
+    def reference_ids(self, now: datetime) -> tuple[str, ...]:
+        """Only authorized stored keys may influence recognition or aliases."""
+        self.authorize(now)
+        identifiers = []
+        for identifier in self.records:
+            try:
+                get_transaction(self.session, identifier, records=self.records, now=now)
+            except AccessDenied:
+                continue
+            identifiers.append(identifier)
+        return tuple(identifiers)
+
     def reference_followup(self, text: str, now: datetime) -> bool:
         try:
-            reference = parse_transaction_reference(text, self.language, self.records)
+            reference = parse_transaction_reference(text, self.language, self.reference_ids(now))
         except (RoutingError, AccessDenied):
             self.clear_record_selection(now)
             raise
         return reference.slot_only or is_search_followup(reference.masked_text, self.language)
 
     def request_slots(self, text: str, now: datetime):
-        return extract_record_slots(text, self.language, self.records,
+        return extract_record_slots(text, self.language, self.reference_ids(now),
                                     reference_date=_request_reference_date(now))
 
     def message(self, text: str, now: datetime) -> None:
+        text = _text(text)
         self.append("user", text, "request")
         if self.pending_draft is not None:
             self.append("assistant", TEXT[self.language]["confirm_button"], "confirmation_required")
@@ -830,6 +859,9 @@ class BrowserSession:
             if not proposal.matched and self.pending_search is not None:
                 self.append("assistant", TEXT[self.language]["followup"], "needs_filters")
                 return
+            if not proposal.matched:
+                self.append("assistant", TEXT[self.language]["request_scope"], "needs_request")
+                return
             self.clear_search()
             self.clear_record_selection(now)
             self.business_issue = text
@@ -898,6 +930,15 @@ class BrowserSession:
             self.clear_search()
 
     def act(self, payload: dict, now: datetime) -> None:
+        # Validate strings before counters, selection, offers or drafts can be
+        # changed, including callers that bypass the HTTP JSON decoder.
+        for value in payload.values():
+            if isinstance(value, str):
+                _valid_unicode(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, str):
+                        _valid_unicode(item)
         self.authorize(now)
         self.rate_limit()
         action = payload["action"]
@@ -1004,7 +1045,9 @@ class DemoServer(ThreadingHTTPServer):
         self._router = router
         self._sessions: dict[str, BrowserSession] = {}
         self._session_lock = RLock()
-        self._minted_sessions = 0
+        self._mint_times: deque[float] = deque()
+        self._closed = False
+        self._pending_cleanup: tuple[str, BrowserSession | None] | None = None
         self._temporary = TemporaryDirectory(prefix="factored-ui-")
         try:
             super().__init__(("127.0.0.1", port), DemoHandler)
@@ -1016,14 +1059,122 @@ class DemoServer(ThreadingHTTPServer):
 
     def mint_session(self) -> tuple[str, BrowserSession]:
         with self._session_lock:
-            if len(self._sessions) >= MAX_SESSIONS or self._minted_sessions >= MAX_MINTED_SESSIONS:
+            if self._closed:
+                raise UiError("server_unavailable", 503)
+            self._finish_pending_cleanup()
+            self._reclaim_expired(_now())
+            if len(self._sessions) >= MAX_SESSIONS:
                 raise UiError("session_capacity", 503)
-            token = secrets.token_urlsafe(32)
+            self._check_mint_rate()
+            return self._mint_unchecked()
+
+    def _check_mint_rate(self) -> None:
+        current = time.monotonic()
+        while self._mint_times and self._mint_times[0] <= current - 60:
+            self._mint_times.popleft()
+        if len(self._mint_times) >= MAX_SESSION_MINTS_PER_MINUTE:
+            raise UiError("rate_limited", 429)
+
+    def _mint_unchecked(self) -> tuple[str, BrowserSession]:
+        token, session = self._construct_session()
+        return self._register_session(token, session)
+
+    def _construct_session(self) -> tuple[str, BrowserSession]:
+        token = secrets.token_urlsafe(32)
+        try:
             session = BrowserSession(Path(self._temporary.name) / f"{token}.sqlite3", config=self._config,
                                      router=self._router)
-            self._sessions[token] = session
-            self._minted_sessions += 1
-            return token, session
+        except Exception:
+            # Construction has not replaced or exposed any existing session.
+            # Track at most one failed path if OS cleanup cannot finish yet.
+            self._pending_cleanup = (token, None)
+            self._finish_pending_cleanup()
+            raise
+        return token, session
+
+    def _register_session(self, token: str, session: BrowserSession) -> tuple[str, BrowserSession]:
+        self._sessions[token] = session
+        self._mint_times.append(time.monotonic())
+        return token, session
+
+    def _remove_session_files(self, token: str) -> None:
+        database = Path(self._temporary.name) / f"{token}.sqlite3"
+        try:
+            for suffix in ("", "-journal", "-wal", "-shm"):
+                Path(str(database) + suffix).unlink(missing_ok=True)
+        except OSError:
+            raise UiError("session_cleanup_failed", 503) from None
+
+    def _dispose_session(self, token: str, session: BrowserSession) -> None:
+        """Close before removing only this server-owned session's local files."""
+        session.close()
+        self._remove_session_files(token)
+
+    def _finish_pending_cleanup(self) -> None:
+        # A replacement is never published until its old store is disposed.
+        # If rollback cleanup failed, no next admission can allocate another
+        # orphan; at most one extra unpublished path/session remains tracked.
+        if self._pending_cleanup is not None:
+            token, session = self._pending_cleanup
+            if session is None:
+                self._remove_session_files(token)
+            else:
+                self._dispose_session(token, session)
+            self._pending_cleanup = None
+
+    def _reclaim_expired(self, now: datetime, *, excluding: str | None = None) -> None:
+        # The registry lock is held by the caller. Never wait for a session:
+        # an in-flight reset holds that lock and then needs the registry lock.
+        for token, session in tuple(self._sessions.items()):
+            if token == excluding or (not session.retired and now < session.session.expires_at):
+                continue
+            if not session.lock.acquire(blocking=False):
+                continue
+            try:
+                try:
+                    self._dispose_session(token, session)
+                except (StoreError, UiError):
+                    # Failed cleanup remains counted and can be retried; it
+                    # cannot accumulate unbounded stores outside the live cap.
+                    continue
+                self._sessions.pop(token, None)
+            finally:
+                session.lock.release()
+
+    def replace_session(self, token: str) -> tuple[str, BrowserSession]:
+        """Explicit reset preserves old state if mint rate admission fails."""
+        with self._session_lock:
+            if self._closed:
+                raise UiError("server_unavailable", 503)
+            session = self._sessions.get(token)
+            if session is None:
+                raise UiError("session_required", 401)
+            # HTTP reset already holds this exact RLock. Other direct callers
+            # must not wait under the registry lock for an active action.
+            if not session.lock.acquire(blocking=False):
+                raise UiError("session_busy", 409)
+            try:
+                # An active confirmed-but-unverified action must retain its
+                # exact idempotency key/store until readback is reconciled.
+                # Expiry still ends authority and follows disposal policy.
+                if session.outcome_unverified and not session.retired and _now() < session.session.expires_at:
+                    raise UiError("action_not_verified", 409)
+                self._finish_pending_cleanup()
+                self._reclaim_expired(_now(), excluding=token)
+                self._check_mint_rate()
+                # Only one unpublished replacement can exist under the
+                # registry lock. Startup failure preserves the old session.
+                fresh_token, fresh_session = self._construct_session()
+                try:
+                    self._dispose_session(token, session)
+                except (StoreError, UiError):
+                    self._pending_cleanup = (fresh_token, fresh_session)
+                    self._finish_pending_cleanup()
+                    raise
+                self._sessions.pop(token, None)
+                return self._register_session(fresh_token, fresh_session)
+            finally:
+                session.lock.release()
 
     def get_session(self, token: str | None) -> BrowserSession | None:
         with self._session_lock:
@@ -1031,16 +1182,32 @@ class DemoServer(ThreadingHTTPServer):
 
     def retire_session(self, token: str) -> None:
         with self._session_lock:
-            session = self._sessions.pop(token, None)
+            session = self._sessions.get(token)
         if session is not None:
-            session.close()
+            # Waiting/closing happens outside the registry lock. Keep the
+            # entry counted until cleanup succeeds, even on an OS failure.
+            with session.lock:
+                self._dispose_session(token, session)
+            with self._session_lock:
+                if self._sessions.get(token) is session:
+                    self._sessions.pop(token, None)
 
     def server_close(self) -> None:
         super().server_close()
         with self._session_lock:
-            for session in self._sessions.values():
-                session.close()
+            self._closed = True
+            sessions = tuple(self._sessions.items())
             self._sessions.clear()
+            pending_cleanup = self._pending_cleanup
+            self._pending_cleanup = None
+        for token, session in sessions:
+            self._dispose_session(token, session)
+        if pending_cleanup is not None:
+            token, session = pending_cleanup
+            if session is None:
+                self._remove_session_files(token)
+            else:
+                self._dispose_session(token, session)
         self._temporary.cleanup()
 
 
@@ -1117,7 +1284,7 @@ class DemoHandler(BaseHTTPRequestHandler):
             label = code
         elif code in ("csrf_rejected", "invalid_origin", "invalid_host", "session_required"):
             label = "security"
-        elif code in ("rate_limited", "session_capacity"):
+        elif code in ("rate_limited", "session_capacity", "session_busy"):
             label = "busy"
         state = {"language": language}
         if session is not None:
@@ -1208,8 +1375,7 @@ class DemoHandler(BaseHTTPRequestHandler):
                     # Reset mints fresh state with the same startup mode/customer;
                     # expiry never silently extends the old session's authority.
                     session.rate_limit()
-                    self.server.retire_session(token)
-                    token, session = self.server.mint_session()
+                    token, session = self.server.replace_session(token)
                     self._json(200, session.state(_now()), token)
                     return
                 session.act(payload, _now())

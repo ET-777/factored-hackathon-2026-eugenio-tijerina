@@ -43,8 +43,8 @@ def main() -> None:
                 print("Learned preview startup refused.", file=sys.stderr)
                 raise SystemExit(1) from None
             version = "v2 short-message candidate" if args.router == "learned-preview-v2" else "v1"
-            print(f"Experimental local router {version}: authored draft training; "
-                  "language review pending.", flush=True)
+            print(f"Experimental local router {version}: guarded serving policy; "
+                  "Spanish owner-reviewed; Portuguese accepted without fluent review.", flush=True)
         if args.cohort_run is None:
             if args.customer_id is not None or args.permission is not None:
                 parser.error("--customer-id and --permission require --cohort-run")
@@ -84,10 +84,13 @@ def main() -> None:
         "languages": ["es", "pt"],
         "banking_actions": "simulated_only",
         "model_implemented": True,
-        "learned_component_stage": "experimental_train_only_preview_not_evaluated",
+        "learned_component_stage": "guarded_post_final_preview_not_final_evaluated",
         "input_mode": "keyword_default_or_learned_preview_and_explicit_confirmation",
         "workflow_implemented": True,
-        "evaluation_run": False,
+        "evaluation_run": True,
+        "frozen_evaluation_status": "completed_not_qualified",
+        "current_policy_final_evaluation_run": False,
+        "language_review": {"es": "owner_approved", "pt": "owner_accepted_without_fluent_review"},
         "web_interface": "local_loopback_demo",
         "web_command": "python -B -m bank_service web",
         "demo_command": "python -B -m bank_service demo --language es",

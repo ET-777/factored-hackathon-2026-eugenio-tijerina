@@ -4,10 +4,10 @@ from collections import Counter
 import json
 from pathlib import Path
 
-from bank_service.learned_routing import INTENTS, LANGUAGES, train_router
+from bank_service.learned_routing import GuardedPreviewRouter, INTENTS, LANGUAGES, train_router
 
 
-TRAINING_PATH = Path(__file__).resolve().parents[1] / "evaluation" / "routing_train.json"
+TRAINING_PATH = Path(__file__).resolve().parent / "resources" / "routing_train.json"
 SHORT_TRAINING_PATH = TRAINING_PATH.with_name("routing_train_short_v2.json")
 MAX_TRAINING_BYTES = 256 * 1024
 
@@ -52,7 +52,7 @@ def _read_training(path):
 def load_preview_router():
     """The original v1 preview accepts no caller-supplied path or evaluation data."""
     try:
-        return train_router(_read_training(TRAINING_PATH))
+        return GuardedPreviewRouter(train_router(_read_training(TRAINING_PATH)))
     except (ValueError, TypeError, RuntimeError):
         raise ValueError("invalid_training_artifact") from None
 
@@ -92,6 +92,6 @@ def load_short_preview_router():
                             for language in LANGUAGES for intent in INTENTS})
         if not set(originals).issubset(seen) or additions != expected:
             raise invalid
-        return train_router(candidate)
+        return GuardedPreviewRouter(train_router(candidate))
     except (OSError, UnicodeError, ValueError, TypeError, RuntimeError):
         raise invalid from None

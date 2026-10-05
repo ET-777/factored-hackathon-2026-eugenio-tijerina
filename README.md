@@ -15,14 +15,14 @@ the default fictional demo records are USD-only. An optional local private-cohor
 mode serves an existing validated source snapshot with a fixed startup test identity.
 The offline character n-gram classifier has an experimental local preview. Its authored
 96-message training and 32-message development drafts have owner-approved Spanish
-wording/labels; Portuguese human review remains pending. The first frozen,
+wording/labels; Portuguese has no fluent-human validation. The first frozen,
 source-backed development comparison is complete: Spanish correct routes improved
 from 6/16 to 15/16 and mechanical workflow completion from 8/16 to 12/16.
 See [development results](docs/development_results.md) for failures and limits.
 An October 4 [short-message development check](docs/short_message_results.md)
 adds a separately versioned 144-message candidate, retaining the original 96
 and adding 48 concise requests. The owner approved the new Spanish wording/labels
-after these diagnostics; fluent Portuguese review remains pending;
+after these diagnostics; Portuguese has no fluent-human validation;
 the historical comparison and sealed final set are preserved.
 The bounded [October 4 alternative-model comparison](docs/linear_routing_results.md)
 uses TRAIN-only grouped cross-validation. Naive Bayes v2 retained 102/144 correct
@@ -55,8 +55,12 @@ resolves exact stored IDs through existing authorization checks. It passes
 677 regression tests, 100 read-only cohort lookup journeys and 32 invented
 journeys that actually reach all eight safety conditions. These are post-final
 engineering checks; the frozen scores and failures remain unchanged.
-Actual final Spanish output review, fluent Portuguese review and deployment
-remain pending. Authored cases do not establish production performance.
+The subsequent [audit repairs](docs/post_audit_repairs.md) guard learned routing,
+hide foreign identifier membership, reject malformed Unicode, recover expired
+session capacity and package the authored TRAIN resources for installed previews.
+The owner approved the existing Spanish review material and actual final outputs.
+Portuguese is accepted by owner assumption without fluent-human validation;
+deployment remains pending. Authored cases do not establish production performance.
 
 Organizer guidance reviewed October 1 requires English submission deliverables and
 Spanish/Portuguese customer interactions. In an October 2 owner-provided Slack screenshot,
@@ -65,7 +69,7 @@ and separately labeled simulated safety/tool-failure scenarios: "Yes just make s
 to justify it". Record their purpose, provenance and limits; this does not approve
 redistributing source data or every pre-existing fictional-record workload.
 Draft families and labels are documented. Spanish wording/labels were approved on
-October 3; Portuguese human review remains pending. The first development protocol
+October 3; Portuguese is now owner-accepted without fluent review. The first development protocol
 was frozen before scoring; the [separate final protocol](docs/final_workflow_protocol.md)
 and its one-attempt results are preserved. Keep the earlier fictional-record
 final cases sealed. See
@@ -106,6 +110,8 @@ Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
   failed qualification targets and scenario-coverage limits.
 - [Post-final native-reference repair](docs/post_final_lookup_repair.md): current
   lookup behavior, reached synthetic safety paths and preserved frozen evidence.
+- [Audit repairs and current review decisions](docs/post_audit_repairs.md): guarded
+  preview behavior, privacy/encoding/session fixes and installed-package verification.
 - [Deferred diagnostic scenario adapter](docs/evaluation_adapter.md): preserve the
   independent constructed schema without weakening source validation.
 

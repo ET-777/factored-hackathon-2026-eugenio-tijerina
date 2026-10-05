@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "status": "post_final_engineering_repairs_verified",
+  "keyword_remains_default": true,
+  "guarded_previews": ["v1", "v2"],
+  "raw_model_and_alpha_unchanged": true,
+  "new_final_scoring_performed": false,
+  "verification": {
+    "complete_regression_tests": 724,
+    "new_invented_regression_tests": 47,
+    "complete_regression_result": "pass",
+    "independent_privacy_review": {
+      "concrete_remaining_bypass_found": false,
+      "foreign_present_absent_paired_probes": 672,
+      "owned_alias_probes": 48,
+      "authority_probes": 12,
+      "provenance": "invented_records_and_disposable_stores"
+    },
+    "isolated_wheel": {
+      "build_result": "pass_after_portuguese_selection_alias_repair",
+      "first_failure_evidence_retained": true,
+      "dependency_downloads": false,
+      "repository_build_outputs_written": false,
+      "extracted_wheel_import_only": true,
+      "child_flags": ["-I", "-B"],
+      "authored_train_resource_hashes_match": true,
+      "training_rows": {"v1": 96, "v2": 144},
+      "fictional_http_journeys_passed": 4,
+      "coverage": "v1/v2 x ES/PT; inquiry, ambiguity, selection, grounded answer, complaint, separate preparation/final consent, verified receipt, duplicate reuse, no unsolicited draft",
+      "tested_runtime_wheel_sha256": "8e8c8cf49e4203b99fd4bbc23eb19b8aedfbf9843909601aaae6ecb280ce28ba"
+    },
+    "working_tree_privacy": {
+      "result": "pass",
+      "violations": 0,
+      "exclusion_probes_passed": 8,
+      "exclusion_probes_total": 8,
+      "dictionary_credential_values_read": false,
+      "git_history_scanned": false
+    }
+  },
+  "preservation": {
+    "protected_artifacts_unchanged": 114,
+    "archived_frozen_files_byte_verified": 90,
+    "original_final_scores_changed": false,
+    "final_semantic_contents_decoded": false,
+    "owner_readiness_file_changed": false,
+    "packaged_train_bytes_equal_originals": true,
+    "raw_model_definition_parity": true,
+    "frozen_freeze_sha256": "004ef91d2eb577d33f535e3aa25ded4d202b65e1a664ee62259503c9a6f46c05"
+  },
+  "session_policy": {
+    "registered_session_limit": 20,
+    "successful_mints_per_rolling_minute": 100,
+    "unpublished_replacement_store_limit": 1,
+    "busy_expired_session_closed_during_action": false,
+    "active_unknown_write_blocks_reset": true,
+    "reset_constructor_failure_preserves_old_state": true,
+    "retention": "Session-specific SQLite files are removed at safe expiry reclamation, explicit reset/retirement or shutdown."
+  },
+  "review_decisions": "evidence/post_audit_review_decisions_v1.json",
+  "limits": [
+    "Repaired serving policy is not qualified by a new untouched final evaluation.",
+    "Portuguese is owner-accepted without fluent-human validation.",
+    "Disclosure oracle checks known literals, not complete semantic privacy; false positives and shared-name blind spots remain possible.",
+    "Local prototype limits and timing do not establish deployed capacity or end-to-end latency.",
+    "No paid model calls, deployment or repository publication occurred."
+  ]
+}

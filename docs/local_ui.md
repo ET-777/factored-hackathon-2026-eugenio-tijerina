@@ -5,7 +5,9 @@ transaction selection, exact proposal review, explicit confirmation, verified
 receipts and readable human-handoff packets. Its default mode uses independently authored
 fictional demo records. An optional [private-cohort mode](private_cohort_ui.md) uses an
 existing bounded source snapshot with a fixed trusted startup identity. Neither mode
-loads an evaluation split or invokes a model.
+loads an evaluation split. The default uses keyword routing; optional guarded
+offline learned previews and their installed-package checks are described in
+[audit repairs](post_audit_repairs.md).
 
 ## Run and review
 
@@ -38,8 +40,8 @@ Ctrl+C. No extra UI dependency, provider account or model call is required.
    return the same generic denial as missing references.
 
 The owner can now review the experience and handoff presentation on the working UI.
-Portuguese wording still needs independent fluent review; functional tests are not
-a linguistic quality assessment.
+The owner approved Spanish and elected to accept Portuguese without fluent review;
+functional tests do not establish Portuguese linguistic quality.
 
 Private mode keeps the same simulated-action journey and changes the record source
 and data captions. The source path, customer and permissions are configured before
@@ -94,7 +96,8 @@ required before development scoring. The existing final set stays sealed.
   matches another browser. Session lifetime is 20 minutes; proposals last five minutes.
 - Reset starts a fresh Spanish session in the configured data mode and retires the old session. It clears access
   to prior tickets and drafts. No production login or durable draft recovery is claimed.
-  Database files are temporary and removed when the server closes normally.
+  Database files are temporary and removed on expiry reclamation, reset or normal
+  shutdown. Active unverified writes block reset until same-key reconciliation.
 - Confirmation retries reconcile the same draft, never an automatic new write. A
   committed write with failed verification shows an unverified outcome, retains the
   reference and allows reconciliation after proposal expiry while the session is
@@ -102,7 +105,9 @@ required before development scoring. The existing final set stays sealed.
 - Host, Origin, CSRF, strict bounded JSON and exact action-field checks guard requests.
   Turns are serialized per session. Limits are 16 KiB/request, 1,000 characters/text,
   60 actions/minute/session, 40 retained chat messages, 20 active sessions and 100
-  sessions minted per server run. These are prototype bounds, not capacity qualification.
+  successful session mints per rolling minute. Expired idle sessions release capacity;
+  busy sessions are preserved until safe reclamation. These are prototype bounds,
+  not capacity qualification.
 - Static assets are local with a restrictive content policy. Record names, user text
   and packets are inserted as text. No prompts, cookies or request bodies are logged.
 
