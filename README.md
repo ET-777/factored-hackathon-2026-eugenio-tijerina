@@ -32,6 +32,9 @@ from the earlier short-message diagnostics and are not final performance.
 The subsequent [two-setting XGBoost trial](docs/xgboost_routing_results.md)
 also retained v2: the best shallow tree configuration reached 51/144 correct
 on the same grouped folds. No challenger was connected to the application.
+The [fixed naive Bayes smoothing check](docs/smoothing_routing_results.md)
+reached 106/144 at alpha 0.1, but its macro-F1 gain of 0.035 missed the declared
+0.05 requirement; v2 retains alpha 1. All three settings are reported separately.
 Subsequent [shared workflow fixes](docs/post_development_fixes.md) add consented
 human review for ineligible disputes, requested channel-limit explanations and
 explicit previous-case continuation handling. Complete plain read/search requests

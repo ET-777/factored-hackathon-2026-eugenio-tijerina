@@ -49,6 +49,9 @@ v2 selector, default router and earlier evidence remain unchanged.
 The subsequent [bounded XGBoost comparison](xgboost_routing_results.md) also
 retained v2. Both shallow tree settings regressed on the same TRAIN folds;
 their separate experimental module and pinned dependencies have no UI selector.
+The [fixed smoothing-only comparison](smoothing_routing_results.md) reports a
+modest gain at alpha 0.1, below the predeclared F1 improvement requirement.
+V2 retains alpha 1; the separate standard-library adapter has no UI selector.
 
 The October 4 [short-message increment](short_message_results.md) adds a separate
 `--router learned-preview-v2` selector and fixed
