@@ -5,7 +5,7 @@ from decimal import Decimal
 import unittest
 
 from bank_service.routing import (
-    IntentProposal, RoutingError, extract_slots, is_search_followup,
+    IntentProposal, RoutingError, extract_slots, is_greeting, is_search_followup,
     refers_to_selected_transaction, route_intent,
 )
 from bank_service.records import SUPPORTED_CURRENCIES
@@ -13,6 +13,50 @@ from bank_service.selection import TransactionFilters
 
 
 class IntentRoutingTests(unittest.TestCase):
+    def test_pure_greetings_do_not_include_business_requests_or_consent(self):
+        for text, language in (("¡Hola!", "es"), ("Buenos días", "es"),
+                               ("Olá!", "pt"), ("Oi", "pt"), ("Boa tarde", "pt")):
+            with self.subTest(text=text):
+                self.assertTrue(is_greeting(text, language))
+        for text, language in (("Hola, no reconozco esta compra", "es"),
+                               ("Oi, quero falar com uma pessoa", "pt"),
+                               ("sí", "es"), ("sim", "pt"), ("25 USD", "es")):
+            with self.subTest(text=text):
+                self.assertFalse(is_greeting(text, language))
+
+    def test_malformed_date_fragments_remain_slots_and_require_valid_calendar_dates(self):
+        for language in ("es", "pt"):
+            for text in ("20226-17-05", "2026-17-05", "2026-6-16", "2026-02-30"):
+                with self.subTest(text=text, language=language):
+                    self.assertTrue(is_search_followup(text, language))
+                    with self.assertRaisesRegex(RoutingError, "^invalid_date$"):
+                        extract_slots(text, language)
+
+    def test_card_date_and_natural_date_replies_are_valid_inquiry_slots(self):
+        for text, language in (("16/06/2026", "es"), ("16-06-2026", "pt"),
+                               ("16 de junio del 2026", "es"), ("junho 16, 2026", "pt")):
+            with self.subTest(text=text):
+                self.assertTrue(is_search_followup(text, language))
+                self.assertEqual(route_intent(text, language), IntentProposal("inquiry", 1.0, True))
+                slots = extract_slots(text + " USD", language)
+                self.assertEqual(slots.filters, TransactionFilters(date(2026, 6, 16), currency="USD"))
+                self.assertIsNone(slots.amount_without_currency)
+                self.assertFalse(slots.assumed_date_year)
+
+    def test_combined_date_and_money_remain_details_without_overriding_business_requests(self):
+        for text, language in (("16 de junio 2026 USD", "es"), ("16/06/2026, USD", "es"),
+                               ("25.50 USD el 16 de junio 2026", "es"),
+                               ("16 de junho de 2026 por 25,50 USD", "pt"),
+                               ("USD em 16-06-2026", "pt"), ("fecha: 16/06/2026 USD", "es")):
+            with self.subTest(text=text):
+                self.assertTrue(is_search_followup(text, language))
+        for text, language in (("No reconozco el cargo del 16 de junio 2026 USD", "es"),
+                               ("Quero falar com uma pessoa em 16/06/2026", "pt"),
+                               ("quiero comer el 16 de junio 2026", "es"),
+                               ("Buscar otra compra de 25 USD el 16/06/2026", "es")):
+            with self.subTest(text=text):
+                self.assertFalse(is_search_followup(text, language))
+
     def test_bilingual_inquiry_and_normalization(self):
         cases = (
             ("¿Cuál es el estado de esta transacción?", "es"),
@@ -334,6 +378,51 @@ class SlotExtractionTests(unittest.TestCase):
         for text in ("Enséñame mis pagos", "Buscar otra compra", "Quiero consultar todas las transacciones", "Sí"):
             with self.subTest(text=text):
                 self.assertFalse(refers_to_selected_transaction(text, "es"))
+
+    def test_operation_movement_and_contracted_references_are_clearly_singular(self):
+        for text, language in (
+            ("¿Cuál es el importe de esta operación?", "es"),
+            ("Dime la fecha de ese movimiento", "es"),
+            ("Quiero revisar la operación seleccionada", "es"),
+            ("¿Qué pasó con el movimiento seleccionado?", "es"),
+            ("Dime el estado del pago elegido", "es"),
+            ("Qual é o valor desta operação?", "pt"),
+            ("Quando ocorreu esse movimento?", "pt"),
+            ("Quero saber o valor desse débito", "pt"),
+            ("Consulte essa movimentação", "pt"),
+            ("Quero detalhes daquele lançamento", "pt"),
+            ("Qual é o status da operação selecionada?", "pt"),
+            ("Mostre o pagamento escolhido", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(refers_to_selected_transaction(text, language))
+
+    def test_plural_broad_and_new_record_queries_are_not_selected_references(self):
+        for text, language in (
+            ("Enséñame mis movimientos", "es"),
+            ("Muéstrame estas operaciones", "es"),
+            ("Quiero ver los movimientos seleccionados", "es"),
+            ("Busca otra operación", "es"),
+            ("Busca una nueva operación como esta compra", "es"),
+            ("Busca otras operaciones como este movimiento", "es"),
+            ("¿Cuál es el importe de una operación?", "es"),
+            ("Mostre meus movimentos", "pt"),
+            ("Quero ver essas operações", "pt"),
+            ("Consulte os movimentos selecionados", "pt"),
+            ("Quero outra operação como essa compra", "pt"),
+            ("Quero outras operações como esse movimento", "pt"),
+            ("Qual é o valor de uma operação?", "pt"),
+            ("Qual é o status da transação?", "pt"),
+        ):
+            with self.subTest(text=text):
+                self.assertFalse(refers_to_selected_transaction(text, language))
+
+    def test_reference_flag_does_not_replace_explicit_id_or_filter_slots(self):
+        text = "Revise esta operação DEMO-TX-002 de 25,50 MXN em 2026-06-17"
+        self.assertTrue(refers_to_selected_transaction(text, "pt"))
+        slots = extract_slots(text, "pt")
+        self.assertEqual(slots.transaction_id, "DEMO-TX-002")
+        self.assertEqual(slots.filters, TransactionFilters(date(2026, 6, 17), Decimal("25.50"), "MXN"))
 
     def test_search_followup_accepts_only_bounded_slot_replies(self):
         for text, language in (

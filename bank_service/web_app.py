@@ -1,41 +1,54 @@
-"""Loopback-only demo UI with server-owned sessions and guarded workflow calls.
+"""Review UI with server-owned sessions and guarded workflow calls.
 
-All records are independently authored demo fixtures. No source cohort, evaluator,
-model, credential or network provider is loaded. This local HTTP server is a review
-tool; production hosting/authentication are a separate deployment task.
+The default mode uses authored demo fixtures. An explicit trusted startup config
+may supply an already validated, bounded private cohort and fixed customer. The
+browser cannot choose the data source, identity or permissions. All actions remain
+simulations. Public hosting is an explicit fictional-data mode behind trusted
+HTTPS termination; the fixed demo identity is not production authentication.
 """
 
 from collections import deque
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from http.cookies import SimpleCookie, CookieError
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import math
 from pathlib import Path
+import re
 import secrets
 from tempfile import TemporaryDirectory
 from threading import RLock
 import time
+from types import MappingProxyType
 import unicodedata
 from urllib.parse import urlsplit
+from zoneinfo import ZoneInfo
 
-from bank_service.access import AccessDenied, Permission, require_access
-from bank_service.actions import ActionDraft, ActionError, ActionService
+from bank_service.access import AccessDenied, Permission, TrustedSession, require_access
+from bank_service.actions import ActionDraft, ActionError, ActionService, VerifiedReceipt
 from bank_service.case_store import CaseStore, StoreError
 from bank_service.conversation import Conversation, ConversationError, ConversationReply
-from bank_service.demo_fixtures import demo_records, demo_session
-from bank_service.responses import ResponseFormatError
+from bank_service.demo_fixtures import DEMO_CUSTOMER, demo_records, demo_session
+from bank_service.hosting import HostingConfig
+from bank_service.records import TransactionRecord
+from bank_service.responses import ResponseFormatError, TransactionAnswer, with_requested_record_limits
 from bank_service.routing import (
-    RoutingError, extract_slots, is_search_followup, refers_to_selected_transaction, route_intent,
+    IntentProposal, RoutingError, declines_handoff_preparation, human_request_purpose,
+    is_case_continuation, is_explicit_human_request,
+    is_explicit_inquiry, is_greeting,
+    is_search_followup, refers_to_selected_transaction, route_intent,
 )
-from bank_service.selection import SelectionError, TransactionFilters
-from bank_service.transactions import SourcedTransaction, get_transaction
+from bank_service.selection import MAX_SEARCH_RECORDS, SelectionError, TransactionFilters
+from bank_service.transactions import SourceReference, SourcedTransaction, get_transaction
+from bank_service.transaction_references import extract_record_slots, parse_transaction_reference
 
 
 MAX_BODY_BYTES = 16 * 1024
 MAX_SESSIONS = 20
-MAX_MINTED_SESSIONS = 100
+MAX_SESSION_MINTS_PER_MINUTE = 100
 MAX_MESSAGES = 40
 MAX_REQUESTS_PER_MINUTE = 60
 COOKIE_NAME = "factored_demo"
@@ -46,64 +59,164 @@ ACTION_KEYS = {
     "prepare_intake": {"reason"},
     "dispute_selected": {"transaction_id"},
     "intake_decision": {"offer_id", "prepare"},
+    "handoff_decision": {"offer_id", "prepare"},
     "prepare_handoff": {"request", "unresolved_questions"},
     "confirm": {"draft_id", "confirmed"}, "cancel": {"draft_id"},
     "language": {"language"}, "reset": set(), "view_case": {"case_id"},
 }
 TEXT = {
     "es": {
-        "greeting": "Hola. Puedo ayudarte a encontrar una transacción ficticia, revisar sus datos o abrir una solicitud de revisión. ¿Qué necesitas?",
-        "denied": "No puedo acceder a esa información con esta sesión. Puedes iniciar una nueva sesión de demostración.",
+        "greeting": "Hola. Puedo ayudarte a consultar tus transacciones o preparar una solicitud de revisión. ¿Qué necesitas?",
+        "denied": "No puedo acceder a esa información con esta sesión. Puedes iniciar una nueva sesión.",
         "invalid": "No pude interpretar esos datos. Revisa la fecha, el importe y la moneda, o selecciona una transacción de la lista.",
-        "unsupported": "Esta demostración permite consultar transacciones y abrir solicitudes de revisión. Para esta petición, puedo preparar una derivación a revisión humana si lo deseas.",
+        "unsupported": "Puedo ayudarte a consultar transacciones y abrir solicitudes de revisión. Para esta petición, puedo preparar una derivación a revisión humana si lo deseas.",
+        "unsupported_without_handoff": "No puedo realizar esa operación. Puedo ayudarte a consultar transacciones. Esta sesión no permite preparar una solicitud para revisión humana.",
+        "credential_change_unsupported": "No puedo cambiar el PIN ni otras credenciales y no tengo instrucciones verificadas para hacerlo. No compartas esos datos en el chat.",
+        "scheduled_payment_unsupported": "No puedo programar ni realizar pagos o transferencias.",
+        "request_scope": "Puedo ayudarte a consultar una transacción o solicitar su revisión. ¿Qué necesitas hacer?",
         "confirm_button": "Para aprobar una solicitud, revisa el borrador y usa su botón de confirmación.",
-        "draft": "Preparé la solicitud en el panel lateral. Revisa allí sus detalles y usa «Confirmar y guardar» para enviarla a la cola simulada. Aún no se ha guardado.",
-        "intake_offer": "¿Quieres que prepare una solicitud de revisión de esta transacción? Es un ticket de demostración, no un reembolso. Puedes responder sí o no, o usar los botones.",
+        "draft": "Preparé la solicitud en el panel lateral. Revisa allí sus detalles y usa «Confirmar y guardar» para enviarla a revisión. Aún no se ha guardado.",
+        "intake_offer": "¿Quieres que prepare una solicitud de revisión de esta transacción? Esto no implica aprobar un reembolso. Puedes responder sí o no, o usar los botones.",
         "intake_declined": "De acuerdo. No preparé ni guardé una solicitud. Puedes seguir consultando tus movimientos.",
         "stale_offer": "Esta opción ya no está vigente. Consulta de nuevo la transacción para solicitar una revisión.",
         "selected_dispute": "No reconozco esta compra",
         "selection_changed": "El movimiento seleccionado cambió o ya no está disponible. Revisa el movimiento actual antes de solicitar una revisión.",
-        "intake": "Abrir un ticket de revisión de esta transacción (demostración).",
-        "handoff": "Guardar una solicitud para revisión humana (cola simulada).",
+        "intake": "Abrir una solicitud de revisión de esta transacción.",
+        "handoff": "Guardar una solicitud para revisión humana.",
+        "receipt_verified": "Solicitud guardada y verificada. Referencia: ",
         "unknown": "No pude verificar el resultado de la solicitud. Conservé la misma referencia: vuelve a comprobarla para evitar crear un duplicado.",
         "stale": "Los datos cambiaron o el borrador venció. Revisa de nuevo la transacción y prepara otra solicitud.",
         "request": "Selecciona primero la transacción que quieres revisar.",
         "busy": "Hay demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
         "security": "La sesión de la página no coincide. Recarga la página antes de continuar.",
         "already_saved": "Esta solicitud ya está guardada. Comprueba la misma referencia para recuperar su recibo.",
-        "currency": "Indica el código de moneda: MXN, COP, ARS o USD. «Pesos» y «$» pueden referirse a varias monedas. Los movimientos ficticios de esta demo están en USD.",
-        "unsupported_currency": "Puedo buscar movimientos en MXN, COP, ARS y USD. Esa moneda no está admitida en el prototipo. No convierto importes; indica una de esas monedas o una fecha en formato AAAA-MM-DD.",
-        "dollars": "En esta demo interpreto «dólares» como USD; no hago una conversión de moneda.",
-        "amount": "Indica el importe de la transacción o una fecha en formato AAAA-MM-DD para continuar la búsqueda.",
-        "followup": "Para continuar, indica una fecha en formato AAAA-MM-DD, el importe y su moneda, o elige una coincidencia de la lista.",
+        "currency": "Indica el código de moneda: MXN, COP, ARS o USD. «Pesos» y «$» pueden referirse a varias monedas. No convierto importes.",
+        "unsupported_currency": "Puedo buscar movimientos en MXN, COP, ARS y USD. Esa moneda no está admitida. No convierto importes; indica una de esas monedas o una fecha en formato DD/MM/AAAA.",
+        "dollars": "Interpreto «dólares» como USD; no hago una conversión de moneda.",
+        "amount": "Indica el importe de la transacción o una fecha en formato DD/MM/AAAA, como 03/05/2026, para continuar la búsqueda. También puedes escribir el mes con palabras.",
+        "followup": "Para continuar, indica una fecha en formato DD/MM/AAAA o con el mes escrito, el importe y su moneda, o elige una coincidencia de la lista.",
+        "date_interpreted": "Uso el año actual: {year}. Buscaré la fecha {day}.",
+        "invalid_date": "Revisa la fecha: usa DD/MM/AAAA, como 03/05/2026, o escribe el mes, como «3 de mayo de 2026». También acepto AAAA-MM-DD. Sin año, uso el año actual.",
+        "ambiguous_date": "Indica una sola fecha para buscar. Las fechas numéricas se leen como día/mes/año (DD/MM/AAAA).",
+        "ineligible_intake": "Este movimiento no admite la solicitud de revisión de compras. Puedo preparar un resumen para revisión humana con tu solicitud y los datos del movimiento.",
+        "case_continuation": "No puedo verificar a qué caso anterior te refieres con la información disponible. Puedo preparar un resumen para revisión humana indicando que ese caso anterior no está verificado.",
+        "session_cases": "Puedes consultar los recibos de esta sesión en «Solicitudes guardadas».",
+        "handoff_offer": "¿Quieres que prepare ese resumen para revisión humana? Puedes responder sí o no, o usar los botones. Aún no se ha guardado ninguna solicitud.",
+        "handoff_unavailable": "Esta sesión no permite guardar una solicitud para revisión humana. No se ha preparado ni guardado una solicitud.",
+        "handoff_declined": "De acuerdo. No preparé ni guardé un resumen para revisión humana. Puedes seguir consultando.",
+        "handoff_context": "Claro. ¿Sobre qué necesitas ayuda? Cuéntame brevemente el motivo para incluirlo en la solicitud de atención humana. Puedes escribir «cancelar» si prefieres seguir consultando.",
+        "handoff_context_cancelled": "De acuerdo. No preparé ni guardé una solicitud de atención humana. Puedes seguir consultando.",
+        "stale_handoff_context": "La solicitud de atención humana venció o el movimiento cambió. Pide hablar con una persona de nuevo para continuar.",
     },
     "pt": {
-        "greeting": "Olá. Posso ajudar a encontrar uma transação fictícia, consultar seus dados ou abrir uma solicitação de revisão. Do que você precisa?",
-        "denied": "Não posso acessar essas informações com esta sessão. Você pode iniciar uma nova sessão de demonstração.",
+        "greeting": "Olá. Posso ajudar a consultar suas transações ou preparar uma solicitação de revisão. Do que você precisa?",
+        "denied": "Não posso acessar essas informações com esta sessão. Você pode iniciar uma nova sessão.",
         "invalid": "Não consegui interpretar esses dados. Confira a data, o valor e a moeda, ou selecione uma transação da lista.",
-        "unsupported": "Esta demonstração permite consultar transações e abrir solicitações de revisão. Para este pedido, posso preparar um encaminhamento para revisão humana se você desejar.",
+        "unsupported": "Posso ajudar a consultar transações e abrir solicitações de revisão. Para este pedido, posso preparar um encaminhamento para revisão humana se você desejar.",
+        "unsupported_without_handoff": "Não posso realizar essa operação. Posso ajudar a consultar transações. Esta sessão não permite preparar uma solicitação para revisão humana.",
+        "credential_change_unsupported": "Não posso alterar o PIN nem outras credenciais e não tenho instruções verificadas para fazer isso. Não compartilhe esses dados no chat.",
+        "scheduled_payment_unsupported": "Não posso agendar nem realizar pagamentos ou transferências.",
+        "request_scope": "Posso ajudar a consultar uma transação ou solicitar sua revisão. O que você precisa fazer?",
         "confirm_button": "Para aprovar uma solicitação, revise o rascunho e use o botão de confirmação.",
-        "draft": "Preparei a solicitação no painel lateral. Revise seus detalhes ali e use «Confirmar e salvar» para enviá-la à fila simulada. Ela ainda não foi salva.",
-        "intake_offer": "Você quer que eu prepare uma solicitação de revisão desta transação? É um ticket de demonstração, não um reembolso. Pode responder sim ou não, ou usar os botões.",
+        "draft": "Preparei a solicitação no painel lateral. Revise seus detalhes ali e use «Confirmar e salvar» para enviá-la para revisão. Ela ainda não foi salva.",
+        "intake_offer": "Você quer que eu prepare uma solicitação de revisão desta transação? Isso não significa aprovar um reembolso. Pode responder sim ou não, ou usar os botões.",
         "intake_declined": "Tudo bem. Não preparei nem salvei uma solicitação. Você pode continuar consultando suas transações.",
         "stale_offer": "Esta opção não está mais vigente. Consulte novamente a transação para solicitar uma revisão.",
         "selected_dispute": "Não reconheço esta compra",
         "selection_changed": "A transação selecionada mudou ou não está mais disponível. Confira a transação atual antes de solicitar uma revisão.",
-        "intake": "Abrir um ticket de revisão desta transação (demonstração).",
-        "handoff": "Salvar uma solicitação para revisão humana (fila simulada).",
+        "intake": "Abrir uma solicitação de revisão desta transação.",
+        "handoff": "Salvar uma solicitação para revisão humana.",
+        "receipt_verified": "Solicitação salva e verificada. Referência: ",
         "unknown": "Não consegui verificar o resultado da solicitação. Mantive a mesma referência: verifique-a novamente para evitar criar uma duplicata.",
         "stale": "Os dados mudaram ou o rascunho expirou. Consulte novamente a transação e prepare outra solicitação.",
         "request": "Selecione primeiro a transação que deseja revisar.",
         "busy": "Há muitas solicitações. Aguarde um momento e tente novamente.",
         "security": "A sessão da página não corresponde. Recarregue a página antes de continuar.",
         "already_saved": "Esta solicitação já está salva. Verifique a mesma referência para recuperar o recibo.",
-        "currency": "Informe o código da moeda: MXN, COP, ARS ou USD. «Pesos» e «$» podem se referir a várias moedas. As transações fictícias desta demonstração estão em USD.",
-        "unsupported_currency": "Posso pesquisar transações em MXN, COP, ARS e USD. Essa moeda não é aceita no protótipo. Não converto valores; informe uma dessas moedas ou uma data no formato AAAA-MM-DD.",
-        "dollars": "Nesta demonstração interpreto «dólares» como USD; não faço conversão de moeda.",
-        "amount": "Informe o valor da transação ou uma data no formato AAAA-MM-DD para continuar a pesquisa.",
-        "followup": "Para continuar, informe uma data no formato AAAA-MM-DD, o valor e a moeda, ou escolha uma correspondência na lista.",
+        "currency": "Informe o código da moeda: MXN, COP, ARS ou USD. «Pesos» e «$» podem se referir a várias moedas. Não converto valores.",
+        "unsupported_currency": "Posso pesquisar transações em MXN, COP, ARS e USD. Essa moeda não é aceita. Não converto valores; informe uma dessas moedas ou uma data no formato DD/MM/AAAA.",
+        "dollars": "Interpreto «dólares» como USD; não faço conversão de moeda.",
+        "amount": "Informe o valor da transação ou uma data no formato DD/MM/AAAA, como 03/05/2026, para continuar a pesquisa. Você também pode escrever o mês por extenso.",
+        "followup": "Para continuar, informe uma data no formato DD/MM/AAAA ou com o mês por extenso, o valor e a moeda, ou escolha uma correspondência na lista.",
+        "date_interpreted": "Uso o ano atual: {year}. Vou pesquisar a data {day}.",
+        "invalid_date": "Confira a data: use DD/MM/AAAA, como 03/05/2026, ou escreva o mês, como «3 de maio de 2026». Também aceito AAAA-MM-DD. Sem ano, uso o ano atual.",
+        "ambiguous_date": "Informe uma única data para pesquisar. Datas numéricas são lidas como dia/mês/ano (DD/MM/AAAA).",
+        "ineligible_intake": "Esta transação não permite a solicitação de revisão de compras. Posso preparar um resumo para revisão humana com seu pedido e os dados da transação.",
+        "case_continuation": "Não consigo verificar a qual caso anterior você se refere com as informações disponíveis. Posso preparar um resumo para revisão humana indicando que esse caso anterior não foi verificado.",
+        "session_cases": "Você pode consultar os recibos desta sessão em «Solicitações salvas».",
+        "handoff_offer": "Você quer que eu prepare esse resumo para revisão humana? Pode responder sim ou não, ou usar os botões. Nenhuma solicitação foi salva ainda.",
+        "handoff_unavailable": "Esta sessão não permite salvar uma solicitação para revisão humana. Nenhuma solicitação foi preparada ou salva.",
+        "handoff_declined": "Tudo bem. Não preparei nem salvei um resumo para revisão humana. Você pode continuar consultando.",
+        "handoff_context": "Claro. Sobre o que você precisa de ajuda? Conte brevemente o motivo para incluí-lo na solicitação de atendimento humano. Você pode escrever «cancelar» se preferir continuar consultando.",
+        "handoff_context_cancelled": "Tudo bem. Não preparei nem salvei uma solicitação de atendimento humano. Você pode continuar consultando.",
+        "stale_handoff_context": "A solicitação de atendimento humano expirou ou a transação mudou. Peça para falar com uma pessoa novamente para continuar.",
     },
 }
+
+PRIVATE_TEXT = {
+    "es": {
+        "greeting": TEXT["es"]["greeting"],
+        "denied": TEXT["es"]["denied"],
+        "currency": "Indica el código de moneda: MXN, COP, ARS o USD. «Pesos» y «$» pueden referirse a varias monedas. La búsqueda conserva la moneda de los registros de esta instantánea privada.",
+        "dollars": "Interpreto «dólares» como USD; no hago una conversión de moneda.",
+        "customer_label": "Cliente",
+    },
+    "pt": {
+        "greeting": TEXT["pt"]["greeting"],
+        "denied": TEXT["pt"]["denied"],
+        "currency": "Informe o código da moeda: MXN, COP, ARS ou USD. «Pesos» e «$» podem se referir a várias moedas. A pesquisa preserva a moeda dos registros desta amostra privada.",
+        "dollars": "Interpreto «dólares» como USD; não faço conversão de moeda.",
+        "customer_label": "Cliente",
+    },
+}
+
+
+@dataclass(frozen=True, repr=False)
+class PrivateCohortConfig:
+    """Trusted startup selection, never reconstructed from browser arguments.
+
+    The caller loads and validates the cohort before creating this configuration.
+    Copying the bounded mapping prevents later caller mutations changing the
+    configured snapshot. Frozen records and source references can safely be shared.
+    """
+
+    records: Mapping[str, SourcedTransaction]
+    customer_id: str
+    permissions: frozenset[Permission]
+
+    def __post_init__(self) -> None:
+        invalid = ValueError("invalid_private_cohort_config")
+        allowed_permissions = frozenset({Permission.READ_TRANSACTION, Permission.CREATE_SIMULATED_INTAKE,
+                                         Permission.CREATE_SIMULATED_HANDOFF})
+        if (not isinstance(self.records, Mapping) or not 0 < len(self.records) <= MAX_SEARCH_RECORDS
+                or not isinstance(self.customer_id, str) or not self.customer_id.strip()
+                or self.customer_id != self.customer_id.strip()
+                or not isinstance(self.permissions, frozenset)
+                or any(not isinstance(permission, Permission) for permission in self.permissions)
+                or not self.permissions <= allowed_permissions
+                or Permission.READ_TRANSACTION not in self.permissions):
+            raise invalid
+        snapshot = dict(self.records)
+        customer_found = False
+        for identifier, entry in snapshot.items():
+            if (not isinstance(identifier, str) or not identifier.strip()
+                    or not isinstance(entry, SourcedTransaction) or not isinstance(entry.record, TransactionRecord)
+                    or identifier != entry.record.transaction_id
+                    or not isinstance(entry.sources, tuple) or not entry.sources):
+                raise invalid
+            customer_found = customer_found or entry.record.customer_id == self.customer_id
+            for source in entry.sources:
+                if (not isinstance(source, SourceReference) or not isinstance(source.file, str)
+                        or not source.file or "\\" in source.file or ":" in source.file
+                        or any(part in ("", ".", "..") for part in source.file.split("/"))
+                        or any(ord(character) < 32 or ord(character) == 127 for character in source.file)
+                        or type(source.row_number) is not int or source.row_number < 1
+                        or not isinstance(source.row_sha256, str) or len(source.row_sha256) != 64
+                        or any(character not in "0123456789abcdef" for character in source.row_sha256)):
+                    raise invalid
+        if not customer_found:
+            raise invalid
+        object.__setattr__(self, "records", MappingProxyType(snapshot))
 
 
 class UiError(ValueError):
@@ -116,10 +229,86 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _request_reference_date(now: datetime) -> date:
+    """Use the server clock in the customer's declared calendar zone."""
+    return now.astimezone(ZoneInfo("America/Monterrey")).date()
+
+
+def _browser_receipt_text(receipt: VerifiedReceipt) -> str:
+    """Present only a receipt already validated by ActionService readback.
+
+    The global DEMO badge carries the environment disclosure. Stored packets and
+    CLI receipts retain their explicit simulation markers without editing facts.
+    """
+    return TEXT[receipt.language]["receipt_verified"] + json.dumps(receipt.case_id, ensure_ascii=False)
+
+
+def _valid_unicode(value: str) -> None:
+    # JSON escape syntax can represent isolated UTF-16 surrogates. They are
+    # not Unicode scalar values and cannot appear in a UTF-8 response body.
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError:
+        raise UiError("invalid_input") from None
+
+
 def _text(value: object, *, required: bool = True) -> str:
     if not isinstance(value, str) or len(value) > 1000 or (required and not value.strip()):
         raise UiError("invalid_input")
+    _valid_unicode(value)
     return value.strip()
+
+
+def _unsupported_credential_change_request(text: str) -> bool:
+    """Recognize a credential change or instructions request, never record facts.
+
+    This service boundary does not inspect credentials or ask for their values.
+    A positive action request or explicit question about how to change a PIN
+    qualifies. A payment inquiry mentioning an earlier PIN change and a negated
+    request without an instructions question retain their usual routing.
+    """
+    normalized = "".join(character for character in unicodedata.normalize("NFKD", text.casefold())
+                         if not unicodedata.combining(character))
+    change = r"(?:cambiar|cambia|cambie|cambies|modificar|modifica|restablecer|restablece|recuperar|recupera|trocar|troca|troque|alterar|altere|redefinir|redefina|recupere)"
+    credential = r"(?:pin|contrasena|senha|password|clave(?:\s+de\s+acceso)?)"
+    prefix = (r"(?:(?:por\s+favor|por\s+gentileza)\s+)?"
+              r"(?:(?:quiero|quisiera|necesito|deseo|quero|preciso|desejo|"
+              r"puedes|podrias|pode|poderia|gostaria\s+de)\s+(?:que\s+)?"
+              r"(?:(?:me|voce)\s+)?|(?:ayudame|ajudame|ajude-me)\s+a\s+)?")
+    for clause in re.split(r"[,;.!?\n]+", normalized):
+        clause = clause.strip(" \t\r\n¿¡")
+        if re.match(r"^" + prefix + change + r"\b[^.;!?]{0,70}\b" + credential + r"\b", clause):
+            return True
+        if (not re.search(r"\b(?:no|nao)\s+(?:pregunte|pregunto|preguntaba|perguntei|pergunto)\b", clause)
+                and re.search(r"\bcomo\s+(?:(?:puedo|puedes|se|posso|pode|eu|voce|faco)\s+){0,2}"
+                              + change + r"\b[^.;!?]{0,70}\b" + credential + r"\b", clause)):
+            return True
+    return False
+
+
+def _unsupported_scheduled_payment_request(text: str) -> bool:
+    """Refuse a positive request to schedule money, not viewing a past record."""
+    prefix = (r"(?:(?:por\s+favor|por\s+gentileza)\s+)?"
+              r"(?:(?:quiero|quisiera|necesito|deseo|quero|preciso|desejo|"
+              r"puedes|podrias|pode|poderia|gostaria\s+de)\s+(?:que\s+)?"
+              r"(?:(?:me|voce)\s+)?)?")
+    money = r"(?:pago|pagamento|transferencia|deposito|retiro|saque|giro)"
+    schedule = r"(?:programar|programa|programe|programame|agendar|agenda|agende)"
+    leave_scheduled = r"(?:dejar|deja|dejame|deixar|deixe)"
+    for original_clause in re.split(r"[,;.!?\n]+", text.casefold()):
+        original_clause = original_clause.strip(" \t\r\n¿¡")
+        # Spanish past «programé» becomes formal/Portuguese imperative
+        # «programe» when accents are removed. Preserve that distinction.
+        if re.match(r"^programé\b", unicodedata.normalize("NFC", original_clause)):
+            continue
+        clause = "".join(character for character in unicodedata.normalize("NFKD", original_clause)
+                         if not unicodedata.combining(character))
+        if re.match(r"^" + prefix + schedule + r"\b[^.;!?]{0,90}\b" + money + r"\b", clause):
+            return True
+        if (re.match(r"^" + prefix + leave_scheduled + r"\b[^.;!?]{0,90}\b" + money + r"\b", clause)
+                and re.search(r"\b(?:programad[oa]|agendad[oa])\b", clause)):
+            return True
+    return False
 
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict:
@@ -157,6 +346,28 @@ class IntakeOffer:
     expires_at: datetime
 
 
+@dataclass(frozen=True)
+class HandoffOffer:
+    """Preparation consent bound to the observed context, never a stored action."""
+
+    offer_id: str
+    transaction_id: str | None
+    request: str
+    snapshot: SourcedTransaction | None
+    reason: str
+    expires_at: datetime
+
+
+@dataclass(frozen=True)
+class PendingHandoffContext:
+    """One customer-requested purpose question, bound to observed session state."""
+
+    transaction_id: str | None
+    snapshot: SourcedTransaction | None
+    language: str
+    expires_at: datetime
+
+
 def _intake_preference(text: str, language: str) -> bool | None:
     # Whole replies only. An action or refund request containing 'yes' is never
     # consent, and this parser is never used to confirm a stored action.
@@ -174,15 +385,53 @@ def _intake_preference(text: str, language: str) -> bool | None:
     return None
 
 
+def _denies_selected_transaction(text: str, language: str) -> bool:
+    """Recognize a complete past-action denial, never preparation consent.
+
+    The caller must already hold an authorized selected transaction. Whole
+    matching excludes negated intentions, questions, and mixed commands.
+    Common hice/hize and fiz/fis spellings are explicit bounded aliases.
+    """
+    normalized = "".join(
+        character for character in unicodedata.normalize("NFKD", text.casefold())
+        if not unicodedata.combining(character))
+    if "?" in normalized or "¿" in normalized:
+        return False
+    normalized = " ".join(normalized.strip(" .!¡").split())
+    if language == "es":
+        pattern = (
+            r"(?:yo\s+)?no\s+(?:hice|hize|pague|compre|autorice|autorize|realice)\s+"
+            r"(?:esto|eso|(?:esta|esa)\s+(?:compra|transaccion|operacion)|"
+            r"(?:este|ese)\s+(?:pago|cargo|cobro|movimiento))"
+        )
+    else:
+        pattern = (
+            r"(?:eu\s+)?nao\s+(?:fiz|fis|paguei|comprei|autorizei|realizei)\s+"
+            r"(?:isto|isso|(?:esta|essa)\s+(?:compra|cobranca|transacao|operacao)|"
+            r"(?:este|esse)\s+(?:pagamento|debito|movimento))"
+        )
+    return re.fullmatch(pattern, normalized) is not None
+
+
 class BrowserSession:
     """A browser token resolves to this exact server-owned session and controller."""
 
-    def __init__(self, database: Path):
+    def __init__(self, database: Path, *, config: PrivateCohortConfig | None = None, router=None):
+        if config is not None and not isinstance(config, PrivateCohortConfig):
+            raise ValueError("invalid_private_cohort_config")
+        if router is not None and not callable(getattr(router, "route_intent", None)):
+            raise ValueError("invalid_routing_component")
+        self.router = router
         self.lock = RLock()
         self.retired = False
         self.csrf_token = secrets.token_urlsafe(32)
-        self.session = demo_session(_now())
-        self.records = demo_records()
+        self.data_mode = "demo" if config is None else "private_cohort"
+        if config is None:
+            self.session = demo_session(_now())
+            self.records = demo_records()
+        else:
+            self.session = TrustedSession(config.customer_id, _now() + timedelta(minutes=20), config.permissions)
+            self.records = MappingProxyType(dict(config.records))
         self.store = CaseStore(database)
         self.actions = ActionService(self.records, self.store)
         self.conversation = Conversation(self.records, self.actions, self.session)
@@ -196,13 +445,20 @@ class BrowserSession:
         self.pending_route: tuple[str, str] | None = None
         self.pending_search: PendingSearch | None = None
         self.intake_offer: IntakeOffer | None = None
+        self.handoff_offer: HandoffOffer | None = None
+        self.pending_handoff_context: PendingHandoffContext | None = None
         self.business_issue: str | None = None
         self.case_ids: list[str] = []
         self.handoff_id: str | None = None
         self.offers_handoff = False
         self.handoff_request: str | None = None
         self.request_times: deque[float] = deque()
-        self.append("assistant", TEXT[self.language]["greeting"], "greeting")
+        self.append("assistant", self.text("greeting"), "greeting")
+
+    def text(self, key: str) -> str:
+        if self.data_mode == "private_cohort" and key in PRIVATE_TEXT[self.language]:
+            return PRIVATE_TEXT[self.language][key]
+        return TEXT[self.language][key]
 
     def close(self) -> None:
         with self.lock:
@@ -210,6 +466,7 @@ class BrowserSession:
             self.store.close()
 
     def append(self, role: str, text: str, status: str) -> None:
+        _valid_unicode(text)
         self.messages.append({"role": role, "text": text, "status": status})
         self.messages = self.messages[-MAX_MESSAGES:]
 
@@ -245,20 +502,22 @@ class BrowserSession:
         except AccessDenied:
             active = False
         state = {
-            "language": self.language, "csrf_token": self.csrf_token,
-            "session": {"customer_label": "Cliente demo A" if self.language == "es" else "Cliente demo A",
+            "language": self.language, "csrf_token": self.csrf_token, "data_mode": self.data_mode,
+            "session": {"customer_label": self.text("customer_label") if self.data_mode == "private_cohort" else "Cliente A",
                         "expires_at": self.session.expires_at.isoformat(), "active": active},
-            "simulation": True, "route_mode": "keyword_baseline", "messages": [],
+            "simulation": True, "route_mode": "keyword_baseline" if self.router is None else "learned_preview", "messages": [],
             "transactions": [], "selected_transaction": None, "candidate_ids": [],
             "pending_draft": None, "receipts": [], "handoff": None, "offers_handoff": False,
             "handoff_request": None,
             "intake_offer": None,
+            "handoff_offer": None,
+            "awaiting_handoff_context": self.pending_handoff_context is not None,
         }
         if not active:
-            state["messages"] = [{"role": "assistant", "status": "access_denied", "text": TEXT[self.language]["denied"]}]
+            state["messages"] = [{"role": "assistant", "status": "access_denied", "text": self.text("denied")}]
             return state
-        # The fixture set is fixed for this browser session. Every returned entry
-        # still goes through its actual owner guard; foreign fixtures are omitted.
+        # The snapshot is fixed for this browser session. Every returned entry
+        # still goes through its actual owner guard; foreign records are omitted.
         state["transactions"] = [self.transaction(identifier, now) for identifier, entry in self.records.items()
                                  if entry.record.customer_id == self.session.customer_id]
         state["messages"] = list(self.messages)
@@ -273,6 +532,13 @@ class BrowserSession:
                 self.intake_offer = None
             else:
                 state["intake_offer"] = {"offer_id": offer.offer_id, "transaction_id": offer.transaction_id}
+        if self.handoff_offer is not None:
+            try:
+                offer = self.bound_handoff_offer(self.handoff_offer.offer_id, now)
+            except (UiError, AccessDenied):
+                self.clear_handoff_offer()
+            else:
+                state["handoff_offer"] = {"offer_id": offer.offer_id, "transaction_id": offer.transaction_id}
         if self.pending_draft is not None:
             draft = self.pending_draft
             proposed = json.loads(self.actions.review_draft(self.session, draft.draft_id, now=now))
@@ -288,7 +554,7 @@ class BrowserSession:
             }
         for identifier in self.case_ids:
             receipt = self.actions.read_case(self.session, identifier, now=now)
-            state["receipts"].append({"case_id": receipt.case_id, "kind": receipt.kind, "text": receipt.text})
+            state["receipts"].append({"case_id": receipt.case_id, "kind": receipt.kind, "text": _browser_receipt_text(receipt)})
             if identifier == self.handoff_id:
                 payload = json.loads(receipt.payload_json)
                 state["handoff"] = {key: payload[key] for key in (
@@ -305,6 +571,11 @@ class BrowserSession:
         if reply.status in ("answered", "needs_filters", "no_match", "ambiguous"):
             self.selected_id = reply.selected_id
         text = reply.text
+        if reply.status == "needs_filters":
+            text = TEXT[self.language]["followup"]
+        if reply.status == "answered" and self.pending_search is not None:
+            text = with_requested_record_limits(
+                TransactionAnswer(reply.language, reply.text, reply.sources), self.pending_search.request).text
         if reply.draft is not None:
             self.pending_draft = reply.draft
             self.outcome_unverified = False
@@ -313,6 +584,7 @@ class BrowserSession:
             self.pending_draft, self.pending_request = None, None
             self.outcome_unverified = False
         if reply.receipt is not None:
+            text = _browser_receipt_text(reply.receipt)
             self.pending_draft, self.pending_request = None, None
             self.outcome_unverified = False
             if reply.receipt.case_id not in self.case_ids:
@@ -335,10 +607,59 @@ class BrowserSession:
         # fail. A stale selected record must never leak into a later draft.
         self.selected_id, self.candidate_ids = None, ()
         self.intake_offer = None
+        self.clear_handoff_offer()
         self.conversation.clear_selection(self.session, now=now)
 
     def clear_search(self) -> None:
         self.pending_search, self.pending_route = None, None
+
+    def clear_handoff_offer(self) -> None:
+        self.handoff_offer = None
+        self.offers_handoff = False
+        self.handoff_request = None
+
+    def bound_handoff_offer(self, identifier: str, now: datetime) -> HandoffOffer:
+        self.authorize(now)
+        offer = self.handoff_offer
+        if (offer is None or identifier != offer.offer_id or now >= offer.expires_at
+                or self.pending_draft is not None or self.selected_id != offer.transaction_id):
+            raise UiError("stale_offer", 409)
+        current = None if offer.transaction_id is None else get_transaction(
+            self.session, offer.transaction_id, records=self.records, now=now)
+        if current != offer.snapshot:
+            self.clear_handoff_offer()
+            raise UiError("stale_offer", 409)
+        require_access(self.session, self.session.customer_id, Permission.CREATE_SIMULATED_HANDOFF, now=now)
+        return offer
+
+    def offer_human_review(self, request: str, reason: str, now: datetime) -> None:
+        self.authorize(now)
+        entry = None if self.selected_id is None else get_transaction(
+            self.session, self.selected_id, records=self.records, now=now)
+        self.clear_handoff_offer()
+        self.intake_offer = None
+        self.clear_search()
+        self.business_issue = request
+        try:
+            require_access(self.session, self.session.customer_id, Permission.CREATE_SIMULATED_HANDOFF, now=now)
+        except AccessDenied:
+            self.append("assistant", TEXT[self.language]["handoff_unavailable"], "handoff_unavailable")
+            return
+        self.handoff_offer = HandoffOffer(
+            secrets.token_urlsafe(24), self.selected_id, request, entry, reason,
+            min(self.session.expires_at, now + timedelta(minutes=5)))
+        self.offers_handoff, self.handoff_request = True, request
+        self.append("assistant", TEXT[self.language]["handoff_offer"], "handoff_offered")
+
+    def decide_handoff(self, identifier: str, prepare: bool, now: datetime) -> None:
+        if type(prepare) is not bool:
+            raise UiError("invalid_confirmation")
+        offer = self.bound_handoff_offer(identifier, now)
+        if prepare:
+            self.prepare("handoff", offer.request, now)
+        else:
+            self.clear_handoff_offer()
+            self.append("assistant", TEXT[self.language]["handoff_declined"], "handoff_declined")
 
     def unresolved_questions(self) -> tuple[str, ...]:
         issue = self.business_issue
@@ -351,6 +672,19 @@ class BrowserSession:
         return (issue if len(issue) <= 300 else issue[:297] + "...",)
 
     def prepare(self, kind: str, request: str, now: datetime, questions: tuple[str, ...] | None = None) -> None:
+        request = _text(request)
+        if questions is not None:
+            if not isinstance(questions, tuple) or len(questions) > 10:
+                raise UiError("invalid_input")
+            questions = tuple(_text(question) for question in questions)
+        reason = "unsupported_request" if request == self.handoff_request else "human_requested"
+        if kind == "handoff" and self.handoff_offer is not None:
+            # Also preserve the older explicit preparation port: it must match
+            # the current server-owned request and snapshot, never replace them.
+            offer = self.bound_handoff_offer(self.handoff_offer.offer_id, now)
+            if request != offer.request or questions is not None:
+                raise UiError("stale_offer", 409)
+            reason = offer.reason
         self.intake_offer = None
         if kind == "intake":
             reply = self.conversation.prepare_intake(self.session, request, now=now)
@@ -358,16 +692,23 @@ class BrowserSession:
         else:
             reply = self.conversation.prepare_handoff(
                 self.session, request,
-                escalation_reason="unsupported_request" if request == self.handoff_request else "human_requested",
+                escalation_reason=reason,
                 unresolved_questions=self.unresolved_questions() if questions is None else questions, now=now)
         self.pending_request = request
+        self.pending_handoff_context = None
         self.clear_search()
+        self.clear_handoff_offer()
         self.reply(reply)
 
     def offer_intake(self, request: str, now: datetime) -> None:
         if self.selected_id is None:
             raise UiError("transaction_required")
         entry = get_transaction(self.session, self.selected_id, records=self.records, now=now)
+        if (entry.record.transaction_type != "Purchase"
+                or entry.record.transaction_status not in ("Approved", "Pending")):
+            self.append("assistant", TEXT[self.language]["ineligible_intake"], "intake_ineligible")
+            self.offer_human_review(request, "ineligible_intake", now)
+            return
         require_access(self.session, entry.record.customer_id, Permission.CREATE_SIMULATED_INTAKE, now=now)
         self.intake_offer = IntakeOffer(secrets.token_urlsafe(24), self.selected_id, request, entry,
                                        min(self.session.expires_at, now + timedelta(minutes=5)))
@@ -393,38 +734,215 @@ class BrowserSession:
             self.intake_offer = None
             self.append("assistant", TEXT[self.language]["intake_declined"], "intake_declined")
 
+    def request_human_handoff(self, text: str, now: datetime) -> None:
+        """Reuse a known issue or ask for one before preparing a human draft."""
+        require_access(self.session, self.session.customer_id, Permission.CREATE_SIMULATED_HANDOFF, now=now)
+        purpose = human_request_purpose(text, self.language) or self.business_issue
+        self.clear_handoff_offer()
+        self.intake_offer = None
+        if purpose is not None:
+            self.business_issue = purpose
+            # The issue is already carried in REQUEST. Do not duplicate it as
+            # an invented unresolved question in another section of the form.
+            self.prepare("handoff", purpose, now, questions=())
+            return
+        self.clear_search()
+        entry = None if self.selected_id is None else get_transaction(
+            self.session, self.selected_id, records=self.records, now=now)
+        self.pending_handoff_context = PendingHandoffContext(
+            self.selected_id, entry, self.language,
+            min(self.session.expires_at, now + timedelta(minutes=5)))
+        self.append("assistant", TEXT[self.language]["handoff_context"], "needs_handoff_context")
+
+    def collect_handoff_context(self, text: str, now: datetime) -> bool:
+        """Consume a purpose reply literally; never route it through a model."""
+        context = self.pending_handoff_context
+        self.authorize(now)
+        require_access(self.session, self.session.customer_id, Permission.CREATE_SIMULATED_HANDOFF, now=now)
+        entry = None if self.selected_id is None else get_transaction(
+            self.session, self.selected_id, records=self.records, now=now)
+        if (now >= context.expires_at or self.language != context.language
+                or self.selected_id != context.transaction_id or entry != context.snapshot):
+            self.pending_handoff_context = None
+            raise UiError("stale_handoff_context", 409)
+        normalized = " ".join("".join(
+            character for character in unicodedata.normalize("NFKD", text.casefold())
+            if not unicodedata.combining(character)).strip(" .!?¡¿").split())
+        cancel = (declines_handoff_preparation(text, self.language)
+                  or _intake_preference(text, self.language) is False
+                  or normalized in {"cancelar", "cancela", "cancelalo", "cancele", "cancelar solicitud",
+                                    "cancelar solicitacao", "olvidalo", "dejalo", "esqueca"}
+                  or re.match(
+                      r"^(?:ya\s+|ja\s+)?(?:no|nao)\s+(?:quiero|quero|necesito|preciso|deseo|desejo)\s+"
+                      r"(?:de\s+)?(?:(?:un|una|um|uma|el|la|o|a)\s+)?"
+                      r"(?:hablar|falar|conversar|persona|pessoa|agente|atendente|humano|humana|asesor|assessor|"
+                      r"atencion humana|atendimento human[oa]|preparar|abrir|crear|criar)\b", normalized))
+        if cancel:
+            self.pending_handoff_context = None
+            self.append("assistant", TEXT[self.language]["handoff_context_cancelled"], "handoff_context_cancelled")
+            return True
+        if is_explicit_inquiry(text, self.language):
+            self.pending_handoff_context = None
+            return False
+        inline = human_request_purpose(text, self.language)
+        if (is_greeting(text, self.language) or _intake_preference(text, self.language) is True
+                or self.reference_followup(text, now)
+                or (is_explicit_human_request(text, self.language) and inline is None)
+                or normalized in {"ayuda", "ajuda", "necesito ayuda", "preciso de ajuda", "algo", "ok", "confirmo",
+                                  "gracias", "muchas gracias", "obrigado", "obrigada", "por favor", "thanks"}):
+            self.append("assistant", TEXT[self.language]["handoff_context"], "needs_handoff_context")
+            return True
+        purpose = inline or text
+        self.business_issue = purpose
+        self.prepare("handoff", purpose, now, questions=())
+        return True
+
+    def reference_ids(self, now: datetime) -> tuple[str, ...]:
+        """Only authorized stored keys may influence recognition or aliases."""
+        self.authorize(now)
+        identifiers = []
+        for identifier in self.records:
+            try:
+                get_transaction(self.session, identifier, records=self.records, now=now)
+            except AccessDenied:
+                continue
+            identifiers.append(identifier)
+        return tuple(identifiers)
+
+    def reference_followup(self, text: str, now: datetime) -> bool:
+        try:
+            reference = parse_transaction_reference(text, self.language, self.reference_ids(now))
+        except (RoutingError, AccessDenied):
+            self.clear_record_selection(now)
+            raise
+        return reference.slot_only or is_search_followup(reference.masked_text, self.language)
+
+    def request_slots(self, text: str, now: datetime):
+        return extract_record_slots(text, self.language, self.reference_ids(now),
+                                    reference_date=_request_reference_date(now))
+
     def message(self, text: str, now: datetime) -> None:
+        text = _text(text)
         self.append("user", text, "request")
-        proposal = route_intent(text, self.language)
         if self.pending_draft is not None:
             self.append("assistant", TEXT[self.language]["confirm_button"], "confirmation_required")
             return
+        if self.pending_handoff_context is not None and self.collect_handoff_context(text, now):
+            return
+        if self.handoff_offer is not None:
+            preference = _intake_preference(text, self.language)
+            if preference is not None:
+                self.decide_handoff(self.handoff_offer.offer_id, preference, now)
+                return
         if self.intake_offer is not None:
             preference = _intake_preference(text, self.language)
             if preference is not None:
                 self.decide_intake(self.intake_offer.offer_id, preference, now)
                 return
-            if proposal.intent == "unsupported" and not proposal.matched and not is_search_followup(text, self.language):
+        if is_greeting(text, self.language):
+            if self.handoff_offer is not None:
+                self.append("assistant", TEXT[self.language]["handoff_offer"], "handoff_offered")
+            elif self.intake_offer is not None:
+                self.append("assistant", TEXT[self.language]["intake_offer"], "intake_offered")
+            elif self.pending_search is not None:
+                self.append("assistant", TEXT[self.language]["followup"], "needs_filters")
+            else:
+                self.append("assistant", self.text("greeting"), "greeting")
+            return
+        if is_case_continuation(text, self.language):
+            self.intake_offer = None
+            self.clear_handoff_offer()
+            self.clear_search()
+            try:
+                slots = self.request_slots(text, now)
+            except (RoutingError, AccessDenied):
+                self.clear_record_selection(now)
+                raise
+            if slots.transaction_id is not None:
+                self.clear_record_selection(now)
+                self.reply(self.conversation.inquire(self.session, slots.transaction_id, now=now))
+            elif slots.filters != TransactionFilters() or slots.needs_currency:
+                self.clear_record_selection(now)
+            self.append("assistant", TEXT[self.language]["case_continuation"], "case_unverified")
+            if self.case_ids:
+                self.append("assistant", TEXT[self.language]["session_cases"], "session_case_receipts")
+            self.offer_human_review(text, "existing_case_unverified", now)
+            return
+        # Details alone start an inquiry or continue the server-owned request.
+        # Neither classifier may infer a dispute/handoff from a date or amount.
+        slot_only = self.reference_followup(text, now)
+        continuing = self.pending_search is not None and slot_only
+        # Complete plain read requests have the same shared protection as
+        # details alone. A classifier must not invent a dispute or handoff from
+        # an explicit request to view/search a payment. Fresh requests replace
+        # an unfinished dispute; only slot replies continue its prior intent.
+        plain_inquiry = is_explicit_inquiry(text, self.language)
+        selected_denial = (self.selected_id is not None
+                           and _denies_selected_transaction(text, self.language))
+        credential_change = _unsupported_credential_change_request(text)
+        scheduled_payment = _unsupported_scheduled_payment_request(text)
+        proposal = (IntentProposal("unsupported", 1.0, True) if credential_change or scheduled_payment else
+                    IntentProposal("dispute_intake", 1.0, True) if selected_denial else
+                    IntentProposal("inquiry", 1.0, True) if slot_only or plain_inquiry else
+                    route_intent(text, self.language) if self.router is None else
+                    self.router.route_intent(text, self.language))
+        if (not isinstance(proposal, IntentProposal)
+                or proposal.intent not in ("inquiry", "dispute_intake", "human_request", "unsupported")
+                or type(proposal.matched) is not bool
+                or type(proposal.confidence) not in (int, float)
+                or not math.isfinite(proposal.confidence)
+                or not 0 <= proposal.confidence <= 1
+                or (not proposal.matched and proposal.intent != "unsupported")):
+            raise RoutingError("invalid_intent_proposal")
+        explicit_human = is_explicit_human_request(text, self.language)
+        if explicit_human:
+            # A positive user request, rather than a model score, determines
+            # preparation intent. Final storage still requires confirmation.
+            proposal = IntentProposal("human_request", 1.0, True)
+        elif proposal.intent == "human_request":
+            # A closed-set model label cannot supply the customer's request to
+            # prepare a handoff. Do not turn unrelated/vague text into either a
+            # draft or a new handoff offer, and keep any prior business context.
+            self.append("assistant", TEXT[self.language]["request_scope"], "needs_request")
+            return
+        if self.handoff_offer is not None:
+            if proposal.intent == "unsupported" and not proposal.matched and not slot_only:
+                self.append("assistant", TEXT[self.language]["handoff_offer"], "handoff_offered")
+                return
+        self.clear_handoff_offer()
+        if self.intake_offer is not None:
+            if proposal.intent == "unsupported" and not proposal.matched and not slot_only:
                 self.append("assistant", TEXT[self.language]["intake_offer"], "intake_offered")
                 return
             self.intake_offer = None
-        self.offers_handoff = False
         if proposal.intent == "human_request":
-            self.prepare("handoff", text, now)
+            self.request_human_handoff(text, now)
             return
         if proposal.intent == "unsupported":
             if not proposal.matched and self.pending_search is not None:
                 self.append("assistant", TEXT[self.language]["followup"], "needs_filters")
                 return
+            if not proposal.matched:
+                self.append("assistant", TEXT[self.language]["request_scope"], "needs_request")
+                return
             self.clear_search()
             self.clear_record_selection(now)
             self.business_issue = text
-            self.offers_handoff = True
-            self.handoff_request = text
-            self.append("assistant", TEXT[self.language]["unsupported"], "unsupported")
+            try:
+                require_access(self.session, self.session.customer_id, Permission.CREATE_SIMULATED_HANDOFF, now=now)
+                can_handoff = True
+            except AccessDenied:
+                can_handoff = False
+            self.offers_handoff = can_handoff
+            self.handoff_request = text if can_handoff else None
+            response = TEXT[self.language]["unsupported" if can_handoff else "unsupported_without_handoff"]
+            if credential_change:
+                response = TEXT[self.language]["credential_change_unsupported"] + " " + response
+            elif scheduled_payment:
+                response = TEXT[self.language]["scheduled_payment_unsupported"] + " " + response
+            self.append("assistant", response, "unsupported")
             return
         self.handoff_request = None
-        continuing = self.pending_search is not None and is_search_followup(text, self.language)
         if not continuing:
             kind = "intake" if proposal.intent == "dispute_intake" else "inquiry"
             self.pending_search = PendingSearch(kind, text)
@@ -433,11 +951,11 @@ class BrowserSession:
         self.pending_route = ("intake", context.request) if context.kind == "intake" else None
         # Only an explicit reference to the selected transaction can reuse it.
         reuse_selection = (not continuing and self.selected_id is not None
-                           and refers_to_selected_transaction(text, self.language))
+                           and (selected_denial or refers_to_selected_transaction(text, self.language)))
         selected = self.selected_id
         self.clear_record_selection(now)
         try:
-            slots = extract_slots(text, self.language)
+            slots = self.request_slots(text, now)
         except RoutingError as error:
             code = str(error)
             if code in ("invalid_amount", "ambiguous_amount", "unsupported_currency", "ambiguous_currency"):
@@ -451,7 +969,11 @@ class BrowserSession:
                 return
             raise
         if slots.used_dollar_alias:
-            self.append("assistant", TEXT[self.language]["dollars"], "currency_interpretation")
+            self.append("assistant", self.text("dollars"), "currency_interpretation")
+        if slots.assumed_date_year:
+            day = slots.filters.transaction_date
+            self.append("assistant", TEXT[self.language]["date_interpreted"].format(
+                year=day.year, day=day.strftime("%d/%m/%Y")), "date_interpreted")
         if slots.transaction_id is not None:
             self.reply(self.conversation.inquire(self.session, slots.transaction_id, now=now))
         elif reuse_selection and slots.filters == TransactionFilters() and not slots.needs_currency:
@@ -467,7 +989,7 @@ class BrowserSession:
             if amount is not None:
                 context.amount = amount
             if slots.currency_ambiguous or (context.amount is not None and context.currency is None):
-                self.append("assistant", TEXT[self.language]["currency"], "needs_currency")
+                self.append("assistant", self.text("currency"), "needs_currency")
                 return
             if context.currency is not None and context.amount is None and context.transaction_date is None:
                 self.append("assistant", TEXT[self.language]["amount"], "needs_filters")
@@ -481,9 +1003,20 @@ class BrowserSession:
             self.clear_search()
 
     def act(self, payload: dict, now: datetime) -> None:
+        # Validate strings before counters, selection, offers or drafts can be
+        # changed, including callers that bypass the HTTP JSON decoder.
+        for value in payload.values():
+            if isinstance(value, str):
+                _valid_unicode(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, str):
+                        _valid_unicode(item)
         self.authorize(now)
         self.rate_limit()
         action = payload["action"]
+        if action not in ("message", "view_case"):
+            self.pending_handoff_context = None
         if action == "dispute_selected":
             # A rendered shortcut identifies the record it referred to. An old
             # click must not silently apply to a newer selection or alter it.
@@ -491,7 +1024,8 @@ class BrowserSession:
             if self.selected_id is None or identifier != self.selected_id:
                 raise UiError("selection_changed", 409)
             get_transaction(self.session, identifier, records=self.records, now=now)
-        self.offers_handoff = False
+        if action not in ("message", "view_case", "prepare_handoff", "handoff_decision"):
+            self.clear_handoff_offer()
         if action not in ("message", "dispute_selected", "intake_decision", "view_case"):
             self.intake_offer = None
         if action == "message":
@@ -501,6 +1035,8 @@ class BrowserSession:
         elif action in ("choose", "inquire"):
             identifier = _text(payload.get("transaction_id"))
             route = self.pending_route if action == "choose" else None
+            if action == "inquire":
+                self.clear_search()
             self.cancel_for_navigation(now)
             self.selected_id, self.candidate_ids = None, ()
             method = self.conversation.choose if action == "choose" else self.conversation.inquire
@@ -521,6 +1057,8 @@ class BrowserSession:
             self.prepare("intake", _text(payload.get("reason")), now)
         elif action == "intake_decision":
             self.decide_intake(_text(payload.get("offer_id")), payload.get("prepare"), now)
+        elif action == "handoff_decision":
+            self.decide_handoff(_text(payload.get("offer_id")), payload.get("prepare"), now)
         elif action == "prepare_handoff":
             request = _text(payload.get("request"))
             questions = payload.get("unresolved_questions")
@@ -545,7 +1083,7 @@ class BrowserSession:
             self.reply(reply)
         elif action == "view_case":
             receipt = self.actions.read_case(self.session, _text(payload.get("case_id")), now=now)
-            self.append("assistant", receipt.text, "action_verified")
+            self.append("assistant", _browser_receipt_text(receipt), "action_verified")
 
 
 def _filters(payload: dict) -> TransactionFilters:
@@ -571,28 +1109,158 @@ class DemoServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, port: int = 8765):
+    def __init__(self, port: int = 8765, *, config: PrivateCohortConfig | None = None, router=None,
+                 hosting: HostingConfig | None = None):
+        if type(port) is not int or not 0 <= port <= 65535:
+            raise ValueError("invalid_port")
+        if hosting is not None and not isinstance(hosting, HostingConfig):
+            raise ValueError("invalid_hosting_config")
+        if hosting is not None and config is not None:
+            raise ValueError("hosted_private_config_forbidden")
+        if config is not None and not isinstance(config, PrivateCohortConfig):
+            raise ValueError("invalid_private_cohort_config")
+        if router is not None and not callable(getattr(router, "route_intent", None)):
+            raise ValueError("invalid_routing_component")
+        self._config = config
+        self._router = router
+        self.hosting = hosting
         self._sessions: dict[str, BrowserSession] = {}
         self._session_lock = RLock()
-        self._minted_sessions = 0
+        self._mint_times: deque[float] = deque()
+        self._closed = False
+        self._pending_cleanup: tuple[str, BrowserSession | None] | None = None
         self._temporary = TemporaryDirectory(prefix="factored-ui-")
         try:
-            super().__init__(("127.0.0.1", port), DemoHandler)
+            super().__init__(("127.0.0.1" if hosting is None else hosting.bind_host, port), DemoHandler)
         except Exception:
             self._temporary.cleanup()
             raise
         actual_port = self.server_address[1]
-        self.allowed_hosts = {f"127.0.0.1:{actual_port}", f"localhost:{actual_port}"}
+        self.allowed_hosts = ({f"127.0.0.1:{actual_port}", f"localhost:{actual_port}"}
+                              if hosting is None else {hosting.authority})
+
+    def request_origin(self, host: str) -> str:
+        """Use only the trusted startup origin; never forwarded headers."""
+        return f"http://{host}" if self.hosting is None else self.hosting.public_origin
 
     def mint_session(self) -> tuple[str, BrowserSession]:
         with self._session_lock:
-            if len(self._sessions) >= MAX_SESSIONS or self._minted_sessions >= MAX_MINTED_SESSIONS:
+            if self._closed:
+                raise UiError("server_unavailable", 503)
+            self._finish_pending_cleanup()
+            self._reclaim_expired(_now())
+            if len(self._sessions) >= MAX_SESSIONS:
                 raise UiError("session_capacity", 503)
-            token = secrets.token_urlsafe(32)
-            session = BrowserSession(Path(self._temporary.name) / f"{token}.sqlite3")
-            self._sessions[token] = session
-            self._minted_sessions += 1
-            return token, session
+            self._check_mint_rate()
+            return self._mint_unchecked()
+
+    def _check_mint_rate(self) -> None:
+        current = time.monotonic()
+        while self._mint_times and self._mint_times[0] <= current - 60:
+            self._mint_times.popleft()
+        if len(self._mint_times) >= MAX_SESSION_MINTS_PER_MINUTE:
+            raise UiError("rate_limited", 429)
+
+    def _mint_unchecked(self) -> tuple[str, BrowserSession]:
+        token, session = self._construct_session()
+        return self._register_session(token, session)
+
+    def _construct_session(self) -> tuple[str, BrowserSession]:
+        token = secrets.token_urlsafe(32)
+        try:
+            session = BrowserSession(Path(self._temporary.name) / f"{token}.sqlite3", config=self._config,
+                                     router=self._router)
+        except Exception:
+            # Construction has not replaced or exposed any existing session.
+            # Track at most one failed path if OS cleanup cannot finish yet.
+            self._pending_cleanup = (token, None)
+            self._finish_pending_cleanup()
+            raise
+        return token, session
+
+    def _register_session(self, token: str, session: BrowserSession) -> tuple[str, BrowserSession]:
+        self._sessions[token] = session
+        self._mint_times.append(time.monotonic())
+        return token, session
+
+    def _remove_session_files(self, token: str) -> None:
+        database = Path(self._temporary.name) / f"{token}.sqlite3"
+        try:
+            for suffix in ("", "-journal", "-wal", "-shm"):
+                Path(str(database) + suffix).unlink(missing_ok=True)
+        except OSError:
+            raise UiError("session_cleanup_failed", 503) from None
+
+    def _dispose_session(self, token: str, session: BrowserSession) -> None:
+        """Close before removing only this server-owned session's local files."""
+        session.close()
+        self._remove_session_files(token)
+
+    def _finish_pending_cleanup(self) -> None:
+        # A replacement is never published until its old store is disposed.
+        # If rollback cleanup failed, no next admission can allocate another
+        # orphan; at most one extra unpublished path/session remains tracked.
+        if self._pending_cleanup is not None:
+            token, session = self._pending_cleanup
+            if session is None:
+                self._remove_session_files(token)
+            else:
+                self._dispose_session(token, session)
+            self._pending_cleanup = None
+
+    def _reclaim_expired(self, now: datetime, *, excluding: str | None = None) -> None:
+        # The registry lock is held by the caller. Never wait for a session:
+        # an in-flight reset holds that lock and then needs the registry lock.
+        for token, session in tuple(self._sessions.items()):
+            if token == excluding or (not session.retired and now < session.session.expires_at):
+                continue
+            if not session.lock.acquire(blocking=False):
+                continue
+            try:
+                try:
+                    self._dispose_session(token, session)
+                except (StoreError, UiError):
+                    # Failed cleanup remains counted and can be retried; it
+                    # cannot accumulate unbounded stores outside the live cap.
+                    continue
+                self._sessions.pop(token, None)
+            finally:
+                session.lock.release()
+
+    def replace_session(self, token: str) -> tuple[str, BrowserSession]:
+        """Explicit reset preserves old state if mint rate admission fails."""
+        with self._session_lock:
+            if self._closed:
+                raise UiError("server_unavailable", 503)
+            session = self._sessions.get(token)
+            if session is None:
+                raise UiError("session_required", 401)
+            # HTTP reset already holds this exact RLock. Other direct callers
+            # must not wait under the registry lock for an active action.
+            if not session.lock.acquire(blocking=False):
+                raise UiError("session_busy", 409)
+            try:
+                # An active confirmed-but-unverified action must retain its
+                # exact idempotency key/store until readback is reconciled.
+                # Expiry still ends authority and follows disposal policy.
+                if session.outcome_unverified and not session.retired and _now() < session.session.expires_at:
+                    raise UiError("action_not_verified", 409)
+                self._finish_pending_cleanup()
+                self._reclaim_expired(_now(), excluding=token)
+                self._check_mint_rate()
+                # Only one unpublished replacement can exist under the
+                # registry lock. Startup failure preserves the old session.
+                fresh_token, fresh_session = self._construct_session()
+                try:
+                    self._dispose_session(token, session)
+                except (StoreError, UiError):
+                    self._pending_cleanup = (fresh_token, fresh_session)
+                    self._finish_pending_cleanup()
+                    raise
+                self._sessions.pop(token, None)
+                return self._register_session(fresh_token, fresh_session)
+            finally:
+                session.lock.release()
 
     def get_session(self, token: str | None) -> BrowserSession | None:
         with self._session_lock:
@@ -600,16 +1268,32 @@ class DemoServer(ThreadingHTTPServer):
 
     def retire_session(self, token: str) -> None:
         with self._session_lock:
-            session = self._sessions.pop(token, None)
+            session = self._sessions.get(token)
         if session is not None:
-            session.close()
+            # Waiting/closing happens outside the registry lock. Keep the
+            # entry counted until cleanup succeeds, even on an OS failure.
+            with session.lock:
+                self._dispose_session(token, session)
+            with self._session_lock:
+                if self._sessions.get(token) is session:
+                    self._sessions.pop(token, None)
 
     def server_close(self) -> None:
         super().server_close()
         with self._session_lock:
-            for session in self._sessions.values():
-                session.close()
+            self._closed = True
+            sessions = tuple(self._sessions.items())
             self._sessions.clear()
+            pending_cleanup = self._pending_cleanup
+            self._pending_cleanup = None
+        for token, session in sessions:
+            self._dispose_session(token, session)
+        if pending_cleanup is not None:
+            token, session = pending_cleanup
+            if session is None:
+                self._remove_session_files(token)
+            else:
+                self._dispose_session(token, session)
         self._temporary.cleanup()
 
 
@@ -626,10 +1310,16 @@ class DemoHandler(BaseHTTPRequestHandler):
         pass
 
     def _host(self) -> str:
-        host = self.headers.get("Host", "")
-        if host not in self.server.allowed_hosts:
+        hosts = self.headers.get_all("Host", [])
+        if len(hosts) != 1 or hosts[0] not in self.server.allowed_hosts:
             raise UiError("invalid_host", 403)
-        return host
+        return hosts[0]
+
+    def _origin(self, host: str, *, required: bool) -> None:
+        origins = self.headers.get_all("Origin", [])
+        if ((required and not origins) or len(origins) > 1
+                or (origins and origins[0] != self.server.request_origin(host))):
+            raise UiError("invalid_origin", 403)
 
     def _cookie(self) -> str | None:
         try:
@@ -650,12 +1340,17 @@ class DemoHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
         self.send_header("Connection", "close")
         if token is not None:
-            self.send_header("Set-Cookie", f"{COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/")
+            secure = "; Secure" if self.server.hosting is not None else ""
+            self.send_header("Set-Cookie", f"{COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/{secure}")
         self.end_headers()
         self.wfile.write(body)
         self.close_connection = True
 
     def _json(self, status: int, value: dict, token: str | None = None) -> None:
+        if self.server.hosting is not None and isinstance(value.get("session"), dict):
+            value["session"]["customer_label"] = DEMO_CUSTOMER
+            value["authentication"] = "fixed_demo_identity_not_production_login"
+            value["hosting_mode"] = "public_fictional_demo"
         self._send(status, json.dumps(value, ensure_ascii=False, allow_nan=False).encode("utf-8"),
                    "application/json; charset=utf-8", token)
 
@@ -680,9 +1375,13 @@ class DemoHandler(BaseHTTPRequestHandler):
             status, label = 409, "selection_changed"
         elif code == "transaction_required":
             label = "request"
+        elif code in ("invalid_date", "ambiguous_date"):
+            label = code
+        elif code == "stale_handoff_context":
+            label = code
         elif code in ("csrf_rejected", "invalid_origin", "invalid_host", "session_required"):
             label = "security"
-        elif code in ("rate_limited", "session_capacity"):
+        elif code in ("rate_limited", "session_capacity", "session_busy"):
             label = "busy"
         state = {"language": language}
         if session is not None:
@@ -690,7 +1389,7 @@ class DemoHandler(BaseHTTPRequestHandler):
                 state = session.state(_now())
             except (AccessDenied, ActionError, StoreError):
                 pass
-        state["error"] = {"code": code, "text": TEXT[language][label],
+        state["error"] = {"code": code, "text": TEXT[language][label] if session is None else session.text(label),
                           "outcome_unverified": label == "unknown"}
         self._json(status, state)
 
@@ -699,11 +1398,13 @@ class DemoHandler(BaseHTTPRequestHandler):
         try:
             host = self._host()
             path = urlsplit(self.path).path
+            if self.path == "/healthz":
+                self._json(200, {"status": "ok"})
+                return
             if path == "/api/state":
                 site = self.headers.get("Sec-Fetch-Site")
-                origin = self.headers.get("Origin")
-                if ((site is not None and site not in ("same-origin", "none"))
-                        or (origin is not None and origin != f"http://{host}")):
+                self._origin(host, required=False)
+                if site is not None and site not in ("same-origin", "none"):
                     raise UiError("invalid_origin", 403)
                 token = self._cookie()
                 session = self.server.get_session(token)
@@ -732,8 +1433,7 @@ class DemoHandler(BaseHTTPRequestHandler):
         session = None
         try:
             host = self._host()
-            if self.headers.get("Origin") != f"http://{host}":
-                raise UiError("invalid_origin", 403)
+            self._origin(host, required=True)
             if urlsplit(self.path).path != "/api/action":
                 raise UiError("not_found", 404)
             if self.headers.get_content_type() != "application/json":
@@ -770,11 +1470,10 @@ class DemoHandler(BaseHTTPRequestHandler):
                         or not secrets.compare_digest(supplied, session.csrf_token)):
                     raise UiError("csrf_rejected", 403)
                 if action == "reset":
-                    # Reset deliberately starts a fresh demonstration; expiration
-                    # never silently grants the old conversation another session.
+                    # Reset mints fresh state with the same startup mode/customer;
+                    # expiry never silently extends the old session's authority.
                     session.rate_limit()
-                    self.server.retire_session(token)
-                    token, session = self.server.mint_session()
+                    token, session = self.server.replace_session(token)
                     self._json(200, session.state(_now()), token)
                     return
                 session.act(payload, _now())
@@ -788,11 +1487,18 @@ class DemoHandler(BaseHTTPRequestHandler):
                 self._error(error)
 
 
-def serve(port: int = 8765) -> None:
+def serve(port: int = 8765, *, config: PrivateCohortConfig | None = None, router=None,
+          hosting: HostingConfig | None = None) -> None:
     if type(port) is not int or not 0 <= port <= 65535:
         raise ValueError("invalid_port")
-    server = DemoServer(port)
-    print(f"Local fictional-data review UI: http://127.0.0.1:{server.server_address[1]}", flush=True)
+    server = DemoServer(port, config=config, router=router, hosting=hosting)
+    label = "fictional-data" if config is None else "private-cohort"
+    if hosting is None:
+        print(f"Local {label} review UI: http://127.0.0.1:{server.server_address[1]}", flush=True)
+    else:
+        print(f"Public fictional-data DEMO: {hosting.public_origin}; "
+              f"HTTP listener {hosting.bind_host}:{server.server_address[1]} requires trusted HTTPS termination; "
+              f"fixed {DEMO_CUSTOMER} identity is not production login.", flush=True)
     try:
         server.serve_forever(poll_interval=0.2)
     except KeyboardInterrupt:

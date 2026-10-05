@@ -3,9 +3,10 @@
 This module proposes an intent; it never authorizes access, confirms a draft, or
 writes a case. ``confidence`` is a binary rule-match indicator, not a calibrated
 probability. No learned model is implemented here. Unknown wording requires the
-UI to clarify or offer a human path. Dates require an explicit ISO calendar date.
-The demo explicitly interprets the word dollar/dólar/dólares as USD and marks that
-interpretation for display. The symbol $ and the word pesos remain ambiguous.
+UI to clarify or offer a human path. Dates accept ISO, day-first numeric dates,
+and bounded Spanish/Portuguese month names. An omitted year uses a trusted
+reference date and is marked for display. The word dollar/dólar/dólares means USD,
+with that interpretation marked for display. The symbol $ and the word pesos remain ambiguous.
 Bare amounts are held separately until a currency is supplied. No conversion or
 inference from the customer's location is performed. The prototype record
 contract allows USD, COP, ARS and MXN only. "Pesos" requires an explicit code
@@ -20,6 +21,7 @@ from typing import Literal
 import unicodedata
 
 from bank_service.records import SUPPORTED_CURRENCIES
+from bank_service.request_dates import DateParsingError, extract_request_date, is_date_reply, mask_request_dates
 from bank_service.selection import TransactionFilters
 
 
@@ -46,6 +48,7 @@ class RequestSlots:
     needs_currency: bool = False
     used_dollar_alias: bool = False
     currency_ambiguous: bool = False
+    assumed_date_year: bool = False
 
 
 def _checked_text(text: str, language: str) -> str:
@@ -203,7 +206,7 @@ def _parse_amount(value: str) -> Decimal:
     return amount
 
 
-def extract_slots(text: str, language: str) -> RequestSlots:
+def extract_slots(text: str, language: str, *, reference_date: date | None = None) -> RequestSlots:
     """Extract exact optional slots, raising rather than guessing ambiguity."""
     checked = _checked_text(text, language)
     ascii_text = _without_accents(checked)
@@ -226,19 +229,17 @@ def extract_slots(text: str, language: str) -> RequestSlots:
         identifiers.add(token.upper() if token.upper().startswith("DEMO-TX-") else token)
     transaction_id = _one_value(identifiers, "ambiguous_transaction_id")
 
-    dates = set()
-    for match in re.finditer(r"(?<![\w-])\d{4}-\d{1,2}-\d{1,2}(?![\w-])", checked):
-        raw = match.group(0)
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw):
-            raise RoutingError("invalid_date")
-        try:
-            dates.add(date.fromisoformat(raw))
-        except ValueError:
-            raise RoutingError("invalid_date") from None
-    transaction_date = _one_value(dates, "ambiguous_date")
+    try:
+        interpreted = extract_request_date(
+            checked, language, reference_date=date.today() if reference_date is None else reference_date)
+    except DateParsingError as error:
+        raise RoutingError(str(error)) from None
+    transaction_date = interpreted.value
 
     used_dollar_alias = bool(_DOLLAR_ALIAS.search(ascii_text))
-    money_text = _DOLLAR_ALIAS.sub("USD", ascii_text)
+    # A date's day/year cannot become a monetary amount merely because the
+    # customer adds a currency code after it. Mask only recognized date spans.
+    money_text = _DOLLAR_ALIAS.sub("USD", mask_request_dates(ascii_text, language))
     has_peso_alias = bool(_PESO_ALIAS.search(ascii_text))
     currencies = {match.group(0).upper() for match in _CURRENCY_PATTERN.finditer(money_text)}
     if currencies - SUPPORTED_CURRENCIES:
@@ -278,6 +279,7 @@ def extract_slots(text: str, language: str) -> RequestSlots:
         transaction_id, TransactionFilters(transaction_date, amount, currency),
         amount_without_currency, needs_currency, used_dollar_alias,
         currency is None and (has_peso_alias or "$" in money_text),
+        interpreted.assumed_year,
     )
 
 
@@ -288,18 +290,270 @@ def refers_to_selected_transaction(text: str, language: str) -> bool:
     new search filters. It is only useful while a server-owned selection exists.
     """
     normalized = _without_accents(_checked_text(text, language)).casefold()
+    noun = (
+        r"(?:compra|cargo|cobro|cobranca|transaccion|transacao|pago|pagamento|debito|"
+        r"operacion|operacao|movimiento|movimento|movimentacao|lancamento)"
+    )
+    # A request for another/new record is not a reference to the selection, even
+    # when the customer mentions the selected record as a comparison.
+    new_noun = (
+        r"(?:compras?|cargos?|cobros?|cobrancas?|transaccion(?:es)?|transacao|transacoes|pagos?|"
+        r"pagamentos?|debitos?|operacion(?:es)?|operacao|operacoes|movimientos?|"
+        r"movimentos?|movimentacao|movimentacoes|lancamentos?)"
+    )
+    if re.search(r"\b(?:otr[oa]s?|outr[oa]s?|nuev[oa]s?|nov[oa]s?)\s+" + new_noun + r"\b", normalized):
+        return False
     return bool(re.search(
-        r"\b(?:esta|este|esa|ese|essa|esse|aquela|aquele)\s+"
-        r"(?:compra|cargo|cobro|transaccion|transacao|pago|pagamento|debito)\b",
+        r"\b(?:esta|este|esa|ese|aquella|aquel|essa|esse|aquela|aquele|"
+        r"desta|deste|dessa|desse|daquela|daquele|nesta|neste|nessa|nesse|naquela|naquele)\s+"
+        + noun + r"\b|"
+        r"\b(?:el|la|del|o|a|do|da|no|na)\s+" + noun
+        + r"\s+(?:seleccionad[oa]|selecionad[oa]|elegid[oa]|escolhid[oa])\b",
         normalized,
     ))
+
+
+def is_greeting(text: str, language: str) -> bool:
+    """Recognize a complete greeting, retaining the selected ES/PT response.
+
+    Common standalone English greetings are courtesy aliases only, not English
+    business-language support. A greeting mixed with a request is excluded.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold().strip(" \t\r\n.!¡?¿")
+    pattern = (r"(?:hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches)"
+               if language == "es" else r"(?:ola|oi|bom dia|boa tarde|boa noite)")
+    return re.fullmatch(r"(?:" + pattern + r"|hello|hi|hey)", normalized) is not None
+
+
+def declines_handoff_preparation(text: str, language: str) -> bool:
+    """Recognize an explicit refusal to prepare/save a support request."""
+    normalized = _without_accents(_checked_text(text, language)).casefold()
+    # A request for a person is not permission to prepare a ticket when another
+    # clause explicitly refuses preparation. A failed past attempt ("no pude
+    # crear...") does not match this bounded refusal grammar.
+    declined_preparation = (
+        r"\b(?:no|nao|nunca|sin|sem)\s+"
+        r"(?:(?:quiero|quero|necesito|preciso|deseo|desejo|permito|autorizo|solicito)\s+)?"
+        r"(?:(?:que|me|voce|se|realmente|mesmo|un|una|um|uma|ningun|ninguna|nenhum|nenhuma)\s+){0,4}"
+        r"(?:preparar|prepara|prepare|prepares|crear|crea|cree|crees|criar|crie|abrir|abra|abras|"
+        r"guardar|guarda|guarde|guardes|salvar|salve|enviar|envia|envie|envies|"
+        r"ticket|caso|solicitud|solicitacao|pedido|resumen|resumo|borrador|rascunho)\b"
+    )
+    return re.search(declined_preparation, normalized) is not None
+
+
+def is_explicit_human_request(text: str, language: str) -> bool:
+    """Require positive human-request wording, never just a model label.
+
+    This bounded check establishes only the request to prepare a human summary;
+    it never grants access, confirms storage or verifies bank case history.
+    Complete positive request clauses are required; narrative mentions and
+    unclear negation need clarification. Existing unsupported-action priority
+    still applies across the whole message.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold()
+    if declines_handoff_preparation(text, language):
+        return False
+    proposal = route_intent(normalized, language)
+    if proposal.intent == "unsupported" and proposal.matched:
+        return False
+    target = (
+        r"(?:(?:un|una|um|uma|el|la|o|a)\s+)?"
+        r"(?:persona|pessoa|agente|atendente|humano|humana|asesor|assessor)"
+        r"(?:\s+(?:real|humano|humana))?"
+    )
+    prefix = (
+        r"(?:quiero|quisiera|necesito|deseo|me gustaria|puedo|puedes|podrias|"
+        r"quero|queria|preciso|desejo|gostaria de|posso|pode|poderia)"
+    )
+    contact = (
+        r"(?:hablar|hablarme|conversar|falar|contactar|conectar|comunicarme|"
+        r"conectame|comunicame|pasame)\s+(?:con|com|a)\s+" + target
+    )
+    request = (
+        r"(?:por\s+favor\s+)?(?:"
+        + r"(?:" + prefix + r"\s+)?(?:por\s+favor\s+)?" + contact
+        + r"|(?:" + prefix + r")\s+(?:de\s+)?" + target
+        + r"|atencion\s+humana|atendimento\s+human[oa])"
+        + r"(?:\s+(?:sobre|por|acerca de|a respeito de)\s+[^,;.!?]+)?"
+        + r"(?:\s+por\s+favor)?"
+    )
+    for clause in re.split(r"[,;.!?\n]+", normalized):
+        clause = clause.strip(" \t\r\n¡¿")
+        # A negative customer problem after "because" is distinct from a
+        # negated request for a person. The whole-message refusal and action
+        # checks above still apply before this positive request clause.
+        human_clause = re.split(
+            r"\s+(?:porque|sobre|acerca de|a respeito de|para)\s+", clause, maxsplit=1)[0]
+        if re.search(r"\b(?:no|nao|nunca|jamas|jamais|ni|nem|sin|sem)\b", human_clause):
+            continue
+        if re.fullmatch(request, human_clause):
+            return True
+    return False
+
+
+def human_request_purpose(text: str, language: str) -> str | None:
+    """Return an inline, literal customer purpose; never a model summary.
+
+    This helper is used only after positive human-request wording is verified.
+    A reason introduced after that request is retained without interpreting it
+    as an instruction to execute a banking action. Mixed complaint clauses may
+    retain the full informative request rather than invent a rewritten issue.
+    """
+    checked = _checked_text(text, language).strip()
+    if not is_explicit_human_request(checked, language):
+        return None
+    for connector in re.finditer(
+        r"\s+(?:porque|sobre|acerca de|a respeito de|por|para)\s+", checked, re.IGNORECASE):
+        prefix = checked[:connector.start()].strip()
+        if is_explicit_human_request(prefix, language):
+            purpose = checked[connector.end():].strip()
+            normalized = _without_accents(purpose).casefold().strip(" .!?¡¿")
+            if normalized not in ("", "favor", "si", "sim", "ayuda", "ajuda", "algo",
+                                  "gracias", "muchas gracias", "obrigado", "obrigada", "thanks"):
+                return purpose
+    clauses = [part.strip() for part in re.split(r"[,;\n]+", checked) if part.strip()]
+    if any(not is_explicit_human_request(part, language)
+           and not is_greeting(part, language)
+           and _without_accents(part).casefold().strip(" .!?¡¿") not in (
+               "por favor", "si", "sim", "gracias", "muchas gracias", "obrigado", "obrigada", "thanks")
+           for part in clauses):
+        return checked
+    return None
+
+
+def is_explicit_inquiry(text: str, language: str) -> bool:
+    """Recognize a complete, plain read/search request before model routing.
+
+    A read verb and transaction noun are both required. The whole-message
+    grammar deliberately excludes unknown tails, negation, support cases,
+    consent and mixed action requests. Existing higher-priority baseline intents
+    must agree that this is an inquiry. This flag never selects a record or
+    supplies missing search details, permission or action consent.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold().strip()
+    if route_intent(text, language).intent != "inquiry":
+        return False
+    if language == "es":
+        greeting = r"(?:hola|buenas|buen dia|buenos dias|buenas tardes|buenas noches)"
+        prefix = (
+            r"(?:quiero|quisiera|necesito|deseo|me gustaria|puedo|puedes|podrias|"
+            r"ayudame a|me ayudas a|puedes ayudarme a|podrias ayudarme a)"
+        )
+        verb = r"(?:ver|consultar|buscar|busca|busco|encontrar|localizar|mostrar|mostrarme|muestra|muestrame|ensena|ensename)"
+        article = r"(?:un|una|el|la|los|las|mi|mis|este|esta|estos|estas|ese|esa|esos|esas)"
+        noun = r"(?:pagos?|cargos?|cobros?|compras?|transaccion(?:es)?|movimientos?|operacion(?:es)?|debitos?)"
+        detail = r"(?:los\s+)?(?:datos|detalles)\s+(?:de|del)\s+"
+    else:
+        greeting = r"(?:ola|oi|bom dia|boa tarde|boa noite)"
+        prefix = (
+            r"(?:quero|queria|preciso|desejo|gostaria de|posso|pode|poderia|"
+            r"me ajude a|pode me ajudar a|poderia me ajudar a)"
+        )
+        verb = r"(?:ver|consultar|consulte|buscar|busque|encontrar|localizar|conferir|confira|verificar|mostrar|mostre)"
+        article = r"(?:um|uma|o|a|os|as|meu|meus|minha|minhas|este|esta|estes|estas|esse|essa|esses|essas|deste|desta|desse|dessa)"
+        noun = r"(?:pagamentos?|compras?|cobrancas?|transacao|transacoes|debitos?|movimentos?|movimentacao|movimentacoes|operacao|operacoes|lancamentos?)"
+        detail = r"(?:os\s+)?(?:dados|detalhes)\s+(?:(?:de|do|da)\s+)?"
+    pattern = (
+        r"[\s¡!¿?]*" + r"(?:" + greeting + r"\s*[,!:]?\s+)?"
+        + r"(?:por\s+favor\s*[,!:]?\s+)?"
+        + r"(?:" + prefix + r"\s+)?"
+        + r"(?:por\s+favor\s+)?" + verb + r"\s+"
+        + r"(?:" + detail + r")?"
+        + r"(?:" + article + r"\s+)?" + noun
+        + r"(?:\s*[,!:]?\s+por\s+favor)?[\s.!?¡¿]*"
+    )
+    return re.fullmatch(pattern, normalized) is not None
+
+
+def is_case_continuation(text: str, language: str) -> bool:
+    """Recognize a request about a customer-claimed existing support case.
+
+    This predicate never verifies that a case exists or retrieves its status.
+    It requires a support-case reference and a continuation/status request;
+    explicit requests to open a new case and negated follow-up requests are
+    excluded. The caller must explain the unavailable history and obtain any
+    separate consent needed to prepare a human-review packet.
+    """
+    normalized = _without_accents(_checked_text(text, language)).casefold()
+    noun = (
+        r"(?:caso|reclamo|reclamacion|queja|ticket|solicitud\s+de\s+revision)"
+        if language == "es" else
+        r"(?:caso|reclamacao|queixa|chamado|protocolo|pedido\s+de\s+revisao)"
+    )
+    case = r"\b" + noun + r"\b"
+    if not re.search(case, normalized):
+        return False
+    no_existing_case = (
+        r"\b(?:no|nao)\s+(?:tengo|tenho|hay|ha|existe|abri|"
+        r"he\s+abierto|registrei|presente|envie|mandei)\b"
+    )
+    if re.search(
+        no_existing_case + r"[^.;!?]{0,55}" + case + r"|"
+        + case + r"[^.;!?]{0,55}" + no_existing_case,
+        normalized,
+    ):
+        return False
+    # Infinitives distinguish a requested new case from a past action such as
+    # "presenté"/"registré", whose accents disappear during normalization.
+    if re.search(
+        r"\b(?:abrir|crear|criar|registrar|iniciar|presentar)\b"
+        r"[^.;!?]{0,55}" + case,
+        _NEGATED_ACTION.sub(" ", normalized),
+    ):
+        return False
+    resume = (
+        r"(?:retomar|retoma|retome|retomemos|continuar|continua|continue|"
+        r"continuemos|reanudar|reanuda|proseguir|prosseguir|"
+        r"dar\s+seguimiento|hacer\s+seguimiento|seguir\s+con|"
+        r"acompanhar|acompanhe|dar\s+continuidade)"
+    )
+    followup = (
+        r"(?:" + resume + r"|consultar|verificar|revisar|saber|conocer|"
+        r"acompanhar|checar|conferir)"
+    )
+    if re.search(
+        r"\b(?:no|nao)\s+(?:(?:quiero|quero|necesito|preciso|deseo|desejo)\s+)?"
+        + followup + r"\b[^.;!?]{0,55}" + case,
+        normalized,
+    ):
+        return False
+    # Resuming/following up an explicitly named case already implies a prior
+    # customer interaction. A generic question merely mentioning a case does not.
+    if re.search(r"\b" + resume + r"\b[^.;!?]{0,90}" + case, normalized):
+        return True
+    owned_case = bool(re.search(
+        r"\b(?:mi|mis|nuestro|nuestra|meu|minha|nosso|nossa)\s+"
+        r"(?:(?:primer|primera|ultimo|ultima|anterior|primeiro|primeira)\s+)?"
+        + case,
+        normalized,
+    ))
+    prior = (
+        r"\b(?:abri|abrimos|envie|enviamos|presente|presentamos|mande|mandei|"
+        r"registrei|registramos|iniciei|iniciamos|abiert[oa]|abert[oa]|"
+        r"registrad[oa]|presentad[oa]|enviad[oa]|anterior|previ[oa]|"
+        r"existente|pendiente|pendente)\b|\b(?:ya|ja)\s+(?:tengo|tenho)\b"
+    )
+    existing_case = owned_case or bool(re.search(
+        case + r"[^.;!?]{0,90}" + prior + r"|"
+        + prior + r"[^.;!?]{0,90}" + case,
+        normalized,
+    ))
+    status_request = bool(re.search(
+        r"\b(?:seguimiento|seguimento|andamento|avance|novedades|atualizacoes|"
+        r"atualizacao|actualizaciones|actualizacion|status|estado|situacion|retorno)\b|"
+        r"\bcomo\s+(?:va|sigue|vai|esta|anda)\b|"
+        r"\b(?:consultar|verificar|revisar|saber|conocer|checar|conferir)\b",
+        normalized,
+    ))
+    return existing_case and status_request
 
 
 def is_search_followup(text: str, language: str) -> bool:
     """Recognize one slot-only reply for an unfinished server-owned search.
 
     This predicate does not validate the value, preserve an intent, or read any
-    conversation state. The caller uses it only with an active unfinished search
+    conversation state. The caller can start an inquiry or continue a prior search,
     and still calls extract_slots(), permission checks and record selection.
     Full matching deliberately excludes new requests and typed consent.
     """
@@ -312,8 +566,20 @@ def is_search_followup(text: str, language: str) -> bool:
         normalized = normalized[:-1].rstrip()
     if _DIRECT_ID.fullmatch(normalized):
         return True
-    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", normalized):
+    if is_date_reply(text, language):
         return True
+    masked = mask_request_dates(normalized, language)
+    if masked != normalized:
+        # Combined details remain details: a date plus currency/amount cannot
+        # start a dispute or discard an active request because of a model label.
+        # Only closed connector/label words are removed; any business prose
+        # remains and fails the whole money-fragment grammar below.
+        normalized = re.sub(
+            r"\b(?:el|la|o|a|del|de|en|em|fue|foi|por|y|e|fecha|data)\b", " ", masked)
+        normalized = re.sub(r"(?<!\d)[,;:](?!\d)", " ", normalized).strip(" \t\r\n.!?¿¡")
+        if not normalized:
+            return True
+        normalized = re.sub(r"\s+", " ", normalized)
     unit = "(?:" + _CURRENCY + r"|dolar(?:es)?|dollars?|pesos?)"
     if re.fullmatch(unit + r"|\$", normalized, re.IGNORECASE):
         return True

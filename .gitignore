@@ -1,25 +1,21 @@
-# Secrets and local configuration (never commit source credentials)
+# Local configuration and credentials
 .env
 .env.*
 !.env.example
-**/secrets/**
-**/credentials/**
+**/secrets/
+**/credentials/
 *credentials*
 *.pem
 *.key
 .aws/
-.streamlit/secrets.toml
 
-# Organizer reference material and any extracted/rendered copies
-*.pdf
-Challenge Materials/
-reference_materials/
-tmp/
-
-# Source data, local audit samples, runtime state, model artifacts
+# Source data, reference material and runtime state
 data/
 .local/
 artifacts/
+reference_materials/
+Challenge Materials/
+*.pdf
 *.csv
 *.tsv
 *.parquet
@@ -32,11 +28,9 @@ artifacts/
 *.pkl
 *.joblib
 *.log
-
-# Final evaluation inputs/labels are local and sealed until freeze
 evaluation/final_private/
 
-# Python/editor/OS
+# Python and editor files
 .venv/
 venv/
 __pycache__/
@@ -46,7 +40,12 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+tmp/
 .idea/
 .vscode/
+.agents/
+.codex/
+AGENTS.md
+CODEX.md
 Thumbs.db
 Desktop.ini

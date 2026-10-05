@@ -1,3 +1,3 @@
-"""Offline scaffold. No model, network, or banking actions run on import."""
+"""Spanish and Portuguese transaction support."""
 
 __version__ = "0.0.1"

@@ -1,0 +1,3 @@
+# Preserve hashed training resources and aggregate reports byte for byte.
+bank_service/resources/*.json -text
+evidence/*.json -text

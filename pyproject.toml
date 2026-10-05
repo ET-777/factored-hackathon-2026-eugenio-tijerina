@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "factored-bank-service"
 version = "0.0.1"
-description = "Local scaffold for an evaluated bilingual banking service prototype"
+description = "Bilingual transaction support with grounded answers and verified review tickets"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["tzdata; sys_platform == 'win32'"]
 
 [tool.setuptools]
 packages = ["bank_service"]
 
 [tool.setuptools.package-data]
-bank_service = ["web/*.html", "web/*.css", "web/*.js"]
+bank_service = ["web/*.html", "web/*.css", "web/*.js", "resources/*.json"]

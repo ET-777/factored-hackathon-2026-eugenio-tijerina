@@ -1,0 +1,2669 @@
+{
+  "criteria": {
+    "no_language_service_completion_regression": false,
+    "routing_gain_target": true,
+    "spanish_service_completions_at_least_12": false,
+    "workflow_gain_target": false,
+    "zero_observed_and_unassessed_safety_failures": true
+  },
+  "default_router_changed": false,
+  "engineering_targets_met": false,
+  "final_output_human_review_complete": false,
+  "finished_at_utc": "2026-10-05T01:29:32.287800+00:00",
+  "freeze_sha256": "004ef91d2eb577d33f535e3aa25ded4d202b65e1a664ee62259503c9a6f46c05",
+  "mechanical_scoring_complete": true,
+  "outcomes_sha256": "2eb64c2f149a8c12a13a97fb63c0008bf11a72e03c241b984807943367f41762",
+  "paired_by_language": {
+    "es": {
+      "baseline_only_correct": 2,
+      "baseline_only_workflow_completed": 4,
+      "candidate_only_correct": 5,
+      "candidate_only_workflow_completed": 2,
+      "correct_delta": 3,
+      "macro_f1_delta": 0.17321428571428554,
+      "service_completion_delta": -2
+    },
+    "pt": {
+      "baseline_only_correct": 0,
+      "baseline_only_workflow_completed": 2,
+      "candidate_only_correct": 6,
+      "candidate_only_workflow_completed": 4,
+      "correct_delta": 6,
+      "macro_f1_delta": 0.2662698412698412,
+      "service_completion_delta": 2
+    }
+  },
+  "portuguese_fluent_review_complete": false,
+  "provenance": {
+    "banking_facts": "validated_supplied_private_cohort",
+    "independent_evaluation": false,
+    "original_final_opened": false,
+    "portuguese_fluent_review_complete": false,
+    "request_source": "codex_authored_owner_reviewed_spanish",
+    "reviewed_spanish_inputs": true,
+    "source_raw_csv_rehashed": false
+  },
+  "schema_version": 1,
+  "status": "mechanical_comparison_complete_human_output_review_pending",
+  "systems": {
+    "keyword_baseline": {
+      "component": {
+        "by_language": {
+          "es": {
+            "abstention_rate": 0.375,
+            "abstentions": 6,
+            "accuracy": 0.5,
+            "attempts": 16,
+            "confusion": {
+              "dispute_intake": {
+                "ABSTAIN": 1,
+                "dispute_intake": 1,
+                "human_request": 0,
+                "inquiry": 2,
+                "unsupported": 0
+              },
+              "human_request": {
+                "ABSTAIN": 1,
+                "dispute_intake": 0,
+                "human_request": 3,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "inquiry": {
+                "ABSTAIN": 0,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 4,
+                "unsupported": 0
+              },
+              "unsupported": {
+                "ABSTAIN": 4,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 0
+              }
+            },
+            "correct": 8,
+            "coverage": 0.625,
+            "covered": 10,
+            "error_rate": 0.0,
+            "errors": 0,
+            "family_exact_all_correct": {
+              "correct": 8,
+              "families": 16,
+              "incorrect": 8,
+              "rate": 0.5
+            },
+            "incorrect": 8,
+            "macro_f1": 0.5142857142857143,
+            "per_intent": {
+              "dispute_intake": {
+                "f1": 0.4,
+                "false_negative": 3,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 1,
+                "recall": 0.25,
+                "support": 4,
+                "true_positive": 1
+              },
+              "human_request": {
+                "f1": 0.8571428571428571,
+                "false_negative": 1,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 3,
+                "recall": 0.75,
+                "support": 4,
+                "true_positive": 3
+              },
+              "inquiry": {
+                "f1": 0.8,
+                "false_negative": 0,
+                "false_positive": 2,
+                "precision": 0.6666666666666666,
+                "predicted": 6,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              },
+              "unsupported": {
+                "f1": 0.0,
+                "false_negative": 4,
+                "false_positive": 0,
+                "precision": 0.0,
+                "predicted": 0,
+                "recall": 0.0,
+                "support": 4,
+                "true_positive": 0
+              }
+            }
+          },
+          "pt": {
+            "abstention_rate": 0.4375,
+            "abstentions": 7,
+            "accuracy": 0.375,
+            "attempts": 16,
+            "confusion": {
+              "dispute_intake": {
+                "ABSTAIN": 1,
+                "dispute_intake": 1,
+                "human_request": 0,
+                "inquiry": 2,
+                "unsupported": 0
+              },
+              "human_request": {
+                "ABSTAIN": 1,
+                "dispute_intake": 0,
+                "human_request": 3,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "inquiry": {
+                "ABSTAIN": 3,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 1,
+                "unsupported": 0
+              },
+              "unsupported": {
+                "ABSTAIN": 2,
+                "dispute_intake": 0,
+                "human_request": 0,
+                "inquiry": 1,
+                "unsupported": 1
+              }
+            },
+            "correct": 6,
+            "coverage": 0.5625,
+            "covered": 9,
+            "error_rate": 0.0,
+            "errors": 0,
+            "family_exact_all_correct": {
+              "correct": 6,
+              "families": 16,
+              "incorrect": 10,
+              "rate": 0.375
+            },
+            "incorrect": 10,
+            "macro_f1": 0.47678571428571426,
+            "per_intent": {
+              "dispute_intake": {
+                "f1": 0.4,
+                "false_negative": 3,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 1,
+                "recall": 0.25,
+                "support": 4,
+                "true_positive": 1
+              },
+              "human_request": {
+                "f1": 0.8571428571428571,
+                "false_negative": 1,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 3,
+                "recall": 0.75,
+                "support": 4,
+                "true_positive": 3
+              },
+              "inquiry": {
+                "f1": 0.25,
+                "false_negative": 3,
+                "false_positive": 3,
+                "precision": 0.25,
+                "predicted": 4,
+                "recall": 0.25,
+                "support": 4,
+                "true_positive": 1
+              },
+              "unsupported": {
+                "f1": 0.4,
+                "false_negative": 3,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 1,
+                "recall": 0.25,
+                "support": 4,
+                "true_positive": 1
+              }
+            }
+          }
+        },
+        "labels": [
+          "inquiry",
+          "dispute_intake",
+          "human_request",
+          "unsupported"
+        ],
+        "overall": {
+          "abstention_rate": 0.40625,
+          "abstentions": 13,
+          "accuracy": 0.4375,
+          "attempts": 32,
+          "confusion": {
+            "dispute_intake": {
+              "ABSTAIN": 2,
+              "dispute_intake": 2,
+              "human_request": 0,
+              "inquiry": 4,
+              "unsupported": 0
+            },
+            "human_request": {
+              "ABSTAIN": 2,
+              "dispute_intake": 0,
+              "human_request": 6,
+              "inquiry": 0,
+              "unsupported": 0
+            },
+            "inquiry": {
+              "ABSTAIN": 3,
+              "dispute_intake": 0,
+              "human_request": 0,
+              "inquiry": 5,
+              "unsupported": 0
+            },
+            "unsupported": {
+              "ABSTAIN": 6,
+              "dispute_intake": 0,
+              "human_request": 0,
+              "inquiry": 1,
+              "unsupported": 1
+            }
+          },
+          "correct": 14,
+          "coverage": 0.59375,
+          "covered": 19,
+          "error_rate": 0.0,
+          "errors": 0,
+          "family_exact_all_correct": {
+            "correct": 5,
+            "families": 16,
+            "incorrect": 11,
+            "rate": 0.3125
+          },
+          "incorrect": 18,
+          "macro_f1": 0.5087301587301587,
+          "per_intent": {
+            "dispute_intake": {
+              "f1": 0.4,
+              "false_negative": 6,
+              "false_positive": 0,
+              "precision": 1.0,
+              "predicted": 2,
+              "recall": 0.25,
+              "support": 8,
+              "true_positive": 2
+            },
+            "human_request": {
+              "f1": 0.8571428571428571,
+              "false_negative": 2,
+              "false_positive": 0,
+              "precision": 1.0,
+              "predicted": 6,
+              "recall": 0.75,
+              "support": 8,
+              "true_positive": 6
+            },
+            "inquiry": {
+              "f1": 0.5555555555555556,
+              "false_negative": 3,
+              "false_positive": 5,
+              "precision": 0.5,
+              "predicted": 10,
+              "recall": 0.625,
+              "support": 8,
+              "true_positive": 5
+            },
+            "unsupported": {
+              "f1": 0.2222222222222222,
+              "false_negative": 7,
+              "false_positive": 0,
+              "precision": 1.0,
+              "predicted": 1,
+              "recall": 0.125,
+              "support": 8,
+              "true_positive": 1
+            }
+          }
+        },
+        "prediction_columns": [
+          "inquiry",
+          "dispute_intake",
+          "human_request",
+          "unsupported",
+          "ABSTAIN"
+        ]
+      },
+      "component_latency": {
+        "attempts": 32,
+        "coverage": 1.0,
+        "median": 0.0001221999991685152,
+        "missing": 0,
+        "observed": 32,
+        "p95": 0.0007585000021208543,
+        "p95_method": "nearest_rank_on_observed",
+        "unit": "seconds"
+      },
+      "workflow": {
+        "by_language": {
+          "es": {
+            "service": {
+              "attempts": 16,
+              "automated_answer_or_intake_completed": 3,
+              "by_terminal": {
+                "answered": {
+                  "attempts": 4,
+                  "completed": 3
+                },
+                "handoff": {
+                  "attempts": 6,
+                  "completed": 4
+                },
+                "intake": {
+                  "attempts": 3,
+                  "completed": 0
+                },
+                "unsupported": {
+                  "attempts": 3,
+                  "completed": 3
+                }
+              },
+              "checks": {
+                "answer_trace_grounded": {
+                  "applicable": 9,
+                  "failed": 4,
+                  "not_applicable": 7,
+                  "passed": 5,
+                  "rate": 0.5555555555555556,
+                  "unassessed": 0
+                },
+                "authorized_disclosure": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "authorized_writes": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "channel_unknown": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 15,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "consent_and_storage": {
+                  "applicable": 9,
+                  "failed": 3,
+                  "not_applicable": 7,
+                  "passed": 6,
+                  "rate": 0.6666666666666666,
+                  "unassessed": 0
+                },
+                "execution_complete": {
+                  "applicable": 16,
+                  "failed": 3,
+                  "not_applicable": 0,
+                  "passed": 13,
+                  "rate": 0.8125,
+                  "unassessed": 0
+                },
+                "expected_error": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "handoff_context_trace": {
+                  "applicable": 6,
+                  "failed": 0,
+                  "not_applicable": 10,
+                  "passed": 6,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "idempotent_confirmation": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 16,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "language_preserved": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "mutation_count": {
+                  "applicable": 16,
+                  "failed": 3,
+                  "not_applicable": 0,
+                  "passed": 13,
+                  "rate": 0.8125,
+                  "unassessed": 0
+                },
+                "no_duplicates": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "no_early_write": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "packet_grounded": {
+                  "applicable": 9,
+                  "failed": 3,
+                  "not_applicable": 7,
+                  "passed": 6,
+                  "rate": 0.6666666666666666,
+                  "unassessed": 0
+                },
+                "purpose_preserved": {
+                  "applicable": 9,
+                  "failed": 3,
+                  "not_applicable": 7,
+                  "passed": 6,
+                  "rate": 0.6666666666666666,
+                  "unassessed": 0
+                },
+                "receipt_readback": {
+                  "applicable": 9,
+                  "failed": 3,
+                  "not_applicable": 7,
+                  "passed": 6,
+                  "rate": 0.6666666666666666,
+                  "unassessed": 0
+                },
+                "required_statuses": {
+                  "applicable": 16,
+                  "failed": 6,
+                  "not_applicable": 0,
+                  "passed": 10,
+                  "rate": 0.625,
+                  "unassessed": 0
+                },
+                "success_requires_verified_receipt": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "terminal": {
+                  "applicable": 16,
+                  "failed": 6,
+                  "not_applicable": 0,
+                  "passed": 10,
+                  "rate": 0.625,
+                  "unassessed": 0
+                }
+              },
+              "completed": 10,
+              "completion_rate": 0.625,
+              "execution_errors": 3,
+              "incomplete": 6,
+              "latency": {
+                "attempts": 16,
+                "coverage": 1.0,
+                "median": 0.012061400000675349,
+                "missing": 0,
+                "observed": 16,
+                "p95": 0.03767530000186525,
+                "p95_method": "nearest_rank_on_observed",
+                "unit": "seconds"
+              },
+              "unnecessary_persisted_transfers": 1,
+              "verified_ticket_transfers_completed": 4
+            },
+            "simulated_safety": {
+              "attempts": 8,
+              "automated_answer_or_intake_completed": 0,
+              "by_terminal": {
+                "access_denied": {
+                  "attempts": 3,
+                  "completed": 1
+                },
+                "assent_pending": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "cancelled": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "declined": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "intake": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "write_failed": {
+                  "attempts": 1,
+                  "completed": 0
+                }
+              },
+              "checks": {
+                "answer_trace_grounded": {
+                  "applicable": 6,
+                  "failed": 6,
+                  "not_applicable": 2,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "authorized_disclosure": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "authorized_writes": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "channel_unknown": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 8,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "consent_and_storage": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "execution_complete": {
+                  "applicable": 8,
+                  "failed": 5,
+                  "not_applicable": 0,
+                  "passed": 3,
+                  "rate": 0.375,
+                  "unassessed": 0
+                },
+                "expected_error": {
+                  "applicable": 8,
+                  "failed": 2,
+                  "not_applicable": 0,
+                  "passed": 6,
+                  "rate": 0.75,
+                  "unassessed": 0
+                },
+                "handoff_context_trace": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 8,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "idempotent_confirmation": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "language_preserved": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "mutation_count": {
+                  "applicable": 8,
+                  "failed": 1,
+                  "not_applicable": 0,
+                  "passed": 7,
+                  "rate": 0.875,
+                  "unassessed": 0
+                },
+                "no_duplicates": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "no_early_write": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "packet_grounded": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "purpose_preserved": {
+                  "applicable": 2,
+                  "failed": 2,
+                  "not_applicable": 6,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "receipt_readback": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "required_statuses": {
+                  "applicable": 8,
+                  "failed": 7,
+                  "not_applicable": 0,
+                  "passed": 1,
+                  "rate": 0.125,
+                  "unassessed": 0
+                },
+                "success_requires_verified_receipt": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "terminal": {
+                  "applicable": 7,
+                  "failed": 5,
+                  "not_applicable": 0,
+                  "passed": 2,
+                  "rate": 0.2857142857142857,
+                  "unassessed": 1
+                }
+              },
+              "completed": 1,
+              "completion_rate": 0.125,
+              "execution_errors": 5,
+              "incomplete": 7,
+              "latency": {
+                "attempts": 8,
+                "coverage": 1.0,
+                "median": 0.005279049999444396,
+                "missing": 0,
+                "observed": 8,
+                "p95": 0.006333400000585243,
+                "p95_method": "nearest_rank_on_observed",
+                "unit": "seconds"
+              },
+              "unnecessary_persisted_transfers": 0,
+              "verified_ticket_transfers_completed": 0
+            }
+          },
+          "pt": {
+            "service": {
+              "attempts": 16,
+              "automated_answer_or_intake_completed": 1,
+              "by_terminal": {
+                "answered": {
+                  "attempts": 4,
+                  "completed": 1
+                },
+                "handoff": {
+                  "attempts": 6,
+                  "completed": 4
+                },
+                "intake": {
+                  "attempts": 3,
+                  "completed": 0
+                },
+                "unsupported": {
+                  "attempts": 3,
+                  "completed": 2
+                }
+              },
+              "checks": {
+                "answer_trace_grounded": {
+                  "applicable": 9,
+                  "failed": 4,
+                  "not_applicable": 7,
+                  "passed": 5,
+                  "rate": 0.5555555555555556,
+                  "unassessed": 0
+                },
+                "authorized_disclosure": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "authorized_writes": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "channel_unknown": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 15,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "consent_and_storage": {
+                  "applicable": 9,
+                  "failed": 3,
+                  "not_applicable": 7,
+                  "passed": 6,
+                  "rate": 0.6666666666666666,
+                  "unassessed": 0
+                },
+                "execution_complete": {
+                  "applicable": 16,
+                  "failed": 3,
+                  "not_applicable": 0,
+                  "passed": 13,
+                  "rate": 0.8125,
+                  "unassessed": 0
+                },
+                "expected_error": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "handoff_context_trace": {
+                  "applicable": 6,
+                  "failed": 0,
+                  "not_applicable": 10,
+                  "passed": 6,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "idempotent_confirmation": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 16,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "language_preserved": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "mutation_count": {
+                  "applicable": 16,
+                  "failed": 3,
+                  "not_applicable": 0,
+                  "passed": 13,
+                  "rate": 0.8125,
+                  "unassessed": 0
+                },
+                "no_duplicates": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "no_early_write": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "packet_grounded": {
+                  "applicable": 9,
+                  "failed": 3,
+                  "not_applicable": 7,
+                  "passed": 6,
+                  "rate": 0.6666666666666666,
+                  "unassessed": 0
+                },
+                "purpose_preserved": {
+                  "applicable": 9,
+                  "failed": 3,
+                  "not_applicable": 7,
+                  "passed": 6,
+                  "rate": 0.6666666666666666,
+                  "unassessed": 0
+                },
+                "receipt_readback": {
+                  "applicable": 9,
+                  "failed": 3,
+                  "not_applicable": 7,
+                  "passed": 6,
+                  "rate": 0.6666666666666666,
+                  "unassessed": 0
+                },
+                "required_statuses": {
+                  "applicable": 16,
+                  "failed": 9,
+                  "not_applicable": 0,
+                  "passed": 7,
+                  "rate": 0.4375,
+                  "unassessed": 0
+                },
+                "success_requires_verified_receipt": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "terminal": {
+                  "applicable": 16,
+                  "failed": 7,
+                  "not_applicable": 0,
+                  "passed": 9,
+                  "rate": 0.5625,
+                  "unassessed": 0
+                }
+              },
+              "completed": 7,
+              "completion_rate": 0.4375,
+              "execution_errors": 3,
+              "incomplete": 9,
+              "latency": {
+                "attempts": 16,
+                "coverage": 1.0,
+                "median": 0.009988649999286281,
+                "missing": 0,
+                "observed": 16,
+                "p95": 0.027674799999658717,
+                "p95_method": "nearest_rank_on_observed",
+                "unit": "seconds"
+              },
+              "unnecessary_persisted_transfers": 1,
+              "verified_ticket_transfers_completed": 4
+            },
+            "simulated_safety": {
+              "attempts": 8,
+              "automated_answer_or_intake_completed": 0,
+              "by_terminal": {
+                "access_denied": {
+                  "attempts": 3,
+                  "completed": 1
+                },
+                "assent_pending": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "cancelled": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "declined": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "intake": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "write_failed": {
+                  "attempts": 1,
+                  "completed": 0
+                }
+              },
+              "checks": {
+                "answer_trace_grounded": {
+                  "applicable": 6,
+                  "failed": 6,
+                  "not_applicable": 2,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "authorized_disclosure": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "authorized_writes": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "channel_unknown": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 8,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "consent_and_storage": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "execution_complete": {
+                  "applicable": 8,
+                  "failed": 5,
+                  "not_applicable": 0,
+                  "passed": 3,
+                  "rate": 0.375,
+                  "unassessed": 0
+                },
+                "expected_error": {
+                  "applicable": 8,
+                  "failed": 2,
+                  "not_applicable": 0,
+                  "passed": 6,
+                  "rate": 0.75,
+                  "unassessed": 0
+                },
+                "handoff_context_trace": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 8,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "idempotent_confirmation": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "language_preserved": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "mutation_count": {
+                  "applicable": 8,
+                  "failed": 1,
+                  "not_applicable": 0,
+                  "passed": 7,
+                  "rate": 0.875,
+                  "unassessed": 0
+                },
+                "no_duplicates": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "no_early_write": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "packet_grounded": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "purpose_preserved": {
+                  "applicable": 2,
+                  "failed": 2,
+                  "not_applicable": 6,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "receipt_readback": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "required_statuses": {
+                  "applicable": 8,
+                  "failed": 7,
+                  "not_applicable": 0,
+                  "passed": 1,
+                  "rate": 0.125,
+                  "unassessed": 0
+                },
+                "success_requires_verified_receipt": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "terminal": {
+                  "applicable": 7,
+                  "failed": 5,
+                  "not_applicable": 0,
+                  "passed": 2,
+                  "rate": 0.2857142857142857,
+                  "unassessed": 1
+                }
+              },
+              "completed": 1,
+              "completion_rate": 0.125,
+              "execution_errors": 5,
+              "incomplete": 7,
+              "latency": {
+                "attempts": 8,
+                "coverage": 1.0,
+                "median": 0.005176700000447454,
+                "missing": 0,
+                "observed": 8,
+                "p95": 0.0062706999997317325,
+                "p95_method": "nearest_rank_on_observed",
+                "unit": "seconds"
+              },
+              "unnecessary_persisted_transfers": 0,
+              "verified_ticket_transfers_completed": 0
+            }
+          }
+        },
+        "overall": {
+          "attempts": 48,
+          "automated_answer_or_intake_completed": 4,
+          "by_terminal": {
+            "access_denied": {
+              "attempts": 6,
+              "completed": 2
+            },
+            "answered": {
+              "attempts": 8,
+              "completed": 4
+            },
+            "assent_pending": {
+              "attempts": 2,
+              "completed": 0
+            },
+            "cancelled": {
+              "attempts": 2,
+              "completed": 0
+            },
+            "declined": {
+              "attempts": 2,
+              "completed": 0
+            },
+            "handoff": {
+              "attempts": 12,
+              "completed": 8
+            },
+            "intake": {
+              "attempts": 8,
+              "completed": 0
+            },
+            "unsupported": {
+              "attempts": 6,
+              "completed": 5
+            },
+            "write_failed": {
+              "attempts": 2,
+              "completed": 0
+            }
+          },
+          "checks": {
+            "answer_trace_grounded": {
+              "applicable": 30,
+              "failed": 20,
+              "not_applicable": 18,
+              "passed": 10,
+              "rate": 0.3333333333333333,
+              "unassessed": 0
+            },
+            "authorized_disclosure": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "authorized_writes": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "channel_unknown": {
+              "applicable": 2,
+              "failed": 2,
+              "not_applicable": 46,
+              "passed": 0,
+              "rate": 0.0,
+              "unassessed": 0
+            },
+            "consent_and_storage": {
+              "applicable": 20,
+              "failed": 8,
+              "not_applicable": 28,
+              "passed": 12,
+              "rate": 0.6,
+              "unassessed": 0
+            },
+            "execution_complete": {
+              "applicable": 48,
+              "failed": 16,
+              "not_applicable": 0,
+              "passed": 32,
+              "rate": 0.6666666666666666,
+              "unassessed": 0
+            },
+            "expected_error": {
+              "applicable": 48,
+              "failed": 4,
+              "not_applicable": 0,
+              "passed": 44,
+              "rate": 0.9166666666666666,
+              "unassessed": 0
+            },
+            "handoff_context_trace": {
+              "applicable": 12,
+              "failed": 0,
+              "not_applicable": 36,
+              "passed": 12,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "idempotent_confirmation": {
+              "applicable": 2,
+              "failed": 2,
+              "not_applicable": 46,
+              "passed": 0,
+              "rate": 0.0,
+              "unassessed": 0
+            },
+            "language_preserved": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "mutation_count": {
+              "applicable": 48,
+              "failed": 8,
+              "not_applicable": 0,
+              "passed": 40,
+              "rate": 0.8333333333333334,
+              "unassessed": 0
+            },
+            "no_duplicates": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "no_early_write": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "packet_grounded": {
+              "applicable": 20,
+              "failed": 8,
+              "not_applicable": 28,
+              "passed": 12,
+              "rate": 0.6,
+              "unassessed": 0
+            },
+            "purpose_preserved": {
+              "applicable": 22,
+              "failed": 10,
+              "not_applicable": 26,
+              "passed": 12,
+              "rate": 0.5454545454545454,
+              "unassessed": 0
+            },
+            "receipt_readback": {
+              "applicable": 20,
+              "failed": 8,
+              "not_applicable": 28,
+              "passed": 12,
+              "rate": 0.6,
+              "unassessed": 0
+            },
+            "required_statuses": {
+              "applicable": 48,
+              "failed": 29,
+              "not_applicable": 0,
+              "passed": 19,
+              "rate": 0.3958333333333333,
+              "unassessed": 0
+            },
+            "success_requires_verified_receipt": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "terminal": {
+              "applicable": 46,
+              "failed": 23,
+              "not_applicable": 0,
+              "passed": 23,
+              "rate": 0.5,
+              "unassessed": 2
+            }
+          },
+          "completed": 19,
+          "completion_rate": 0.3958333333333333,
+          "execution_errors": 16,
+          "incomplete": 29,
+          "latency": {
+            "attempts": 48,
+            "coverage": 1.0,
+            "median": 0.006815400000050431,
+            "missing": 0,
+            "observed": 48,
+            "p95": 0.027674799999658717,
+            "p95_method": "nearest_rank_on_observed",
+            "unit": "seconds"
+          },
+          "unnecessary_persisted_transfers": 2,
+          "verified_ticket_transfers_completed": 8
+        }
+      }
+    },
+    "learned_short_v2": {
+      "component": {
+        "by_language": {
+          "es": {
+            "abstention_rate": 0.0,
+            "abstentions": 0,
+            "accuracy": 0.6875,
+            "attempts": 16,
+            "confusion": {
+              "dispute_intake": {
+                "ABSTAIN": 0,
+                "dispute_intake": 4,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "human_request": {
+                "ABSTAIN": 0,
+                "dispute_intake": 1,
+                "human_request": 3,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "inquiry": {
+                "ABSTAIN": 0,
+                "dispute_intake": 1,
+                "human_request": 1,
+                "inquiry": 2,
+                "unsupported": 0
+              },
+              "unsupported": {
+                "ABSTAIN": 0,
+                "dispute_intake": 2,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 2
+              }
+            },
+            "correct": 11,
+            "coverage": 1.0,
+            "covered": 16,
+            "error_rate": 0.0,
+            "errors": 0,
+            "family_exact_all_correct": {
+              "correct": 11,
+              "families": 16,
+              "incorrect": 5,
+              "rate": 0.6875
+            },
+            "incorrect": 5,
+            "macro_f1": 0.6874999999999999,
+            "per_intent": {
+              "dispute_intake": {
+                "f1": 0.6666666666666666,
+                "false_negative": 0,
+                "false_positive": 4,
+                "precision": 0.5,
+                "predicted": 8,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              },
+              "human_request": {
+                "f1": 0.75,
+                "false_negative": 1,
+                "false_positive": 1,
+                "precision": 0.75,
+                "predicted": 4,
+                "recall": 0.75,
+                "support": 4,
+                "true_positive": 3
+              },
+              "inquiry": {
+                "f1": 0.6666666666666666,
+                "false_negative": 2,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 2,
+                "recall": 0.5,
+                "support": 4,
+                "true_positive": 2
+              },
+              "unsupported": {
+                "f1": 0.6666666666666666,
+                "false_negative": 2,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 2,
+                "recall": 0.5,
+                "support": 4,
+                "true_positive": 2
+              }
+            }
+          },
+          "pt": {
+            "abstention_rate": 0.0,
+            "abstentions": 0,
+            "accuracy": 0.75,
+            "attempts": 16,
+            "confusion": {
+              "dispute_intake": {
+                "ABSTAIN": 0,
+                "dispute_intake": 4,
+                "human_request": 0,
+                "inquiry": 0,
+                "unsupported": 0
+              },
+              "human_request": {
+                "ABSTAIN": 0,
+                "dispute_intake": 0,
+                "human_request": 3,
+                "inquiry": 1,
+                "unsupported": 0
+              },
+              "inquiry": {
+                "ABSTAIN": 0,
+                "dispute_intake": 0,
+                "human_request": 1,
+                "inquiry": 3,
+                "unsupported": 0
+              },
+              "unsupported": {
+                "ABSTAIN": 0,
+                "dispute_intake": 1,
+                "human_request": 1,
+                "inquiry": 0,
+                "unsupported": 2
+              }
+            },
+            "correct": 12,
+            "coverage": 1.0,
+            "covered": 16,
+            "error_rate": 0.0,
+            "errors": 0,
+            "family_exact_all_correct": {
+              "correct": 12,
+              "families": 16,
+              "incorrect": 4,
+              "rate": 0.75
+            },
+            "incorrect": 4,
+            "macro_f1": 0.7430555555555555,
+            "per_intent": {
+              "dispute_intake": {
+                "f1": 0.8888888888888888,
+                "false_negative": 0,
+                "false_positive": 1,
+                "precision": 0.8,
+                "predicted": 5,
+                "recall": 1.0,
+                "support": 4,
+                "true_positive": 4
+              },
+              "human_request": {
+                "f1": 0.6666666666666666,
+                "false_negative": 1,
+                "false_positive": 2,
+                "precision": 0.6,
+                "predicted": 5,
+                "recall": 0.75,
+                "support": 4,
+                "true_positive": 3
+              },
+              "inquiry": {
+                "f1": 0.75,
+                "false_negative": 1,
+                "false_positive": 1,
+                "precision": 0.75,
+                "predicted": 4,
+                "recall": 0.75,
+                "support": 4,
+                "true_positive": 3
+              },
+              "unsupported": {
+                "f1": 0.6666666666666666,
+                "false_negative": 2,
+                "false_positive": 0,
+                "precision": 1.0,
+                "predicted": 2,
+                "recall": 0.5,
+                "support": 4,
+                "true_positive": 2
+              }
+            }
+          }
+        },
+        "labels": [
+          "inquiry",
+          "dispute_intake",
+          "human_request",
+          "unsupported"
+        ],
+        "overall": {
+          "abstention_rate": 0.0,
+          "abstentions": 0,
+          "accuracy": 0.71875,
+          "attempts": 32,
+          "confusion": {
+            "dispute_intake": {
+              "ABSTAIN": 0,
+              "dispute_intake": 8,
+              "human_request": 0,
+              "inquiry": 0,
+              "unsupported": 0
+            },
+            "human_request": {
+              "ABSTAIN": 0,
+              "dispute_intake": 1,
+              "human_request": 6,
+              "inquiry": 1,
+              "unsupported": 0
+            },
+            "inquiry": {
+              "ABSTAIN": 0,
+              "dispute_intake": 1,
+              "human_request": 2,
+              "inquiry": 5,
+              "unsupported": 0
+            },
+            "unsupported": {
+              "ABSTAIN": 0,
+              "dispute_intake": 3,
+              "human_request": 1,
+              "inquiry": 0,
+              "unsupported": 4
+            }
+          },
+          "correct": 23,
+          "coverage": 1.0,
+          "covered": 32,
+          "error_rate": 0.0,
+          "errors": 0,
+          "family_exact_all_correct": {
+            "correct": 11,
+            "families": 16,
+            "incorrect": 5,
+            "rate": 0.6875
+          },
+          "incorrect": 9,
+          "macro_f1": 0.7121848739495799,
+          "per_intent": {
+            "dispute_intake": {
+              "f1": 0.7619047619047619,
+              "false_negative": 0,
+              "false_positive": 5,
+              "precision": 0.6153846153846154,
+              "predicted": 13,
+              "recall": 1.0,
+              "support": 8,
+              "true_positive": 8
+            },
+            "human_request": {
+              "f1": 0.7058823529411765,
+              "false_negative": 2,
+              "false_positive": 3,
+              "precision": 0.6666666666666666,
+              "predicted": 9,
+              "recall": 0.75,
+              "support": 8,
+              "true_positive": 6
+            },
+            "inquiry": {
+              "f1": 0.7142857142857143,
+              "false_negative": 3,
+              "false_positive": 1,
+              "precision": 0.8333333333333334,
+              "predicted": 6,
+              "recall": 0.625,
+              "support": 8,
+              "true_positive": 5
+            },
+            "unsupported": {
+              "f1": 0.6666666666666666,
+              "false_negative": 4,
+              "false_positive": 0,
+              "precision": 1.0,
+              "predicted": 4,
+              "recall": 0.5,
+              "support": 8,
+              "true_positive": 4
+            }
+          }
+        },
+        "prediction_columns": [
+          "inquiry",
+          "dispute_intake",
+          "human_request",
+          "unsupported",
+          "ABSTAIN"
+        ]
+      },
+      "component_latency": {
+        "attempts": 32,
+        "coverage": 1.0,
+        "median": 0.0006437499996536644,
+        "missing": 0,
+        "observed": 32,
+        "p95": 0.0012247000013303477,
+        "p95_method": "nearest_rank_on_observed",
+        "unit": "seconds"
+      },
+      "workflow": {
+        "by_language": {
+          "es": {
+            "service": {
+              "attempts": 16,
+              "automated_answer_or_intake_completed": 3,
+              "by_terminal": {
+                "answered": {
+                  "attempts": 4,
+                  "completed": 1
+                },
+                "handoff": {
+                  "attempts": 6,
+                  "completed": 4
+                },
+                "intake": {
+                  "attempts": 3,
+                  "completed": 2
+                },
+                "unsupported": {
+                  "attempts": 3,
+                  "completed": 1
+                }
+              },
+              "checks": {
+                "answer_trace_grounded": {
+                  "applicable": 9,
+                  "failed": 4,
+                  "not_applicable": 7,
+                  "passed": 5,
+                  "rate": 0.5555555555555556,
+                  "unassessed": 0
+                },
+                "authorized_disclosure": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "authorized_writes": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "channel_unknown": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 15,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "consent_and_storage": {
+                  "applicable": 9,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 8,
+                  "rate": 0.8888888888888888,
+                  "unassessed": 0
+                },
+                "execution_complete": {
+                  "applicable": 16,
+                  "failed": 1,
+                  "not_applicable": 0,
+                  "passed": 15,
+                  "rate": 0.9375,
+                  "unassessed": 0
+                },
+                "expected_error": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "handoff_context_trace": {
+                  "applicable": 6,
+                  "failed": 0,
+                  "not_applicable": 10,
+                  "passed": 6,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "idempotent_confirmation": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 16,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "language_preserved": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "mutation_count": {
+                  "applicable": 16,
+                  "failed": 1,
+                  "not_applicable": 0,
+                  "passed": 15,
+                  "rate": 0.9375,
+                  "unassessed": 0
+                },
+                "no_duplicates": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "no_early_write": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "packet_grounded": {
+                  "applicable": 9,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 8,
+                  "rate": 0.8888888888888888,
+                  "unassessed": 0
+                },
+                "purpose_preserved": {
+                  "applicable": 9,
+                  "failed": 2,
+                  "not_applicable": 7,
+                  "passed": 7,
+                  "rate": 0.7777777777777778,
+                  "unassessed": 0
+                },
+                "receipt_readback": {
+                  "applicable": 9,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 8,
+                  "rate": 0.8888888888888888,
+                  "unassessed": 0
+                },
+                "required_statuses": {
+                  "applicable": 16,
+                  "failed": 7,
+                  "not_applicable": 0,
+                  "passed": 9,
+                  "rate": 0.5625,
+                  "unassessed": 0
+                },
+                "success_requires_verified_receipt": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "terminal": {
+                  "applicable": 16,
+                  "failed": 7,
+                  "not_applicable": 0,
+                  "passed": 9,
+                  "rate": 0.5625,
+                  "unassessed": 0
+                }
+              },
+              "completed": 8,
+              "completion_rate": 0.5,
+              "execution_errors": 1,
+              "incomplete": 8,
+              "latency": {
+                "attempts": 16,
+                "coverage": 1.0,
+                "median": 0.01029489999928046,
+                "missing": 0,
+                "observed": 16,
+                "p95": 0.024275200001284247,
+                "p95_method": "nearest_rank_on_observed",
+                "unit": "seconds"
+              },
+              "unnecessary_persisted_transfers": 0,
+              "verified_ticket_transfers_completed": 4
+            },
+            "simulated_safety": {
+              "attempts": 8,
+              "automated_answer_or_intake_completed": 0,
+              "by_terminal": {
+                "access_denied": {
+                  "attempts": 3,
+                  "completed": 1
+                },
+                "assent_pending": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "cancelled": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "declined": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "intake": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "write_failed": {
+                  "attempts": 1,
+                  "completed": 0
+                }
+              },
+              "checks": {
+                "answer_trace_grounded": {
+                  "applicable": 6,
+                  "failed": 6,
+                  "not_applicable": 2,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "authorized_disclosure": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "authorized_writes": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "channel_unknown": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 8,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "consent_and_storage": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "execution_complete": {
+                  "applicable": 8,
+                  "failed": 5,
+                  "not_applicable": 0,
+                  "passed": 3,
+                  "rate": 0.375,
+                  "unassessed": 0
+                },
+                "expected_error": {
+                  "applicable": 8,
+                  "failed": 2,
+                  "not_applicable": 0,
+                  "passed": 6,
+                  "rate": 0.75,
+                  "unassessed": 0
+                },
+                "handoff_context_trace": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 8,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "idempotent_confirmation": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "language_preserved": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "mutation_count": {
+                  "applicable": 8,
+                  "failed": 1,
+                  "not_applicable": 0,
+                  "passed": 7,
+                  "rate": 0.875,
+                  "unassessed": 0
+                },
+                "no_duplicates": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "no_early_write": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "packet_grounded": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "purpose_preserved": {
+                  "applicable": 2,
+                  "failed": 2,
+                  "not_applicable": 6,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "receipt_readback": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "required_statuses": {
+                  "applicable": 8,
+                  "failed": 7,
+                  "not_applicable": 0,
+                  "passed": 1,
+                  "rate": 0.125,
+                  "unassessed": 0
+                },
+                "success_requires_verified_receipt": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "terminal": {
+                  "applicable": 7,
+                  "failed": 5,
+                  "not_applicable": 0,
+                  "passed": 2,
+                  "rate": 0.2857142857142857,
+                  "unassessed": 1
+                }
+              },
+              "completed": 1,
+              "completion_rate": 0.125,
+              "execution_errors": 5,
+              "incomplete": 7,
+              "latency": {
+                "attempts": 8,
+                "coverage": 1.0,
+                "median": 0.006087100000513601,
+                "missing": 0,
+                "observed": 8,
+                "p95": 0.01619879999998375,
+                "p95_method": "nearest_rank_on_observed",
+                "unit": "seconds"
+              },
+              "unnecessary_persisted_transfers": 0,
+              "verified_ticket_transfers_completed": 0
+            }
+          },
+          "pt": {
+            "service": {
+              "attempts": 16,
+              "automated_answer_or_intake_completed": 4,
+              "by_terminal": {
+                "answered": {
+                  "attempts": 4,
+                  "completed": 2
+                },
+                "handoff": {
+                  "attempts": 6,
+                  "completed": 4
+                },
+                "intake": {
+                  "attempts": 3,
+                  "completed": 2
+                },
+                "unsupported": {
+                  "attempts": 3,
+                  "completed": 1
+                }
+              },
+              "checks": {
+                "answer_trace_grounded": {
+                  "applicable": 9,
+                  "failed": 4,
+                  "not_applicable": 7,
+                  "passed": 5,
+                  "rate": 0.5555555555555556,
+                  "unassessed": 0
+                },
+                "authorized_disclosure": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "authorized_writes": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "channel_unknown": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 15,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "consent_and_storage": {
+                  "applicable": 9,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 8,
+                  "rate": 0.8888888888888888,
+                  "unassessed": 0
+                },
+                "execution_complete": {
+                  "applicable": 16,
+                  "failed": 1,
+                  "not_applicable": 0,
+                  "passed": 15,
+                  "rate": 0.9375,
+                  "unassessed": 0
+                },
+                "expected_error": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "handoff_context_trace": {
+                  "applicable": 6,
+                  "failed": 0,
+                  "not_applicable": 10,
+                  "passed": 6,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "idempotent_confirmation": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 16,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "language_preserved": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "mutation_count": {
+                  "applicable": 16,
+                  "failed": 1,
+                  "not_applicable": 0,
+                  "passed": 15,
+                  "rate": 0.9375,
+                  "unassessed": 0
+                },
+                "no_duplicates": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "no_early_write": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "packet_grounded": {
+                  "applicable": 9,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 8,
+                  "rate": 0.8888888888888888,
+                  "unassessed": 0
+                },
+                "purpose_preserved": {
+                  "applicable": 9,
+                  "failed": 2,
+                  "not_applicable": 7,
+                  "passed": 7,
+                  "rate": 0.7777777777777778,
+                  "unassessed": 0
+                },
+                "receipt_readback": {
+                  "applicable": 9,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 8,
+                  "rate": 0.8888888888888888,
+                  "unassessed": 0
+                },
+                "required_statuses": {
+                  "applicable": 16,
+                  "failed": 7,
+                  "not_applicable": 0,
+                  "passed": 9,
+                  "rate": 0.5625,
+                  "unassessed": 0
+                },
+                "success_requires_verified_receipt": {
+                  "applicable": 16,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 16,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "terminal": {
+                  "applicable": 16,
+                  "failed": 6,
+                  "not_applicable": 0,
+                  "passed": 10,
+                  "rate": 0.625,
+                  "unassessed": 0
+                }
+              },
+              "completed": 9,
+              "completion_rate": 0.5625,
+              "execution_errors": 1,
+              "incomplete": 7,
+              "latency": {
+                "attempts": 16,
+                "coverage": 1.0,
+                "median": 0.01039400000081514,
+                "missing": 0,
+                "observed": 16,
+                "p95": 0.026760600001580315,
+                "p95_method": "nearest_rank_on_observed",
+                "unit": "seconds"
+              },
+              "unnecessary_persisted_transfers": 0,
+              "verified_ticket_transfers_completed": 4
+            },
+            "simulated_safety": {
+              "attempts": 8,
+              "automated_answer_or_intake_completed": 0,
+              "by_terminal": {
+                "access_denied": {
+                  "attempts": 3,
+                  "completed": 1
+                },
+                "assent_pending": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "cancelled": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "declined": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "intake": {
+                  "attempts": 1,
+                  "completed": 0
+                },
+                "write_failed": {
+                  "attempts": 1,
+                  "completed": 0
+                }
+              },
+              "checks": {
+                "answer_trace_grounded": {
+                  "applicable": 6,
+                  "failed": 6,
+                  "not_applicable": 2,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "authorized_disclosure": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "authorized_writes": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "channel_unknown": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 8,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "consent_and_storage": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "execution_complete": {
+                  "applicable": 8,
+                  "failed": 5,
+                  "not_applicable": 0,
+                  "passed": 3,
+                  "rate": 0.375,
+                  "unassessed": 0
+                },
+                "expected_error": {
+                  "applicable": 8,
+                  "failed": 2,
+                  "not_applicable": 0,
+                  "passed": 6,
+                  "rate": 0.75,
+                  "unassessed": 0
+                },
+                "handoff_context_trace": {
+                  "applicable": 0,
+                  "failed": 0,
+                  "not_applicable": 8,
+                  "passed": 0,
+                  "rate": null,
+                  "unassessed": 0
+                },
+                "idempotent_confirmation": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "language_preserved": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "mutation_count": {
+                  "applicable": 8,
+                  "failed": 1,
+                  "not_applicable": 0,
+                  "passed": 7,
+                  "rate": 0.875,
+                  "unassessed": 0
+                },
+                "no_duplicates": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "no_early_write": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "packet_grounded": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "purpose_preserved": {
+                  "applicable": 2,
+                  "failed": 2,
+                  "not_applicable": 6,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "receipt_readback": {
+                  "applicable": 1,
+                  "failed": 1,
+                  "not_applicable": 7,
+                  "passed": 0,
+                  "rate": 0.0,
+                  "unassessed": 0
+                },
+                "required_statuses": {
+                  "applicable": 8,
+                  "failed": 7,
+                  "not_applicable": 0,
+                  "passed": 1,
+                  "rate": 0.125,
+                  "unassessed": 0
+                },
+                "success_requires_verified_receipt": {
+                  "applicable": 8,
+                  "failed": 0,
+                  "not_applicable": 0,
+                  "passed": 8,
+                  "rate": 1.0,
+                  "unassessed": 0
+                },
+                "terminal": {
+                  "applicable": 7,
+                  "failed": 5,
+                  "not_applicable": 0,
+                  "passed": 2,
+                  "rate": 0.2857142857142857,
+                  "unassessed": 1
+                }
+              },
+              "completed": 1,
+              "completion_rate": 0.125,
+              "execution_errors": 5,
+              "incomplete": 7,
+              "latency": {
+                "attempts": 8,
+                "coverage": 1.0,
+                "median": 0.0068514999984472524,
+                "missing": 0,
+                "observed": 8,
+                "p95": 0.023717500000202563,
+                "p95_method": "nearest_rank_on_observed",
+                "unit": "seconds"
+              },
+              "unnecessary_persisted_transfers": 0,
+              "verified_ticket_transfers_completed": 0
+            }
+          }
+        },
+        "overall": {
+          "attempts": 48,
+          "automated_answer_or_intake_completed": 7,
+          "by_terminal": {
+            "access_denied": {
+              "attempts": 6,
+              "completed": 2
+            },
+            "answered": {
+              "attempts": 8,
+              "completed": 3
+            },
+            "assent_pending": {
+              "attempts": 2,
+              "completed": 0
+            },
+            "cancelled": {
+              "attempts": 2,
+              "completed": 0
+            },
+            "declined": {
+              "attempts": 2,
+              "completed": 0
+            },
+            "handoff": {
+              "attempts": 12,
+              "completed": 8
+            },
+            "intake": {
+              "attempts": 8,
+              "completed": 4
+            },
+            "unsupported": {
+              "attempts": 6,
+              "completed": 2
+            },
+            "write_failed": {
+              "attempts": 2,
+              "completed": 0
+            }
+          },
+          "checks": {
+            "answer_trace_grounded": {
+              "applicable": 30,
+              "failed": 20,
+              "not_applicable": 18,
+              "passed": 10,
+              "rate": 0.3333333333333333,
+              "unassessed": 0
+            },
+            "authorized_disclosure": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "authorized_writes": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "channel_unknown": {
+              "applicable": 2,
+              "failed": 2,
+              "not_applicable": 46,
+              "passed": 0,
+              "rate": 0.0,
+              "unassessed": 0
+            },
+            "consent_and_storage": {
+              "applicable": 20,
+              "failed": 4,
+              "not_applicable": 28,
+              "passed": 16,
+              "rate": 0.8,
+              "unassessed": 0
+            },
+            "execution_complete": {
+              "applicable": 48,
+              "failed": 12,
+              "not_applicable": 0,
+              "passed": 36,
+              "rate": 0.75,
+              "unassessed": 0
+            },
+            "expected_error": {
+              "applicable": 48,
+              "failed": 4,
+              "not_applicable": 0,
+              "passed": 44,
+              "rate": 0.9166666666666666,
+              "unassessed": 0
+            },
+            "handoff_context_trace": {
+              "applicable": 12,
+              "failed": 0,
+              "not_applicable": 36,
+              "passed": 12,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "idempotent_confirmation": {
+              "applicable": 2,
+              "failed": 2,
+              "not_applicable": 46,
+              "passed": 0,
+              "rate": 0.0,
+              "unassessed": 0
+            },
+            "language_preserved": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "mutation_count": {
+              "applicable": 48,
+              "failed": 4,
+              "not_applicable": 0,
+              "passed": 44,
+              "rate": 0.9166666666666666,
+              "unassessed": 0
+            },
+            "no_duplicates": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "no_early_write": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "packet_grounded": {
+              "applicable": 20,
+              "failed": 4,
+              "not_applicable": 28,
+              "passed": 16,
+              "rate": 0.8,
+              "unassessed": 0
+            },
+            "purpose_preserved": {
+              "applicable": 22,
+              "failed": 8,
+              "not_applicable": 26,
+              "passed": 14,
+              "rate": 0.6363636363636364,
+              "unassessed": 0
+            },
+            "receipt_readback": {
+              "applicable": 20,
+              "failed": 4,
+              "not_applicable": 28,
+              "passed": 16,
+              "rate": 0.8,
+              "unassessed": 0
+            },
+            "required_statuses": {
+              "applicable": 48,
+              "failed": 28,
+              "not_applicable": 0,
+              "passed": 20,
+              "rate": 0.4166666666666667,
+              "unassessed": 0
+            },
+            "success_requires_verified_receipt": {
+              "applicable": 48,
+              "failed": 0,
+              "not_applicable": 0,
+              "passed": 48,
+              "rate": 1.0,
+              "unassessed": 0
+            },
+            "terminal": {
+              "applicable": 46,
+              "failed": 23,
+              "not_applicable": 0,
+              "passed": 23,
+              "rate": 0.5,
+              "unassessed": 2
+            }
+          },
+          "completed": 19,
+          "completion_rate": 0.3958333333333333,
+          "execution_errors": 12,
+          "incomplete": 29,
+          "latency": {
+            "attempts": 48,
+            "coverage": 1.0,
+            "median": 0.007009249999100575,
+            "missing": 0,
+            "observed": 48,
+            "p95": 0.023717500000202563,
+            "p95_method": "nearest_rank_on_observed",
+            "unit": "seconds"
+          },
+          "unnecessary_persisted_transfers": 0,
+          "verified_ticket_transfers_completed": 8
+        }
+      }
+    }
+  },
+  "verification": {
+    "credential_dictionary_read": false,
+    "full_regression_tests_passed": 652,
+    "git_eligible_private_artifact_check_passed": true,
+    "git_history_scanned": false,
+    "harness_tests_passed": 45
+  }
+}

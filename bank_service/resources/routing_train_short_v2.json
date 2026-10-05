@@ -1,0 +1,1016 @@
+{
+  "schema_version": 1,
+  "split": "train",
+  "provenance": "codex_authored",
+  "review_status": "draft_pending_owner_and_portuguese_review",
+  "examples": [
+    {
+      "id": "tr-inquiry-original-amount-es-01",
+      "family_id": "tr-inquiry-original-amount",
+      "language": "es",
+      "text": "¿Cuál fue el importe original de esta operación y en qué moneda está registrado?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-original-amount-es-02",
+      "family_id": "tr-inquiry-original-amount",
+      "language": "es",
+      "text": "Quiero consultar cuánto se cobró en este movimiento, con su divisa original.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-original-amount-es-03",
+      "family_id": "tr-inquiry-original-amount",
+      "language": "es",
+      "text": "Indícame la cantidad y la moneda que figuran en el cargo seleccionado.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-original-amount-es-04",
+      "family_id": "tr-inquiry-original-amount",
+      "language": "es",
+      "text": "Para revisar mis gastos, necesito el monto registrado de esta transacción y su moneda.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-original-amount-pt-01",
+      "family_id": "tr-inquiry-original-amount",
+      "language": "pt",
+      "text": "Qual foi o valor original desta operação e em que moeda ele está registrado?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-original-amount-pt-02",
+      "family_id": "tr-inquiry-original-amount",
+      "language": "pt",
+      "text": "Quero consultar quanto foi cobrado neste lançamento, na moeda original.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-original-amount-pt-03",
+      "family_id": "tr-inquiry-original-amount",
+      "language": "pt",
+      "text": "Informe a quantia e a moeda que aparecem na cobrança selecionada.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-original-amount-pt-04",
+      "family_id": "tr-inquiry-original-amount",
+      "language": "pt",
+      "text": "Para conferir meus gastos, preciso do valor registrado desta transação e da moeda.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-recorded-status-es-01",
+      "family_id": "tr-inquiry-recorded-status",
+      "language": "es",
+      "text": "¿Qué estado tiene actualmente la transacción que estoy viendo?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-recorded-status-es-02",
+      "family_id": "tr-inquiry-recorded-status",
+      "language": "es",
+      "text": "Consulta si este movimiento figura como pendiente o completado en el registro.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-recorded-status-es-03",
+      "family_id": "tr-inquiry-recorded-status",
+      "language": "es",
+      "text": "Quisiera saber cómo aparece el estado de esta operación en los datos disponibles.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-recorded-status-es-04",
+      "family_id": "tr-inquiry-recorded-status",
+      "language": "es",
+      "text": "Dime si el cargo seleccionado está registrado como rechazado o aprobado.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-recorded-status-pt-01",
+      "family_id": "tr-inquiry-recorded-status",
+      "language": "pt",
+      "text": "Qual é o status atual da transação que estou vendo?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-recorded-status-pt-02",
+      "family_id": "tr-inquiry-recorded-status",
+      "language": "pt",
+      "text": "Consulte se este lançamento consta como pendente ou concluído no registro.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-recorded-status-pt-03",
+      "family_id": "tr-inquiry-recorded-status",
+      "language": "pt",
+      "text": "Gostaria de saber qual situação aparece para esta operação nos dados disponíveis.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-recorded-status-pt-04",
+      "family_id": "tr-inquiry-recorded-status",
+      "language": "pt",
+      "text": "Diga se a cobrança selecionada está registrada como recusada ou aprovada.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-merchant-identity-es-01",
+      "family_id": "tr-inquiry-merchant-identity",
+      "language": "es",
+      "text": "¿Qué nombre de comercio aparece asociado a esta compra?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-merchant-identity-es-02",
+      "family_id": "tr-inquiry-merchant-identity",
+      "language": "es",
+      "text": "Quiero consultar a qué establecimiento corresponde el movimiento seleccionado.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-merchant-identity-es-03",
+      "family_id": "tr-inquiry-merchant-identity",
+      "language": "es",
+      "text": "Muéstrame el comercio que figura en el registro de esta transacción.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-merchant-identity-es-04",
+      "family_id": "tr-inquiry-merchant-identity",
+      "language": "es",
+      "text": "Necesito identificar al vendedor indicado en los datos de esta compra.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-merchant-identity-pt-01",
+      "family_id": "tr-inquiry-merchant-identity",
+      "language": "pt",
+      "text": "Qual nome de estabelecimento aparece associado a esta compra?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-merchant-identity-pt-02",
+      "family_id": "tr-inquiry-merchant-identity",
+      "language": "pt",
+      "text": "Quero consultar a qual estabelecimento corresponde o lançamento selecionado.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-merchant-identity-pt-03",
+      "family_id": "tr-inquiry-merchant-identity",
+      "language": "pt",
+      "text": "Mostre o comércio que consta no registro desta transação.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-inquiry-merchant-identity-pt-04",
+      "family_id": "tr-inquiry-merchant-identity",
+      "language": "pt",
+      "text": "Preciso identificar o vendedor indicado nos dados desta compra.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "tr-dispute-unrecognized-purchase-es-01",
+      "family_id": "tr-dispute-unrecognized-purchase",
+      "language": "es",
+      "text": "No reconozco esta compra y quiero iniciar una reclamación por el cargo.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-unrecognized-purchase-es-02",
+      "family_id": "tr-dispute-unrecognized-purchase",
+      "language": "es",
+      "text": "Esta operación no la autoricé; necesito reportarla para que la revisen.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-unrecognized-purchase-es-03",
+      "family_id": "tr-dispute-unrecognized-purchase",
+      "language": "es",
+      "text": "El movimiento seleccionado no es mío. Quiero preparar una solicitud para impugnarlo.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-unrecognized-purchase-es-04",
+      "family_id": "tr-dispute-unrecognized-purchase",
+      "language": "es",
+      "text": "Quiero registrar que desconozco este cargo y pedir su revisión.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-unrecognized-purchase-pt-01",
+      "family_id": "tr-dispute-unrecognized-purchase",
+      "language": "pt",
+      "text": "Não reconheço esta compra e quero iniciar uma contestação da cobrança.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-unrecognized-purchase-pt-02",
+      "family_id": "tr-dispute-unrecognized-purchase",
+      "language": "pt",
+      "text": "Não autorizei esta operação; preciso comunicar isso para que ela seja analisada.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-unrecognized-purchase-pt-03",
+      "family_id": "tr-dispute-unrecognized-purchase",
+      "language": "pt",
+      "text": "O lançamento selecionado não é meu. Quero preparar uma solicitação para contestá-lo.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-unrecognized-purchase-pt-04",
+      "family_id": "tr-dispute-unrecognized-purchase",
+      "language": "pt",
+      "text": "Quero registrar que desconheço esta cobrança e pedir sua análise.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-duplicate-charge-es-01",
+      "family_id": "tr-dispute-duplicate-charge",
+      "language": "es",
+      "text": "Me cobraron dos veces la misma compra y quiero reclamar el cargo repetido.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-duplicate-charge-es-02",
+      "family_id": "tr-dispute-duplicate-charge",
+      "language": "es",
+      "text": "Creo que esta operación está duplicada; prepara una solicitud de revisión.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-duplicate-charge-es-03",
+      "family_id": "tr-dispute-duplicate-charge",
+      "language": "es",
+      "text": "Quisiera presentar una reclamación porque este movimiento repite un cobro anterior.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-duplicate-charge-es-04",
+      "family_id": "tr-dispute-duplicate-charge",
+      "language": "es",
+      "text": "Pagué una sola vez, pero veo un segundo cargo por lo mismo. Quiero reportarlo.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-duplicate-charge-pt-01",
+      "family_id": "tr-dispute-duplicate-charge",
+      "language": "pt",
+      "text": "Fui cobrado duas vezes pela mesma compra e quero contestar a cobrança repetida.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-duplicate-charge-pt-02",
+      "family_id": "tr-dispute-duplicate-charge",
+      "language": "pt",
+      "text": "Acho que esta operação está duplicada; prepare uma solicitação de análise.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-duplicate-charge-pt-03",
+      "family_id": "tr-dispute-duplicate-charge",
+      "language": "pt",
+      "text": "Gostaria de abrir uma contestação porque este lançamento repete uma cobrança anterior.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-duplicate-charge-pt-04",
+      "family_id": "tr-dispute-duplicate-charge",
+      "language": "pt",
+      "text": "Paguei uma vez só, mas vejo uma segunda cobrança pela mesma compra. Quero comunicar isso.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-cancelled-subscription-es-01",
+      "family_id": "tr-dispute-cancelled-subscription",
+      "language": "es",
+      "text": "Cancelé la suscripción antes de este cobro y quiero presentar una reclamación.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-cancelled-subscription-es-02",
+      "family_id": "tr-dispute-cancelled-subscription",
+      "language": "es",
+      "text": "Quiero impugnar este cargo de un servicio que ya había dado de baja.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-cancelled-subscription-es-03",
+      "family_id": "tr-dispute-cancelled-subscription",
+      "language": "es",
+      "text": "Me siguen cobrando una membresía cancelada; necesito reportar esta operación.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-cancelled-subscription-es-04",
+      "family_id": "tr-dispute-cancelled-subscription",
+      "language": "es",
+      "text": "Este cobro se hizo después de mi cancelación. Prepara una solicitud para revisarlo.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-cancelled-subscription-pt-01",
+      "family_id": "tr-dispute-cancelled-subscription",
+      "language": "pt",
+      "text": "Cancelei a assinatura antes desta cobrança e quero abrir uma contestação.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-cancelled-subscription-pt-02",
+      "family_id": "tr-dispute-cancelled-subscription",
+      "language": "pt",
+      "text": "Quero contestar esta cobrança de um serviço que eu já havia cancelado.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-cancelled-subscription-pt-03",
+      "family_id": "tr-dispute-cancelled-subscription",
+      "language": "pt",
+      "text": "Continuam cobrando uma assinatura cancelada; preciso comunicar esta operação.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-dispute-cancelled-subscription-pt-04",
+      "family_id": "tr-dispute-cancelled-subscription",
+      "language": "pt",
+      "text": "Esta cobrança ocorreu depois do meu cancelamento. Prepare uma solicitação para analisá-la.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "tr-human-person-preference-es-01",
+      "family_id": "tr-human-person-preference",
+      "language": "es",
+      "text": "Prefiero hablar con una persona sobre esta transacción.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-person-preference-es-02",
+      "family_id": "tr-human-person-preference",
+      "language": "es",
+      "text": "¿Puedes ponerme en contacto con un agente para continuar esta consulta?",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-person-preference-es-03",
+      "family_id": "tr-human-person-preference",
+      "language": "es",
+      "text": "Quiero que un asesor humano me atienda con este movimiento.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-person-preference-es-04",
+      "family_id": "tr-human-person-preference",
+      "language": "es",
+      "text": "Necesito conversar directamente con alguien del equipo de atención.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-person-preference-pt-01",
+      "family_id": "tr-human-person-preference",
+      "language": "pt",
+      "text": "Prefiro falar com uma pessoa sobre esta transação.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-person-preference-pt-02",
+      "family_id": "tr-human-person-preference",
+      "language": "pt",
+      "text": "Você pode me colocar em contato com um atendente para continuar esta consulta?",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-person-preference-pt-03",
+      "family_id": "tr-human-person-preference",
+      "language": "pt",
+      "text": "Quero ser atendido por uma pessoa para tratar deste lançamento.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-person-preference-pt-04",
+      "family_id": "tr-human-person-preference",
+      "language": "pt",
+      "text": "Preciso conversar diretamente com alguém da equipe de atendimento.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-repeated-self-service-es-01",
+      "family_id": "tr-human-repeated-self-service",
+      "language": "es",
+      "text": "Ya intenté resolverlo varias veces en la aplicación; quiero que me atienda una persona.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-repeated-self-service-es-02",
+      "family_id": "tr-human-repeated-self-service",
+      "language": "es",
+      "text": "He repetido esta consulta sin lograr una solución. Necesito hablar con un agente.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-repeated-self-service-es-03",
+      "family_id": "tr-human-repeated-self-service",
+      "language": "es",
+      "text": "Llevo varios intentos con el asistente automático y quiero continuar con un asesor.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-repeated-self-service-es-04",
+      "family_id": "tr-human-repeated-self-service",
+      "language": "es",
+      "text": "Las respuestas automáticas no me han servido; pásame con alguien de atención.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-repeated-self-service-pt-01",
+      "family_id": "tr-human-repeated-self-service",
+      "language": "pt",
+      "text": "Já tentei resolver isso várias vezes pelo aplicativo; quero ser atendido por uma pessoa.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-repeated-self-service-pt-02",
+      "family_id": "tr-human-repeated-self-service",
+      "language": "pt",
+      "text": "Repeti esta consulta e ainda não consegui resolver. Preciso falar com um atendente.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-repeated-self-service-pt-03",
+      "family_id": "tr-human-repeated-self-service",
+      "language": "pt",
+      "text": "Já fiz várias tentativas com o assistente automático e quero continuar com uma pessoa.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-repeated-self-service-pt-04",
+      "family_id": "tr-human-repeated-self-service",
+      "language": "pt",
+      "text": "As respostas automáticas não me ajudaram; encaminhe-me para alguém do atendimento.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-guided-conversation-es-01",
+      "family_id": "tr-human-guided-conversation",
+      "language": "es",
+      "text": "Necesito que una persona me explique esto con calma, paso a paso.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-guided-conversation-es-02",
+      "family_id": "tr-human-guided-conversation",
+      "language": "es",
+      "text": "Me resulta difícil seguir la información escrita; quiero conversar con un asesor.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-guided-conversation-es-03",
+      "family_id": "tr-human-guided-conversation",
+      "language": "es",
+      "text": "Prefiero que un agente me acompañe mientras reviso este movimiento.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-guided-conversation-es-04",
+      "family_id": "tr-human-guided-conversation",
+      "language": "es",
+      "text": "Quiero hacer mis preguntas directamente a una persona que pueda guiarme.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-guided-conversation-pt-01",
+      "family_id": "tr-human-guided-conversation",
+      "language": "pt",
+      "text": "Preciso que uma pessoa me explique isso com calma, passo a passo.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-guided-conversation-pt-02",
+      "family_id": "tr-human-guided-conversation",
+      "language": "pt",
+      "text": "Tenho dificuldade para acompanhar a informação escrita; quero conversar com um atendente.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-guided-conversation-pt-03",
+      "family_id": "tr-human-guided-conversation",
+      "language": "pt",
+      "text": "Prefiro que um atendente me acompanhe enquanto confiro este lançamento.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-human-guided-conversation-pt-04",
+      "family_id": "tr-human-guided-conversation",
+      "language": "pt",
+      "text": "Quero fazer minhas perguntas diretamente a uma pessoa que possa me orientar.",
+      "intent": "human_request"
+    },
+    {
+      "id": "tr-unsupported-account-balance-es-01",
+      "family_id": "tr-unsupported-account-balance",
+      "language": "es",
+      "text": "¿Cuánto saldo disponible tengo ahora en mi cuenta?",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-account-balance-es-02",
+      "family_id": "tr-unsupported-account-balance",
+      "language": "es",
+      "text": "Quiero consultar el saldo total de mi cuenta de ahorros.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-account-balance-es-03",
+      "family_id": "tr-unsupported-account-balance",
+      "language": "es",
+      "text": "Dime cuánto dinero me queda disponible para gastar en la cuenta.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-account-balance-es-04",
+      "family_id": "tr-unsupported-account-balance",
+      "language": "es",
+      "text": "Muéstrame mi saldo bancario actual.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-account-balance-pt-01",
+      "family_id": "tr-unsupported-account-balance",
+      "language": "pt",
+      "text": "Quanto tenho de saldo disponível na minha conta agora?",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-account-balance-pt-02",
+      "family_id": "tr-unsupported-account-balance",
+      "language": "pt",
+      "text": "Quero consultar o saldo total da minha conta poupança.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-account-balance-pt-03",
+      "family_id": "tr-unsupported-account-balance",
+      "language": "pt",
+      "text": "Diga quanto dinheiro ainda tenho disponível para gastar na conta.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-account-balance-pt-04",
+      "family_id": "tr-unsupported-account-balance",
+      "language": "pt",
+      "text": "Mostre meu saldo bancário atual.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-new-transfer-es-01",
+      "family_id": "tr-unsupported-new-transfer",
+      "language": "es",
+      "text": "Haz una transferencia nueva a la cuenta de mi proveedor.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-new-transfer-es-02",
+      "family_id": "tr-unsupported-new-transfer",
+      "language": "es",
+      "text": "Quiero enviar dinero a otro banco; ejecuta la transferencia.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-new-transfer-es-03",
+      "family_id": "tr-unsupported-new-transfer",
+      "language": "es",
+      "text": "Mueve dinero de mi cuenta a la de un familiar ahora.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-new-transfer-es-04",
+      "family_id": "tr-unsupported-new-transfer",
+      "language": "es",
+      "text": "Realiza un pago nuevo mediante transferencia bancaria.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-new-transfer-pt-01",
+      "family_id": "tr-unsupported-new-transfer",
+      "language": "pt",
+      "text": "Faça uma nova transferência para a conta do meu fornecedor.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-new-transfer-pt-02",
+      "family_id": "tr-unsupported-new-transfer",
+      "language": "pt",
+      "text": "Quero enviar dinheiro para outro banco; execute a transferência.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-new-transfer-pt-03",
+      "family_id": "tr-unsupported-new-transfer",
+      "language": "pt",
+      "text": "Transfira dinheiro da minha conta para a de um familiar agora.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-new-transfer-pt-04",
+      "family_id": "tr-unsupported-new-transfer",
+      "language": "pt",
+      "text": "Realize um novo pagamento por transferência bancária.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-card-suspension-es-01",
+      "family_id": "tr-unsupported-card-suspension",
+      "language": "es",
+      "text": "Bloquea mi tarjeta porque la perdí.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-card-suspension-es-02",
+      "family_id": "tr-unsupported-card-suspension",
+      "language": "es",
+      "text": "Quiero que suspendas el uso de mi tarjeta de inmediato.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-card-suspension-es-03",
+      "family_id": "tr-unsupported-card-suspension",
+      "language": "es",
+      "text": "Desactiva mi tarjeta para que no puedan hacer nuevas compras.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-card-suspension-es-04",
+      "family_id": "tr-unsupported-card-suspension",
+      "language": "es",
+      "text": "Apaga temporalmente mi tarjeta bancaria.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-card-suspension-pt-01",
+      "family_id": "tr-unsupported-card-suspension",
+      "language": "pt",
+      "text": "Bloqueie meu cartão porque eu o perdi.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-card-suspension-pt-02",
+      "family_id": "tr-unsupported-card-suspension",
+      "language": "pt",
+      "text": "Quero que você suspenda o uso do meu cartão imediatamente.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-card-suspension-pt-03",
+      "family_id": "tr-unsupported-card-suspension",
+      "language": "pt",
+      "text": "Desative meu cartão para impedir novas compras.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "tr-unsupported-card-suspension-pt-04",
+      "family_id": "tr-unsupported-card-suspension",
+      "language": "pt",
+      "text": "Desabilite temporariamente meu cartão bancário.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-01-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-01",
+      "language": "es",
+      "text": "¿Se registró ese pago?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-01-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-01",
+      "language": "es",
+      "text": "¿Entró mi pago anterior?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-01-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-01",
+      "language": "pt",
+      "text": "Esse pagamento foi registrado?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-01-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-01",
+      "language": "pt",
+      "text": "Meu pagamento anterior entrou?",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-02-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-02",
+      "language": "es",
+      "text": "Muéstrame ese pago.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-02-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-02",
+      "language": "es",
+      "text": "Busca mi pago anterior.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-02-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-02",
+      "language": "pt",
+      "text": "Mostra esse pagamento.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-02-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-02",
+      "language": "pt",
+      "text": "Busca meu pagamento anterior.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-03-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-03",
+      "language": "es",
+      "text": "Explícame este pago.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-03-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-03",
+      "language": "es",
+      "text": "Aclárame ese pago.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-03-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-03",
+      "language": "pt",
+      "text": "Explica esse pagamento.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-INQUIRY-03-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-INQUIRY-03",
+      "language": "pt",
+      "text": "Esclarece esse pagamento.",
+      "intent": "inquiry"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-01-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-01",
+      "language": "es",
+      "text": "Yo no compré eso.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-01-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-01",
+      "language": "es",
+      "text": "No reconosco esa compra.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-01-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-01",
+      "language": "pt",
+      "text": "Eu não comprei isso.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-01-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-01",
+      "language": "pt",
+      "text": "Não reconheço essa conpra.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-02-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-02",
+      "language": "es",
+      "text": "Me cobraron doble.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-02-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-02",
+      "language": "es",
+      "text": "Ese cobro está duplicado.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-02-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-02",
+      "language": "pt",
+      "text": "Me cobraram em dobro.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-02-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-02",
+      "language": "pt",
+      "text": "Essa cobrança veio duplicada.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-03-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-03",
+      "language": "es",
+      "text": "Ese cargo está mal.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-03-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-03",
+      "language": "es",
+      "text": "Me cargaron de más.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-03-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-03",
+      "language": "pt",
+      "text": "Essa cobrança está errada.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-DISPUTE-03-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-DISPUTE-03",
+      "language": "pt",
+      "text": "Me cobraram a mais.",
+      "intent": "dispute_intake"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-01-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-01",
+      "language": "es",
+      "text": "Pásame con una persona.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-01-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-01",
+      "language": "es",
+      "text": "Quiero atención de una persona.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-01-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-01",
+      "language": "pt",
+      "text": "Me passa pra uma pessoa.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-01-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-01",
+      "language": "pt",
+      "text": "Quero atendimento de uma pessoa.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-02-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-02",
+      "language": "es",
+      "text": "Pido un asesor humano.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-02-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-02",
+      "language": "es",
+      "text": "Solicito un agente humano.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-02-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-02",
+      "language": "pt",
+      "text": "Me conecta com atendente humano.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-02-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-02",
+      "language": "pt",
+      "text": "Quero um agente humano.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-03-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-03",
+      "language": "es",
+      "text": "Comunícame con un operador.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-03-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-03",
+      "language": "es",
+      "text": "Pásame con una operadora.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-03-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-03",
+      "language": "pt",
+      "text": "Chama um operador pra mim.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-HUMAN-03-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-HUMAN-03",
+      "language": "pt",
+      "text": "Me passa pra uma operadora.",
+      "intent": "human_request"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-01-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-01",
+      "language": "es",
+      "text": "Haz un pago nuevo.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-01-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-01",
+      "language": "es",
+      "text": "Inicia una transferencia.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-01-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-01",
+      "language": "pt",
+      "text": "Faz um pagamento novo.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-01-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-01",
+      "language": "pt",
+      "text": "Inicia uma transferência.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-02-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-02",
+      "language": "es",
+      "text": "Consígueme un préstamo.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-02-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-02",
+      "language": "es",
+      "text": "Tramita un préstamo.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-02-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-02",
+      "language": "pt",
+      "text": "Consegue um empréstimo pra mim.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-02-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-02",
+      "language": "pt",
+      "text": "Solicita um empréstimo.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-03-ES-A",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-03",
+      "language": "es",
+      "text": "Reembolsa ese pago.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-03-ES-B",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-03",
+      "language": "es",
+      "text": "Devuélveme ese dinero.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-03-PT-A",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-03",
+      "language": "pt",
+      "text": "Reembolsa esse pagamento.",
+      "intent": "unsupported"
+    },
+    {
+      "id": "SHORT-TRAIN-UNSUPPORTED-03-PT-B",
+      "family_id": "SHORT-TRAIN-FAMILY-UNSUPPORTED-03",
+      "language": "pt",
+      "text": "Devolve esse dinheiro.",
+      "intent": "unsupported"
+    }
+  ]
+}

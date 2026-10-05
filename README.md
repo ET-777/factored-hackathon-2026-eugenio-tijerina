@@ -1,115 +1,75 @@
-# Factored banking service prototype
+# Transaction Support Assistant
 
-Local foundation for a solo Factored AI & Data Hackathon 2026 submission.
-Private development repository: [ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro).
-Keep it private during development; public visibility requires new explicit owner authorization.
-The application currently runs locally; a hosted prototype is still pending.
+**Eugenio Tijerina · Factored AI & Data Hackathon 2026**
 
-**Status: local bilingual web UI and keyword baseline, with grounded inquiry,
-clarification, confirmed simulated intake/handoff and verified SQLite receipts.**
-The keyword UI retains an unfinished search across amount/currency replies and
-summarizes distinct handoff steps without inventing unresolved questions.
-Supported transaction currencies are **MXN, COP, ARS and USD**. Searches preserve
-native amounts and return no match when the available records lack that currency;
-the current fictional demo records are USD-only.
-The learned classifier, evaluation scenario adapter, deployment and final evaluation
-remain pending. No comparative performance result is claimed.
+[Live application](https://factored-bank-demo.onrender.com/) · [Submission repository](https://github.com/ET-777/factored-hackathon-2026-eugenio-tijerina)
 
-Internal submission target: **October 4, 2026, 16:00 America/Monterrey**.
-Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
-(22:59 America/Monterrey). Approximately 34 work hours total. Video maximum: three minutes.
+A Spanish and Portuguese assistant for finding a recorded payment, checking its
+facts, and preparing a review ticket or a summary for human support. The customer
+chooses the transaction, reviews the draft, and confirms before anything is saved.
+The receipt confirms that the ticket was stored and checked; it is not a refund.
 
-## Start here
+The public application uses fictional transactions. No money moves, no bank is
+contacted, and no real support team receives the tickets. Do not enter personal
+or financial information.
 
-- [Requirements and unresolved questions](docs/requirements.md): organizer requirements, options, and user decisions with PDF page references.
-- [Bounded data audit](docs/audit.md): verified findings, sampling limitations, and source claims.
-- [Full local-data review and revisions](docs/local_data_review.md): broader evidence from the user-downloaded dataset; the first audit remains historical evidence.
-- [Scope recommendation and implementation handoff](docs/scope.md).
-- [Evaluation contract](docs/evaluation.md): baseline, learned component, thresholds, and untouched final workload.
-- [Submission plan](docs/submission_plan.md): work budget, deployed prototype, slides, and video.
-- [Run and review the local workflow](docs/local_workflow.md): demo commands, module map,
-  confirmation rules, checks, and current limitations.
-- [Try the local interface](docs/local_ui.md): browser commands, review journey,
-  keyword input limits, session/reset behavior and current verification.
-- [Evaluation scenario adapter contract](docs/evaluation_adapter.md): preserve the
-  independent development schema without weakening source validation.
+## Run locally
 
-## Local checks
-
-Python 3.11+; the local workflow and tests require only the standard library. Run from this directory:
+Python 3.11 or later:
 
 ```powershell
-python -B -m bank_service
-python -B -m bank_service web --port 8765
+python -m pip install -e .
+python -B -m bank_service web --port 8765 --router learned-preview-v2
+```
+
+Open **http://127.0.0.1:8765/**. Stop the server with Ctrl+C. Without an explicit
+router option, `web` uses the keyword baseline. The Docker image selects v2.
+
+To run the scripted fictional workflows or the application tests:
+
+```powershell
 python -B -m bank_service demo --language es
 python -B -m bank_service demo --language pt
 python -B -m unittest discover -s tests -q
-python -B scripts/check_private_artifacts.py
 ```
 
-Open **http://127.0.0.1:8765** after the `web` command starts. Stop it with Ctrl+C.
-The browser uses fictional records and a server-owned demo session. Cases are
-isolated per browser session and temporary; resetting starts a fresh demonstration.
-The UI stays on the loopback interface and does not load private source records.
+The selected model trains locally from the included 144 authored examples.
+It requires no model download, API key, paid inference or external model call.
 
-The bare module reports status; `demo` exercises the real local workflow using newly
-authored fictional records and explicitly scripted confirmation. It creates a temporary
-SQLite database by default. An optional `--db .local/demo/cases.sqlite3` keeps simulated
-cases between runs; each run is a new conversation. The demo never loads the source
-cohort or either evaluation split. Only the explicit `web` command starts a web
-server. Neither command calls a model, cloud provider or real bank tool. Trusted
-demo sessions are not production authentication.
+## How it works
 
-`python -B scripts/verify_evaluation.py` is the separate seal-integrity check described
-in the evaluation plan; it is not an application evaluation and is not needed for this demo.
-See the audit document for its separate optional PDF dependency and bounded rerun command.
-For the stronger exact-credential check, use an interpreter with `requirements-audit.txt`
-available and run `python scripts/check_private_artifacts.py --dictionary "../Challenge Materials/LATAM_Bank_Complete_Data_Dictionary.pdf"`.
-That reads credentials only in memory and reports counts, never their values.
+- Search by date, or amount and currency, then choose a matching record.
+- Read grounded merchant, amount, status and date information.
+- Agree to prepare a review request; inspect and explicitly confirm its draft.
+- Ask for human support and supply the issue. The summary preserves relevant
+  facts, completed steps and any earlier verified ticket.
 
-## Repository contents
+Search supports MXN, COP, ARS and USD without conversion. The public fixtures
+contain USD only. Dates accept day-first numeric formats, ISO dates and Spanish
+or Portuguese month names; an omitted year uses the current year in Monterrey.
 
-```text
-bank_service/                  guarded workflow, keyword routing, local UI, synthetic demo
-docs/                          source-backed requirements, audit, scope and evaluation
-evaluation/development.json    public, team-authored development cases
-evaluation/final_manifest.json public final-set commitment; no final case content
-evaluation/final_private/      ignored, sealed local cases and labels
-evidence/                      aggregate audit evidence only
-scripts/                       reproducible audit and verification utilities
-tests/                         synthetic record, permission, workflow and storage checks
-data/                          ignored source samples and private audit provenance
-```
+Service code enforces ownership, permissions, session expiry, confirmation and
+verified saving. A model prediction cannot grant access or save a ticket.
 
-All examples in development/final evaluation are team-authored synthetic test fixtures,
-not extracts or Portuguese translations of organizer customer records. Source dataset
-text is documented as Spanish-only. Portuguese performance still needs human review.
+## Results and limits
 
-## Privacy and source handling
+The repaired workflow completed **15/16 service journeys per language** and
+passed **8/8 specified safety scenarios per language**. These are reused-case
+regression results under corrected scoring, not model accuracy or a new unseen
+evaluation. The original frozen evaluation failed. Portuguese wording has no
+fluent human review, and the demo identity is not production authentication.
+See the [model and evaluation report](docs/model-and-evaluation.md) for both
+scoring views, original results and remaining limitations.
 
-Source PDFs remain in `../Challenge Materials/`. The complete dictionary contains
-credentials. Never copy the PDF, its access page, credentials, raw records, or full
-extracted text into documentation, terminals, issue/PR bodies, Git, or external models.
-Audit access reads credentials into memory from the local source only and uses them
-only for read-only access to the documented data source. Do not enable SDK debug logs.
+## Documentation
 
-`.gitignore` excludes credentials/local configuration, PDFs, raw data, runtime state,
-model binaries, scratch files and final evaluation contents. It is a safeguard, not a
-secret scanner; never use `git add -f` on those paths. Review the eligible file list
-and run the secret check before each commit or push.
+- [Architecture](docs/architecture.md): workflow, controls and module map.
+- [Model and evaluation](docs/model-and-evaluation.md): model choice, comparisons,
+  service results and safety scenarios.
+- [Data](docs/data.md): source audit, authored inputs and public fixtures.
+- [Deployment](docs/deployment.md): Docker, Render and session retention.
 
-The final evaluation set is under an ignored directory in a OneDrive-backed workspace.
-It may be synchronized by the user's existing OneDrive setup; “local/private” here means
-excluded from this repository, not a claim of an air gap or disabled cloud backup.
-Its contents must stay out of model context and development runs until the documented freeze.
-Retain it for the final run; regenerate only through an explicit, documented evaluation revision.
-
-## Prototype boundaries
-
-Repository publication does not deploy the application, buy services, call paid
-models, move money, or submit material to organizers. Actions are simulated intake
-and handoff only;
-there is no real chargeback, reimbursement, fraud determination, or lending decision.
-The user delegated the workflow decision; transaction inquiry with confirmed simulated
-intake and human handoff is selected in `docs/scope.md`. Training, learned inference,
-end-to-end evaluation, language review, deployment and submission remain future work.
+`bank_service/` contains the application, browser assets and training resources;
+`tests/` contains synthetic application tests; `evidence/` contains unchanged
+aggregate reports. Organizer records, credentials, PDFs and private evaluation
+cases are excluded.

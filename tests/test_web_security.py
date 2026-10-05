@@ -138,13 +138,12 @@ class WebSecurityTests(unittest.TestCase):
             self.assertNotIn("Demo Mercado Sol", json.dumps(state))
             self.assertEqual(self.act(cookie, csrf, "inquire", transaction_id="DEMO-TX-001")[0], 403)
 
-    def test_malformed_or_oversized_json_cannot_change_workflow(self):
+    def test_malformed_json_cannot_change_workflow(self):
         cookie, csrf, _ = self.browser()
         examples = (
             (b'{"action":"reset","action":"inquire"}', 400),
             (b'{"action":"message","text":NaN}', 400),
             (b'[]', 400),
-            (b' ' * (MAX_BODY_BYTES + 1), 413),
         )
         for raw, expected in examples:
             with self.subTest(raw_length=len(raw)):
@@ -154,6 +153,33 @@ class WebSecurityTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIsNone(state["selected_transaction"])
         self.assertEqual(state["receipts"], [])
+
+    def test_oversized_content_length_rejected_without_changing_workflow(self):
+        cookie, csrf, _ = self.browser()
+        self.assertEqual(self.act(cookie, csrf, "inquire", transaction_id="DEMO-TX-001")[0], 200)
+        status, before, _ = self.act(cookie, csrf, "prepare_intake", reason="No reconozco esta compra.")
+        self.assertEqual(status, 200)
+        self.assertIsNotNone(before["pending_draft"])
+        browser = self.server.get_session(cookie.split("=", 1)[1])
+        case_count = browser.store.count()
+
+        # The size gate must reject the announced upload before reading its body.
+        # Sending headers alone avoids racing an upload against connection close.
+        status, body, _ = self.request(
+            "POST", "/api/action", cookie=cookie,
+            headers={"Content-Length": str(MAX_BODY_BYTES + 1)},
+        )
+        self.assertEqual(status, 413)
+        self.assertEqual(body["error"]["code"], "body_too_large")
+
+        status, after, _ = self.request("GET", "/api/state", cookie=cookie)
+        self.assertEqual(status, 200)
+        for field in ("selected_transaction", "pending_draft", "receipts", "candidate_ids", "messages"):
+            with self.subTest(field=field):
+                self.assertEqual(after[field], before[field])
+        self.assertEqual(after["csrf_token"], csrf)
+        self.assertEqual(browser.store.count(), case_count)
+        self.assertEqual(len(self.server._sessions), 1)
 
     def test_reset_revokes_an_already_looked_up_session_before_later_turn(self):
         cookie, csrf, _ = self.browser()

@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "scope": "fixed_seven_partition_source_intent_feasibility",
+  "inventory_sha256": "620479a5c32b30077e7acafd7522d689fc13044627271940782d143e42f3924d",
+  "review_status": "Codex draft labels; human validation pending",
+  "source_labels_used": false,
+  "keyword_router_predictions_used": false,
+  "subset": {
+    "files_read": 7,
+    "bytes_read": 883373,
+    "rows_read": 1098,
+    "nonblank_customer_text_rows": 1098,
+    "missing_customer_text_rows": 0,
+    "distinct_text_groups": 42
+  },
+  "stored_language_rows": {
+    "es": 1098,
+    "pt": 0,
+    "en": 0
+  },
+  "other_language_rows": 0,
+  "missing_language_rows": 0,
+  "class_support": {
+    "inquiry": {
+      "normalized_text_groups": 0,
+      "reviewed_families": 0,
+      "subset_rows": 0
+    },
+    "dispute_intake": {
+      "normalized_text_groups": 0,
+      "reviewed_families": 0,
+      "subset_rows": 0
+    },
+    "human_request": {
+      "normalized_text_groups": 0,
+      "reviewed_families": 0,
+      "subset_rows": 0
+    },
+    "unsupported": {
+      "normalized_text_groups": 42,
+      "reviewed_families": 2,
+      "subset_rows": 1098
+    },
+    "uncertain": {
+      "normalized_text_groups": 0,
+      "reviewed_families": 0,
+      "subset_rows": 0
+    },
+    "unusable": {
+      "normalized_text_groups": 0,
+      "reviewed_families": 0,
+      "subset_rows": 0
+    }
+  },
+  "distinct_reviewed_first_request_spans": 2,
+  "rows_with_appended_customer_followups": 459,
+  "distinct_reviewed_families": 2,
+  "performance_results": null,
+  "limitations": [
+    "Counts describe a fixed local subset, not full-corpus class prevalence.",
+    "Codex semantic annotations and family assignments are not human-validated labels.",
+    "Repeated rows and appended followups are not independent first-turn examples.",
+    "No model fitting, splits, threshold selection or final scoring were performed."
+  ],
+  "review_sha256": "ca06b1cb8f11b63f6fcbf30f7507f0237e846016914e357289c47ca18877ec34"
+}

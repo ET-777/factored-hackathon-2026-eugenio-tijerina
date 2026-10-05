@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-10-05T18:48:26Z",
+  "origin": "https://factored-bank-demo.onrender.com",
+  "status": "passed_bounded_repaired_runtime_verification",
+  "release": {
+    "repository": "https://github.com/ET-777/factored-bank-demo",
+    "branch": "codex/release-owner-v1",
+    "commit": "21cf0c7f4ecc08ca7dbbc14e2ef336447d0d7b05",
+    "package_manifest_sha256": "0e16cea40313487a8575118c443c8cf49ad48ea03eecfb573923e2148e17f3ac",
+    "render_dashboard_status": "Deploy succeeded | Live",
+    "render_startup_log_router": "guarded learned preview v2",
+    "api_route_mode": "learned_preview",
+    "repository_visibility_changed": false,
+    "package_payload_files": 29
+  },
+  "verification": {
+    "helper": ".local/verify_render_repair_v2.py",
+    "helper_sha256": "2fd28db27b858db2fa8a705e86a5349c0d50df32e7900a09361f520f7df9769c",
+    "base_helper_sha256": "61e73147d61d619da544e0fa43b494598b0b90e9f147963f97aea87d9d03de7b",
+    "tls_certificate_and_hostname_verified": true,
+    "http_requests": 43,
+    "isolated_fictional_sessions_created": 2,
+    "languages": ["es", "pt"],
+    "check_groups_passed": 22,
+    "initial_and_final_health_passed": true,
+    "existing_technical_groups_passed": 16,
+    "additional_repair_groups_per_language": [
+      "explicit_financial_report_offer_declined_without_write",
+      "pin_instructions_refused_without_draft_or_write",
+      "scheduled_payment_refused_without_draft_or_write"
+    ],
+    "browser_evidence": "Render dashboard showed the exact new commit live and the guarded v2 startup log; no product browser action sequence was performed."
+  },
+  "limits": [
+    "Technical fictional HTTPS checks, not model scoring or new held-out qualification.",
+    "Portuguese semantics have no fluent human review.",
+    "The eight fault families were reached in separate local regressions; this live check does not inject all eight faults.",
+    "No hosted expiry, restart, capacity, platform log retention or judge-device availability test.",
+    "No exact mixed-language filming sequence or browser cookie-storage inspection."
+  ],
+  "preservation": {
+    "original_hosted_verification_v1_overwritten": false,
+    "original_frozen_results_overwritten": false,
+    "raw_organizer_data_or_credentials_sent": false,
+    "cookie_csrf_offer_draft_or_case_identifiers_recorded": false,
+    "deployment_uses_authored_fictional_records": true
+  }
+}
