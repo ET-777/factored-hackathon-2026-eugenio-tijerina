@@ -1,0 +1,80 @@
+{
+  "actual_final_spanish_output_review_complete": false,
+  "checked_at_utc": "2026-10-05T01:58:57Z",
+  "classification": "post_final_engineering_regression",
+  "default_router_changed": false,
+  "deployment_performed": false,
+  "exposed_final_rerun_or_rescore": false,
+  "files_sha256": {
+    "bank_service/transaction_references.py": "b914cb68192d8c5e0f11d0f2769fd1972f548bb39556848847548ffeeaf067f8",
+    "bank_service/web_app.py": "44eb37b9ebfaf5c02cf4f52f670c86e093e4720f6a5addceb7c43b3a316e14d0",
+    "tests/test_post_final_safety_paths.py": "ca684b8b97ca026e8f7f163a91c1ae9a44726455ab20905513c0903afe5d688c",
+    "tests/test_transaction_references.py": "0eb479e6c0061ea28bdcdfd3901ef80c63a234b2b060e4086f4c953e8949b74b"
+  },
+  "new_held_out_performance_claim": false,
+  "new_reference_tests_passed": 17,
+  "new_safety_tests_passed": 8,
+  "portuguese_fluent_human_review_complete": false,
+  "preservation": {
+    "frozen_code_files_byte_verified_in_private_archive": 90,
+    "frozen_freeze_sha256": "004ef91d2eb577d33f535e3aa25ded4d202b65e1a664ee62259503c9a6f46c05",
+    "only_preexisting_frozen_code_file_changed": "bank_service/web_app.py",
+    "original_sealed_fictional_final_read": false,
+    "protected_exposed_artifacts_unchanged": 114,
+    "source_or_credentials_copied_to_archive": false
+  },
+  "privacy_check": {
+    "dictionary_credentials_read": false,
+    "eligible_working_tree_files_checked": 165,
+    "exclusion_probes_passed": 8,
+    "exclusion_probes_total": 8,
+    "git_history_scanned": false,
+    "violating_files": 0
+  },
+  "public_visibility_changed": false,
+  "regression_tests_passed": 677,
+  "schema_version": 1,
+  "source_lookup": {
+    "cases_persisted": 0,
+    "classification": "post_final_engineering_regression",
+    "exact_id_slot_checks_passed": 400,
+    "final_cases_read_or_rescored": false,
+    "fresh_read_only_http_journeys_passed": 100,
+    "languages": [
+      "es",
+      "pt"
+    ],
+    "native_record_and_cohort_bytes_unchanged": true,
+    "original_raw_source_files_read": false,
+    "portuguese_fluent_human_review": false,
+    "python_version": "3.11.0",
+    "schema_version": 1,
+    "source_records_checked": 50,
+    "trained_router_loaded": false
+  },
+  "synthetic_safety": {
+    "conditions": [
+      "foreign_access_denied",
+      "read_only_intake_denied",
+      "expired_session_denied",
+      "preparation_declined",
+      "chat_assent_does_not_persist",
+      "draft_cancelled",
+      "duplicate_confirmation_single_verified_case",
+      "persistence_failure_unverified_no_success"
+    ],
+    "conditions_reached": 8,
+    "journeys_passed": 32,
+    "languages": [
+      "es",
+      "pt"
+    ],
+    "modes": [
+      "keyword",
+      "fixed_synthetic_dispute_proposal"
+    ],
+    "trained_model_evaluation": false,
+    "variants_per_condition": 4
+  },
+  "trained_router_changed_or_refitted": false
+}

@@ -34,13 +34,14 @@ from bank_service.demo_fixtures import demo_records, demo_session
 from bank_service.records import TransactionRecord
 from bank_service.responses import ResponseFormatError, TransactionAnswer, with_requested_record_limits
 from bank_service.routing import (
-    IntentProposal, RoutingError, declines_handoff_preparation, extract_slots, human_request_purpose,
+    IntentProposal, RoutingError, declines_handoff_preparation, human_request_purpose,
     is_case_continuation, is_explicit_human_request,
     is_explicit_inquiry, is_greeting,
     is_search_followup, refers_to_selected_transaction, route_intent,
 )
 from bank_service.selection import MAX_SEARCH_RECORDS, SelectionError, TransactionFilters
 from bank_service.transactions import SourceReference, SourcedTransaction, get_transaction
+from bank_service.transaction_references import extract_record_slots, parse_transaction_reference
 
 
 MAX_BODY_BYTES = 16 * 1024
@@ -709,7 +710,7 @@ class BrowserSession:
             return False
         inline = human_request_purpose(text, self.language)
         if (is_greeting(text, self.language) or _intake_preference(text, self.language) is True
-                or is_search_followup(text, self.language)
+                or self.reference_followup(text, now)
                 or (is_explicit_human_request(text, self.language) and inline is None)
                 or normalized in {"ayuda", "ajuda", "necesito ayuda", "preciso de ajuda", "algo", "ok", "confirmo",
                                   "gracias", "muchas gracias", "obrigado", "obrigada", "por favor", "thanks"}):
@@ -719,6 +720,18 @@ class BrowserSession:
         self.business_issue = purpose
         self.prepare("handoff", purpose, now, questions=())
         return True
+
+    def reference_followup(self, text: str, now: datetime) -> bool:
+        try:
+            reference = parse_transaction_reference(text, self.language, self.records)
+        except (RoutingError, AccessDenied):
+            self.clear_record_selection(now)
+            raise
+        return reference.slot_only or is_search_followup(reference.masked_text, self.language)
+
+    def request_slots(self, text: str, now: datetime):
+        return extract_record_slots(text, self.language, self.records,
+                                    reference_date=_request_reference_date(now))
 
     def message(self, text: str, now: datetime) -> None:
         self.append("user", text, "request")
@@ -752,8 +765,8 @@ class BrowserSession:
             self.clear_handoff_offer()
             self.clear_search()
             try:
-                slots = extract_slots(text, self.language, reference_date=_request_reference_date(now))
-            except RoutingError:
+                slots = self.request_slots(text, now)
+            except (RoutingError, AccessDenied):
                 self.clear_record_selection(now)
                 raise
             if slots.transaction_id is not None:
@@ -768,7 +781,7 @@ class BrowserSession:
             return
         # Details alone start an inquiry or continue the server-owned request.
         # Neither classifier may infer a dispute/handoff from a date or amount.
-        slot_only = is_search_followup(text, self.language)
+        slot_only = self.reference_followup(text, now)
         continuing = self.pending_search is not None and slot_only
         # Complete plain read requests have the same shared protection as
         # details alone. A classifier must not invent a dispute or handoff from
@@ -806,7 +819,7 @@ class BrowserSession:
                 return
         self.clear_handoff_offer()
         if self.intake_offer is not None:
-            if proposal.intent == "unsupported" and not proposal.matched and not is_search_followup(text, self.language):
+            if proposal.intent == "unsupported" and not proposal.matched and not slot_only:
                 self.append("assistant", TEXT[self.language]["intake_offer"], "intake_offered")
                 return
             self.intake_offer = None
@@ -837,7 +850,7 @@ class BrowserSession:
         selected = self.selected_id
         self.clear_record_selection(now)
         try:
-            slots = extract_slots(text, self.language, reference_date=_request_reference_date(now))
+            slots = self.request_slots(text, now)
         except RoutingError as error:
             code = str(error)
             if code in ("invalid_amount", "ambiguous_amount", "unsupported_currency", "ambiguous_currency"):

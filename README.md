@@ -46,9 +46,17 @@ with before preparing the form. The literal reply becomes the request in the
 handoff; an inline purpose or an already known dispute skips that question. The
 customer can cancel or switch to an inquiry, and saving still requires a separate
 confirmation and verified receipt.
-These fixes have regression checks; the first comparison scores still describe the earlier frozen code.
-Human output review, broader scenario evaluation, deployment and final evaluation
-remain pending. These are authored development results, not final performance.
+The [frozen workflow comparison](docs/final_workflow_results.md) is complete.
+The learned router improved standalone intent recognition but failed the declared
+workflow qualification targets; keyword routing remains the default. A shared
+native-ID discovery gap blocked six intended fault conditions in that run.
+The subsequent [native-reference repair](docs/post_final_lookup_repair.md) now
+resolves exact stored IDs through existing authorization checks. It passes
+677 regression tests, 100 read-only cohort lookup journeys and 32 invented
+journeys that actually reach all eight safety conditions. These are post-final
+engineering checks; the frozen scores and failures remain unchanged.
+Actual final Spanish output review, fluent Portuguese review and deployment
+remain pending. Authored cases do not establish production performance.
 
 Organizer guidance reviewed October 1 requires English submission deliverables and
 Spanish/Portuguese customer interactions. In an October 2 owner-provided Slack screenshot,
@@ -58,8 +66,9 @@ to justify it". Record their purpose, provenance and limits; this does not appro
 redistributing source data or every pre-existing fictional-record workload.
 Draft families and labels are documented. Spanish wording/labels were approved on
 October 3; Portuguese human review remains pending. The first development protocol
-was frozen before scoring; a separate final protocol remains pending.
-Keep the existing final cases sealed. See
+was frozen before scoring; the [separate final protocol](docs/final_workflow_protocol.md)
+and its one-attempt results are preserved. Keep the earlier fictional-record
+final cases sealed. See
 [requirements](docs/requirements.md) and the [evaluation eligibility gate](docs/evaluation.md).
 
 The [bounded source-intent review](docs/source_intent_inventory.md) is complete:
@@ -93,6 +102,10 @@ Official deadline, as confirmed by the user: **October 5, 2026, 23:59 GMT-5**
   messages with October 3 owner wording/label approval, without classifier predictions.
 - [New Spanish short-message checklist](docs/routing_short_review_es.md): new TRAIN
   additions and development checks, approved by the owner on October 4.
+- [Frozen final comparison](docs/final_workflow_results.md): original scores,
+  failed qualification targets and scenario-coverage limits.
+- [Post-final native-reference repair](docs/post_final_lookup_repair.md): current
+  lookup behavior, reached synthetic safety paths and preserved frozen evidence.
 - [Deferred diagnostic scenario adapter](docs/evaluation_adapter.md): preserve the
   independent constructed schema without weakening source validation.
 
