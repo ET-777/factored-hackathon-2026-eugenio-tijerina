@@ -46,6 +46,9 @@ predeclared overall/per-language criteria. The alternative implementation is
 available for experiment reproduction only, with the optional
 `routing-experiment` dependencies; it has no UI selector. The original preview,
 v2 selector, default router and earlier evidence remain unchanged.
+The subsequent [bounded XGBoost comparison](xgboost_routing_results.md) also
+retained v2. Both shallow tree settings regressed on the same TRAIN folds;
+their separate experimental module and pinned dependencies have no UI selector.
 
 The October 4 [short-message increment](short_message_results.md) adds a separate
 `--router learned-preview-v2` selector and fixed

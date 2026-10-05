@@ -29,6 +29,9 @@ uses TRAIN-only grouped cross-validation. Naive Bayes v2 retained 102/144 correc
 routes versus 99/144 for the best of three logistic regression settings; the
 alternative was not promoted. These selection scores use different partitions
 from the earlier short-message diagnostics and are not final performance.
+The subsequent [two-setting XGBoost trial](docs/xgboost_routing_results.md)
+also retained v2: the best shallow tree configuration reached 51/144 correct
+on the same grouped folds. No challenger was connected to the application.
 Subsequent [shared workflow fixes](docs/post_development_fixes.md) add consented
 human review for ineligible disputes, requested channel-limit explanations and
 explicit previous-case continuation handling. Complete plain read/search requests
