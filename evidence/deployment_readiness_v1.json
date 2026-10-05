@@ -1,0 +1,170 @@
+{
+  "deck": {
+    "all_final_slides_rendered_and_visually_reviewed": true,
+    "first_party_reimport_passed": true,
+    "integrity_findings": 0,
+    "layout_findings": 0,
+    "native_editable_tables": 3,
+    "native_powerpoint_execution_verified": false,
+    "path": "submission/transaction-support-draft-v4.pptx",
+    "sha256": "c4300ccd8a73eb79a7644d302053812dbebf7a77036aa861a50b084f59fdfb62",
+    "slides": 5
+  },
+  "docker_context": {
+    "actual_engine_started": false,
+    "actual_image_built": false,
+    "buildkit_verified": false,
+    "excluded_sentinels_admitted": 0,
+    "excluded_sentinels_total": 12,
+    "initial_directory_inclusion_bug_reproduced": true,
+    "native_archive_evidence": "independent_reviewer_tool_transcript_only_no_retained_capture_or_helper_hash",
+    "native_archive_scope": "legacy_Docker_client_synthetic_context_fake_local_named_pipe_daemon",
+    "old_rules_regression_failures": 8,
+    "repaired_native_client_expected_files": 28,
+    "repaired_native_client_missing_files": 0,
+    "repaired_native_client_unexpected_files": 0
+  },
+  "external_actions": {
+    "cloud_deployed": false,
+    "new_repository_created": false,
+    "paid_model_calls": false,
+    "real_https_verified": false,
+    "repository_visibility_changed": false,
+    "submission_sent": false,
+    "video_published": false
+  },
+  "installed_export_checks": {
+    "hosted_cli": {
+      "canonical_host_origin_checks": true,
+      "journeys": [
+        {
+          "ambiguous_search_choice": true,
+          "consented_handoff": true,
+          "duplicate_reuses_receipt": true,
+          "language": "es",
+          "two_decisions_before_verified_intake": true
+        },
+        {
+          "ambiguous_search_choice": true,
+          "consented_handoff": true,
+          "duplicate_reuses_receipt": true,
+          "language": "pt",
+          "two_decisions_before_verified_intake": true
+        }
+      ],
+      "keyword_default": true,
+      "real_cli_process_started": true,
+      "secure_cookie_attributes": true,
+      "stateless_health": true,
+      "tls_scope": "manual_HTTP_client_simulates_trusted_TLS_termination_not_real_HTTPS"
+    },
+    "installed_learned_workflows": {
+      "journeys": [
+        {
+          "cases_created": 1,
+          "duplicate_confirmation_reused": true,
+          "greeting_unrelated_unsupported_no_draft": true,
+          "inquiry_details_grounded_answer": true,
+          "language": "es",
+          "router": "v1",
+          "training_rows": 96,
+          "two_stage_consent_verified_receipt": true
+        },
+        {
+          "cases_created": 1,
+          "duplicate_confirmation_reused": true,
+          "greeting_unrelated_unsupported_no_draft": true,
+          "inquiry_details_grounded_answer": true,
+          "language": "pt",
+          "router": "v1",
+          "training_rows": 96,
+          "two_stage_consent_verified_receipt": true
+        },
+        {
+          "cases_created": 1,
+          "duplicate_confirmation_reused": true,
+          "greeting_unrelated_unsupported_no_draft": true,
+          "inquiry_details_grounded_answer": true,
+          "language": "es",
+          "router": "v2",
+          "training_rows": 144,
+          "two_stage_consent_verified_receipt": true
+        },
+        {
+          "cases_created": 1,
+          "duplicate_confirmation_reused": true,
+          "greeting_unrelated_unsupported_no_draft": true,
+          "inquiry_details_grounded_answer": true,
+          "language": "pt",
+          "router": "v2",
+          "training_rows": 144,
+          "two_stage_consent_verified_receipt": true
+        }
+      ],
+      "resource_hashes_match": true,
+      "resource_sha256": {
+        "routing_train.json": "41c3b99d7e38b33661625be83c062ad26e22c94900026fd53105680aa16891ab",
+        "routing_train_short_v2.json": "75618938c2398a7db2c976b8dabeb0a56b0b7cbfdf0eea337b89d7622f3216c5"
+      },
+      "wheel_import_only": true
+    }
+  },
+  "language_review": {
+    "portuguese": "owner_accepted_by_assumption_no_fluent_review",
+    "spanish": "owner_reviewed"
+  },
+  "observed_date": "2026-10-04",
+  "package": {
+    "allowlisted_files": 29,
+    "current_allowlisted_bytes_match_tested_export": true,
+    "kind": "fictional_runtime_only",
+    "manifest_sha256": "51b653b917a1faba06ba1cb40496f7cac39642c5fbbdecfc09d2c37e90f15230",
+    "source_commit_ancestry_metadata": "9d784d71bdc35670f2b55d3362ef40ea10c19e36",
+    "source_snapshot": "allowlisted_working_tree_bytes",
+    "wheel_sha256": "5f40a5cc2310c51a1669b19634eb563ea21772e44da2297bbbadab10b17fdfdf"
+  },
+  "preservation": {
+    "archive_total": 90,
+    "archive_unchanged": 90,
+    "authored_train_resources_byte_parity": true,
+    "final_evaluation_rerun": false,
+    "final_semantic_contents_decoded": false,
+    "freeze_sha256": "004ef91d2eb577d33f535e3aa25ded4d202b65e1a664ee62259503c9a6f46c05",
+    "protected_total": 114,
+    "protected_unchanged": 114,
+    "raw_model_definitions_preserved": true
+  },
+  "privacy": {
+    "decompressed_deck_parts_checked": 38,
+    "decompressed_deck_violating_parts": 0,
+    "credential_values_compared_in_memory": 2,
+    "credential_values_printed_or_copied": false,
+    "git_history_scanned": false,
+    "scope": "generic_key_patterns_and_exact_dictionary_values_in_eligible_working_tree_bytes;compressed_deck_xml_additionally_checked_privately",
+    "working_tree_credential_scan_initial_passed": true,
+    "final_git_eligible_files_checked": 187,
+    "final_working_tree_violating_files": 0,
+    "git_exclusion_probes_passed": 8,
+    "git_exclusion_probes_total": 8
+  },
+  "qualification": {
+    "current_guarded_learned_serving": "unscored",
+    "keyword_default": true,
+    "original_frozen_result": "failed_preserved"
+  },
+  "schema_version": 1,
+  "status": "local_delivery_preparation_verified_not_deployed",
+  "unit_tests": {
+    "elapsed_seconds": 32.417,
+    "failed": 0,
+    "new_hosted_and_package_tests": 28,
+    "passed": 752,
+    "skipped": 0
+  },
+  "video": {
+    "actual_duration_verified": false,
+    "recorded": false,
+    "script_path": "docs/submission_video_script.md",
+    "target_seconds": 165
+  }
+}

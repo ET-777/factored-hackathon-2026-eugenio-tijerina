@@ -1,9 +1,10 @@
-"""Loopback-only review UI with server-owned sessions and guarded workflow calls.
+"""Review UI with server-owned sessions and guarded workflow calls.
 
 The default mode uses authored demo fixtures. An explicit trusted startup config
 may supply an already validated, bounded private cohort and fixed customer. The
 browser cannot choose the data source, identity or permissions. All actions remain
-local simulations; production hosting/authentication are a separate task.
+simulations. Public hosting is an explicit fictional-data mode behind trusted
+HTTPS termination; the fixed demo identity is not production authentication.
 """
 
 from collections import deque
@@ -30,7 +31,8 @@ from bank_service.access import AccessDenied, Permission, TrustedSession, requir
 from bank_service.actions import ActionDraft, ActionError, ActionService, VerifiedReceipt
 from bank_service.case_store import CaseStore, StoreError
 from bank_service.conversation import Conversation, ConversationError, ConversationReply
-from bank_service.demo_fixtures import demo_records, demo_session
+from bank_service.demo_fixtures import DEMO_CUSTOMER, demo_records, demo_session
+from bank_service.hosting import HostingConfig
 from bank_service.records import TransactionRecord
 from bank_service.responses import ResponseFormatError, TransactionAnswer, with_requested_record_limits
 from bank_service.routing import (
@@ -1036,13 +1038,21 @@ class DemoServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True
 
-    def __init__(self, port: int = 8765, *, config: PrivateCohortConfig | None = None, router=None):
+    def __init__(self, port: int = 8765, *, config: PrivateCohortConfig | None = None, router=None,
+                 hosting: HostingConfig | None = None):
+        if type(port) is not int or not 0 <= port <= 65535:
+            raise ValueError("invalid_port")
+        if hosting is not None and not isinstance(hosting, HostingConfig):
+            raise ValueError("invalid_hosting_config")
+        if hosting is not None and config is not None:
+            raise ValueError("hosted_private_config_forbidden")
         if config is not None and not isinstance(config, PrivateCohortConfig):
             raise ValueError("invalid_private_cohort_config")
         if router is not None and not callable(getattr(router, "route_intent", None)):
             raise ValueError("invalid_routing_component")
         self._config = config
         self._router = router
+        self.hosting = hosting
         self._sessions: dict[str, BrowserSession] = {}
         self._session_lock = RLock()
         self._mint_times: deque[float] = deque()
@@ -1050,12 +1060,17 @@ class DemoServer(ThreadingHTTPServer):
         self._pending_cleanup: tuple[str, BrowserSession | None] | None = None
         self._temporary = TemporaryDirectory(prefix="factored-ui-")
         try:
-            super().__init__(("127.0.0.1", port), DemoHandler)
+            super().__init__(("127.0.0.1" if hosting is None else hosting.bind_host, port), DemoHandler)
         except Exception:
             self._temporary.cleanup()
             raise
         actual_port = self.server_address[1]
-        self.allowed_hosts = {f"127.0.0.1:{actual_port}", f"localhost:{actual_port}"}
+        self.allowed_hosts = ({f"127.0.0.1:{actual_port}", f"localhost:{actual_port}"}
+                              if hosting is None else {hosting.authority})
+
+    def request_origin(self, host: str) -> str:
+        """Use only the trusted startup origin; never forwarded headers."""
+        return f"http://{host}" if self.hosting is None else self.hosting.public_origin
 
     def mint_session(self) -> tuple[str, BrowserSession]:
         with self._session_lock:
@@ -1224,10 +1239,16 @@ class DemoHandler(BaseHTTPRequestHandler):
         pass
 
     def _host(self) -> str:
-        host = self.headers.get("Host", "")
-        if host not in self.server.allowed_hosts:
+        hosts = self.headers.get_all("Host", [])
+        if len(hosts) != 1 or hosts[0] not in self.server.allowed_hosts:
             raise UiError("invalid_host", 403)
-        return host
+        return hosts[0]
+
+    def _origin(self, host: str, *, required: bool) -> None:
+        origins = self.headers.get_all("Origin", [])
+        if ((required and not origins) or len(origins) > 1
+                or (origins and origins[0] != self.server.request_origin(host))):
+            raise UiError("invalid_origin", 403)
 
     def _cookie(self) -> str | None:
         try:
@@ -1248,12 +1269,17 @@ class DemoHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'")
         self.send_header("Connection", "close")
         if token is not None:
-            self.send_header("Set-Cookie", f"{COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/")
+            secure = "; Secure" if self.server.hosting is not None else ""
+            self.send_header("Set-Cookie", f"{COOKIE_NAME}={token}; HttpOnly; SameSite=Strict; Path=/{secure}")
         self.end_headers()
         self.wfile.write(body)
         self.close_connection = True
 
     def _json(self, status: int, value: dict, token: str | None = None) -> None:
+        if self.server.hosting is not None and isinstance(value.get("session"), dict):
+            value["session"]["customer_label"] = DEMO_CUSTOMER
+            value["authentication"] = "fixed_demo_identity_not_production_login"
+            value["hosting_mode"] = "public_fictional_demo"
         self._send(status, json.dumps(value, ensure_ascii=False, allow_nan=False).encode("utf-8"),
                    "application/json; charset=utf-8", token)
 
@@ -1301,11 +1327,13 @@ class DemoHandler(BaseHTTPRequestHandler):
         try:
             host = self._host()
             path = urlsplit(self.path).path
+            if self.path == "/healthz":
+                self._json(200, {"status": "ok"})
+                return
             if path == "/api/state":
                 site = self.headers.get("Sec-Fetch-Site")
-                origin = self.headers.get("Origin")
-                if ((site is not None and site not in ("same-origin", "none"))
-                        or (origin is not None and origin != f"http://{host}")):
+                self._origin(host, required=False)
+                if site is not None and site not in ("same-origin", "none"):
                     raise UiError("invalid_origin", 403)
                 token = self._cookie()
                 session = self.server.get_session(token)
@@ -1334,8 +1362,7 @@ class DemoHandler(BaseHTTPRequestHandler):
         session = None
         try:
             host = self._host()
-            if self.headers.get("Origin") != f"http://{host}":
-                raise UiError("invalid_origin", 403)
+            self._origin(host, required=True)
             if urlsplit(self.path).path != "/api/action":
                 raise UiError("not_found", 404)
             if self.headers.get_content_type() != "application/json":
@@ -1389,12 +1416,18 @@ class DemoHandler(BaseHTTPRequestHandler):
                 self._error(error)
 
 
-def serve(port: int = 8765, *, config: PrivateCohortConfig | None = None, router=None) -> None:
+def serve(port: int = 8765, *, config: PrivateCohortConfig | None = None, router=None,
+          hosting: HostingConfig | None = None) -> None:
     if type(port) is not int or not 0 <= port <= 65535:
         raise ValueError("invalid_port")
-    server = DemoServer(port, config=config, router=router)
+    server = DemoServer(port, config=config, router=router, hosting=hosting)
     label = "fictional-data" if config is None else "private-cohort"
-    print(f"Local {label} review UI: http://127.0.0.1:{server.server_address[1]}", flush=True)
+    if hosting is None:
+        print(f"Local {label} review UI: http://127.0.0.1:{server.server_address[1]}", flush=True)
+    else:
+        print(f"Public fictional-data DEMO: {hosting.public_origin}; "
+              f"HTTP listener {hosting.bind_host}:{server.server_address[1]} requires trusted HTTPS termination; "
+              f"fixed {DEMO_CUSTOMER} identity is not production login.", flush=True)
     try:
         server.serve_forever(poll_interval=0.2)
     except KeyboardInterrupt:

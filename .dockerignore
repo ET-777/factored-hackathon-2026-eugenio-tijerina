@@ -1,0 +1,35 @@
+# Deny the entire checkout, then admit literal runtime files only.
+# Docker sends this file and Dockerfile separately even when ignored here.
+**
+!pyproject.toml
+!bank_service/
+bank_service/**
+!bank_service/__init__.py
+!bank_service/__main__.py
+!bank_service/access.py
+!bank_service/actions.py
+!bank_service/case_store.py
+!bank_service/cohort_repository.py
+!bank_service/conversation.py
+!bank_service/demo.py
+!bank_service/demo_fixtures.py
+!bank_service/hosting.py
+!bank_service/learned_routing.py
+!bank_service/records.py
+!bank_service/request_dates.py
+!bank_service/responses.py
+!bank_service/route_loader.py
+!bank_service/routing.py
+!bank_service/selection.py
+!bank_service/transaction_references.py
+!bank_service/transactions.py
+!bank_service/web_app.py
+!bank_service/web/
+bank_service/web/**
+!bank_service/web/index.html
+!bank_service/web/styles.css
+!bank_service/web/app.js
+!bank_service/resources/
+bank_service/resources/**
+!bank_service/resources/routing_train.json
+!bank_service/resources/routing_train_short_v2.json

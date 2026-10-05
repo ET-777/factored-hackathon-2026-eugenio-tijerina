@@ -4,6 +4,13 @@ Local foundation for a solo Factored AI & Data Hackathon 2026 submission.
 Private development repository: [ET-777/factored-hackathon-2026-claro](https://github.com/ET-777/factored-hackathon-2026-claro).
 Keep it private during development; public visibility requires new explicit owner authorization.
 The application currently runs locally; a hosted prototype is still pending.
+The [hosted-demo package and Render setup](docs/deployment.md),
+[editable five-slide draft](submission/transaction-support-draft-v4.pptx), and
+[165-second recording plan](docs/submission_video_script.md) are prepared.
+[Delivery checks](docs/deployment_readiness.md) passed 752 synthetic tests and six
+installed-package bilingual journeys. Docker image execution, real cloud HTTPS,
+video recording and public judge access remain pending; these checks do not
+replace or improve the preserved failed frozen evaluation.
 
 **Status: local bilingual web UI, keyword baseline and experimental learned router, with grounded inquiry,
 clarification, confirmed simulated intake/handoff and verified SQLite receipts.**
