@@ -2,7 +2,7 @@
 
 **Eugenio Tijerina · Factored AI & Data Hackathon 2026**
 
-[Live application](https://factored-bank-demo.onrender.com/) · [Submission repository](https://github.com/ET-777/factored-hackathon-2026-eugenio-tijerina)
+[Live application](https://factored-bank-demo.onrender.com/)
 
 A Spanish and Portuguese assistant for finding a recorded payment, checking its
 facts, and preparing a review ticket or a summary for human support. The customer
@@ -10,8 +10,7 @@ chooses the transaction, reviews the draft, and confirms before anything is save
 The receipt confirms that the ticket was stored and checked; it is not a refund.
 
 The public application uses fictional transactions. No money moves, no bank is
-contacted, and no real support team receives the tickets. Do not enter personal
-or financial information.
+contacted, and no real support team receives the tickets.
 
 ## Run locally
 
@@ -46,7 +45,7 @@ It requires no model download, API key, paid inference or external model call.
 
 Search supports MXN, COP, ARS and USD without conversion. The public fixtures
 contain USD only. Dates accept day-first numeric formats, ISO dates and Spanish
-or Portuguese month names; an omitted year uses the current year in Monterrey.
+or Portuguese month names; an omitted year uses the current year.
 
 Service code enforces ownership, permissions, session expiry, confirmation and
 verified saving. A model prediction cannot grant access or save a ticket.
@@ -57,7 +56,7 @@ The repaired workflow completed **15/16 service journeys per language** and
 passed **8/8 specified safety scenarios per language**. These are reused-case
 regression results under corrected scoring, not model accuracy or a new unseen
 evaluation. The original frozen evaluation failed. Portuguese wording has no
-fluent human review, and the demo identity is not production authentication.
+fluent review.
 See the [model and evaluation report](docs/model-and-evaluation.md) for both
 scoring views, original results and remaining limitations.
 
